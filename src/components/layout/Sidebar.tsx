@@ -3,7 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { LayoutDashboard, LogOut, LucideIcon, Users, UserCog } from "lucide-react";
+import {
+  LayoutDashboard,
+  LogOut,
+  LucideIcon,
+  Users,
+  UserCog,
+  Building2,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { useSidebar } from "@/context/SidebarContext";
 
 const navItems: {
   label: string;
@@ -14,25 +24,40 @@ const navItems: {
   { label: "Dashboard", icon: LayoutDashboard, href: "/" },
   { label: "Leads", icon: Users, href: "/leads" },
   { label: "Usuarios", icon: UserCog, href: "/users", roles: ["ADMIN"] },
+  {
+    label: "Franquicias",
+    icon: Building2,
+    href: "/companies",
+    roles: ["ADMIN"],
+  },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const { collapsed, setCollapsed } = useSidebar();
 
   return (
-    <aside className="w-56 bg-[#13151c] flex flex-col h-screen fixed left-0 top-0 z-50">
+    <aside
+      className={`${collapsed ? "w-16" : "w-56"} bg-[#13151c] flex flex-col h-screen fixed left-0 top-0 z-50 transition-all duration-300 overflow-visible`}
+    >
       {/* Logo */}
-      <div className="h-14 p-4 border-b border-white/10">
-        <div>
-          <p className="text-white text-center font-semibold text-sm leading-none">
+      <div className="h-14 px-4 border-b border-white/10 flex items-center justify-between">
+        {!collapsed && (
+          <p className="text-white font-semibold text-sm leading-none">
             PH360 CRM
           </p>
-        </div>
+        )}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className={`text-white/40 hover:text-white transition-colors ${collapsed ? "mx-auto" : ""}`}
+        >
+          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+        </button>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+      <nav className="flex-1 p-3 space-y-1">
         {navItems
           .filter(
             (item) =>
@@ -42,31 +67,49 @@ export function Sidebar() {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                  isActive
-                    ? "bg-cyan-500/10 text-cyan-400"
-                    : "text-white/50 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                <Icon className="text-[18px]" />
-                {item.label}
-              </Link>
+              <div key={item.href} className="relative group">
+                <Link
+                  href={item.href}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    collapsed ? "justify-center" : ""
+                  } ${
+                    isActive
+                      ? "bg-cyan-500/10 text-cyan-400"
+                      : "text-white/50 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <Icon size={18} />
+                  {!collapsed && item.label}
+                </Link>
+
+                {/* Tooltip */}
+                {collapsed && (
+                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-[#1e2030] border border-white/10 rounded-lg text-xs text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                    {item.label}
+                  </div>
+                )}
+              </div>
             );
           })}
       </nav>
 
       {/* Footer */}
-      <div className="p-3 border-t border-white/10 space-y-1">
-        <button
-          onClick={() => signOut({ callbackUrl: "/auth/login" })}
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-400/70 hover:text-red-400 hover:bg-red-500/10 w-full transition-colors"
-        >
-          <LogOut />
-          Cerrar Sesión
-        </button>
+      <div className="p-3 border-t border-white/10">
+        <div className="relative group">
+          <button
+            onClick={() => signOut({ callbackUrl: "/auth/login" })}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-400/70 hover:text-red-400 hover:bg-red-500/10 w-full transition-colors ${collapsed ? "justify-center" : ""}`}
+          >
+            <LogOut size={18} />
+            {!collapsed && "Cerrar Sesión"}
+          </button>
+
+          {collapsed && (
+            <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-[#1e2030] border border-white/10 rounded-lg text-xs text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+              Cerrar Sesión
+            </div>
+          )}
+        </div>
       </div>
     </aside>
   );

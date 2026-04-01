@@ -22,7 +22,7 @@ const baseSchema = z
       .or(z.literal("")),
     confirmPassword: z.string().optional().or(z.literal("")),
     role: z.enum(["ADMIN", "SUPERVISOR", "COACH", "AGENT"]),
-    companyId: z.string().min(1, "La empresa es requerida"),
+    companyId: z.string().min(1, "La franquicia es requerida"),
     teamId: z.string().min(1, "El equipo es requerido"),
     active: z.boolean(),
   })

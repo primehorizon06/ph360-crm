@@ -24,7 +24,7 @@ export function UserTable({ users, onEdit, onDelete }: Props) {
               "Usuario",
               "Nombre",
               "Rol",
-              "Empresa",
+              "franquicia",
               "Equipo",
               "Estado",
               "Acciones",

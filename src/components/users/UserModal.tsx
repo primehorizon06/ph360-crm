@@ -54,7 +54,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
   // Cargar empresas
   useEffect(() => {
     const load = async () => {
-      const res = await fetch("/api/company");
+      const res = await fetch("/api/companies");
       setCompanies(await res.json());
     };
     load();
@@ -67,7 +67,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
         setTeams([]);
         return;
       }
-      const res = await fetch(`/api/team?companyId=${companyId}`);
+      const res = await fetch(`/api/teams?companyId=${companyId}`);
       setTeams(await res.json());
     };
     loadTeams();
@@ -205,20 +205,20 @@ export function UserModal({ user, onClose, onSave }: Props) {
           {/* Empresa */}
           <div>
             <label className="text-xs text-white/40 mb-1 block">
-              Empresa <span className="text-red-400">*</span>
+              Franquicia <span className="text-red-400">*</span>
             </label>
             <CustomSelect
               name="companyId"
               value={
                 companies.find((c) => String(c.id) === companyId)?.name ??
-                "Seleccionar empresa"
+                "Seleccionar franquicia"
               }
               onChange={(val) => {
                 setValue("companyId", val);
                 setValue("teamId", "");
               }}
               options={["", ...companies.map((c) => String(c.id))]}
-              labels={["Seleccionar empresa", ...companies.map((c) => c.name)]}
+              labels={["Seleccionar franquicia", ...companies.map((c) => c.name)]}
             />
             {errors.companyId && (
               <p className="text-red-400 text-xs mt-1">
