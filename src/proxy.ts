@@ -9,6 +9,7 @@ export async function proxy(req: NextRequest) {
   // Rutas públicas
   const publicPaths = ["/auth/login", "/auth/error"];
   if (publicPaths.includes(path)) {
+    if (token) return NextResponse.redirect(new URL("/", req.url));
     return NextResponse.next();
   }
 
@@ -17,20 +18,19 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(new URL("/auth/login", req.url));
   }
 
-  // Verificar permisos por rol para rutas específicas
-  const role = token.role;
+  const role = token.role as string;
 
-  // Rutas de admin
-  if (path.startsWith("/admin") && role !== "ADMIN") {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+  // Proteger rutas por rol
+  if (path.startsWith("/users") && role !== "ADMIN") {
+    return NextResponse.redirect(new URL("/", req.url));
   }
 
-  // Rutas de supervisor
-  if (
-    path.startsWith("/supervisor") &&
-    !["ADMIN", "SUPERVISOR"].includes(role as string)
-  ) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+  if (path.startsWith("/companies") && role !== "ADMIN") {
+    return NextResponse.redirect(new URL("/", req.url));
+  }
+
+  if (path.startsWith("/teams") && !["ADMIN", "SUPERVISOR"].includes(role)) {
+    return NextResponse.redirect(new URL("/", req.url));
   }
 
   return NextResponse.next();
@@ -38,10 +38,6 @@ export async function proxy(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/dashboard/:path*",
-    "/admin/:path*",
-    "/supervisor/:path*",
-    "/leads/:path*",
-    "/users/:path*",
+    "/((?!_next/static|_next/image|favicon.ico|uploads|api/auth).*)",
   ],
 };

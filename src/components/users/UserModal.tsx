@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { User } from "@/app/(dashboard)/users/page";
+import {
+  userSchema,
+  createUserSchema,
+  UserFormData,
+} from "@/lib/validations/user";
 import { X, Camera } from "lucide-react";
 import { Avatar } from "../ui/Avatar";
 import { CustomSelect } from "../ui/Select";
@@ -15,36 +22,56 @@ interface Props {
 const roles = ["ADMIN", "SUPERVISOR", "COACH", "AGENT"];
 
 export function UserModal({ user, onClose, onSave }: Props) {
-  const [form, setForm] = useState({
-    username: user?.username ?? "",
-    name: user?.name ?? "",
-    email: user?.email ?? "",
-    password: "",
-    role: user?.role ?? "AGENT",
-    active: user?.active ?? true,
-    avatar: user?.avatar ?? "",
-    confirmPassword: "",
-    companyId: user?.companyId ? String(user.companyId) : "",
-    teamId: user?.teamId ? String(user.teamId) : "",
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [companies, setCompanies] = useState<{ id: number; name: string }[]>(
     [],
   );
   const [teams, setTeams] = useState<{ id: number; name: string }[]>([]);
+  const [serverError, setServerError] = useState("");
 
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<UserFormData>({
+    resolver: zodResolver(user ? userSchema : createUserSchema),
+    defaultValues: {
+      username: user?.username ?? "",
+      name: user?.name ?? "",
+      email: user?.email ?? "",
+      password: "",
+      confirmPassword: "",
+      role: (user?.role as UserFormData["role"]) ?? "AGENT",
+      companyId: user?.companyId ? String(user.companyId) : "",
+      teamId: user?.teamId ? String(user.teamId) : "",
+      active: user?.active ?? true,
+    },
+  });
+
+  const companyId = watch("companyId");
+
+  // Cargar empresas
   useEffect(() => {
     const load = async () => {
-      const [companiesRes, teamsRes] = await Promise.all([
-        fetch("/api/company"),
-        fetch("/api/team"),
-      ]);
-      setCompanies(await companiesRes.json());
-      setTeams(await teamsRes.json());
+      const res = await fetch("/api/company");
+      setCompanies(await res.json());
     };
     load();
   }, []);
+
+  // Cargar equipos según empresa
+  useEffect(() => {
+    const loadTeams = async () => {
+      if (!companyId) {
+        setTeams([]);
+        return;
+      }
+      const res = await fetch(`/api/team?companyId=${companyId}`);
+      setTeams(await res.json());
+    };
+    loadTeams();
+  }, [companyId]);
 
   async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -54,34 +81,11 @@ export function UserModal({ user, onClose, onSave }: Props) {
     formData.append("file", file);
     formData.append("userId", user.id.toString());
 
-    const res = await fetch("/api/users/avatar", {
-      method: "POST",
-      body: formData,
-    });
-
-    const data = await res.json();
-    if (data.url) setForm((prev) => ({ ...prev, avatar: data.url }));
+    await fetch("/api/users/avatar", { method: "POST", body: formData });
   }
 
-  function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) {
-    const { name, value, type } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]:
-        type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
-    }));
-  }
-
-  async function handleSubmit() {
-    setError("");
-
-    if (form.password && form.password !== form.confirmPassword) {
-      setError("Las contraseñas no coinciden");
-      return;
-    }
-    setLoading(true);
+  async function onSubmit(data: UserFormData) {
+    setServerError("");
 
     const method = user ? "PATCH" : "POST";
     const url = user ? `/api/users/${user.id}` : "/api/users";
@@ -89,18 +93,19 @@ export function UserModal({ user, onClose, onSave }: Props) {
     const res = await fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify(data),
     });
 
     if (!res.ok) {
-      const data = await res.json();
-      setError(data.error ?? "Error al guardar");
-    } else {
-      onSave();
+      const json = await res.json();
+      setServerError(json.error ?? "Error al guardar");
+      return;
     }
 
-    setLoading(false);
+    onSave();
   }
+
+  const avatarValue = watch("name");
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -119,10 +124,11 @@ export function UserModal({ user, onClose, onSave }: Props) {
         </div>
 
         {/* Body */}
-        <div className="p-5 space-y-4">
+        <div className="p-5 space-y-4 max-h-[65vh] overflow-y-auto">
+          {/* Avatar */}
           <div className="flex justify-center">
             <label className="cursor-pointer group relative">
-              <Avatar name={form.name} avatar={form.avatar} size="lg" />
+              <Avatar name={avatarValue} avatar={user?.avatar} size="lg" />
               <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <Camera size={16} className="text-white" />
               </div>
@@ -134,12 +140,14 @@ export function UserModal({ user, onClose, onSave }: Props) {
               />
             </label>
           </div>
-          {error && (
+
+          {serverError && (
             <p className="text-red-400 text-sm bg-red-500/10 px-3 py-2 rounded-lg">
-              {error}
+              {serverError}
             </p>
           )}
 
+          {/* Campos de texto */}
           {[
             {
               label: "Usuario",
@@ -168,27 +176,33 @@ export function UserModal({ user, onClose, onSave }: Props) {
               </label>
               <input
                 type={field.type}
-                name={field.name}
-                value={form[field.name as keyof typeof form] as string}
-                onChange={handleChange}
                 disabled={field.disabled}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/20 outline-none focus:border-cyan-500/50 disabled:opacity-40"
+                {...register(field.name as keyof UserFormData)}
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-cyan-500/50 disabled:opacity-40"
               />
+              {errors[field.name as keyof UserFormData] && (
+                <p className="text-red-400 text-xs mt-1">
+                  {errors[field.name as keyof UserFormData]?.message}
+                </p>
+              )}
             </div>
           ))}
 
+          {/* Rol */}
           <div>
             <label className="text-xs text-white/40 mb-1 block">Rol</label>
             <CustomSelect
               name="role"
-              value={form.role}
-              onChange={(value) =>
-                setForm((prev) => ({ ...prev, role: value }))
-              }
+              value={watch("role")}
+              onChange={(val) => setValue("role", val as UserFormData["role"])}
               options={roles}
             />
+            {errors.role && (
+              <p className="text-red-400 text-xs mt-1">{errors.role.message}</p>
+            )}
           </div>
 
+          {/* Empresa */}
           <div>
             <label className="text-xs text-white/40 mb-1 block">
               Empresa <span className="text-red-400">*</span>
@@ -196,17 +210,24 @@ export function UserModal({ user, onClose, onSave }: Props) {
             <CustomSelect
               name="companyId"
               value={
-                companies.find((c) => String(c.id) === form.companyId)?.name ??
+                companies.find((c) => String(c.id) === companyId)?.name ??
                 "Seleccionar empresa"
               }
-              onChange={(val) =>
-                setForm((prev) => ({ ...prev, companyId: val }))
-              }
+              onChange={(val) => {
+                setValue("companyId", val);
+                setValue("teamId", "");
+              }}
               options={["", ...companies.map((c) => String(c.id))]}
               labels={["Seleccionar empresa", ...companies.map((c) => c.name)]}
             />
+            {errors.companyId && (
+              <p className="text-red-400 text-xs mt-1">
+                {errors.companyId.message}
+              </p>
+            )}
           </div>
 
+          {/* Equipo */}
           <div>
             <label className="text-xs text-white/40 mb-1 block">
               Equipo <span className="text-red-400">*</span>
@@ -214,23 +235,27 @@ export function UserModal({ user, onClose, onSave }: Props) {
             <CustomSelect
               name="teamId"
               value={
-                teams.find((t) => String(t.id) === form.teamId)?.name ??
+                teams.find((t) => String(t.id) === watch("teamId"))?.name ??
                 "Seleccionar equipo"
               }
-              onChange={(val) => setForm((prev) => ({ ...prev, teamId: val }))}
+              onChange={(val) => setValue("teamId", val)}
               options={["", ...teams.map((t) => String(t.id))]}
               labels={["Seleccionar equipo", ...teams.map((t) => t.name)]}
             />
+            {errors.teamId && (
+              <p className="text-red-400 text-xs mt-1">
+                {errors.teamId.message}
+              </p>
+            )}
           </div>
 
+          {/* Activo */}
           {user && (
             <div className="flex items-center gap-3">
               <input
                 type="checkbox"
-                name="active"
                 id="active"
-                checked={form.active}
-                onChange={handleChange}
+                {...register("active")}
                 className="accent-cyan-500"
               />
               <label htmlFor="active" className="text-sm text-white/70">
@@ -249,11 +274,11 @@ export function UserModal({ user, onClose, onSave }: Props) {
             Cancelar
           </button>
           <button
-            onClick={handleSubmit}
-            disabled={loading}
+            onClick={handleSubmit(onSubmit)}
+            disabled={isSubmitting}
             className="px-4 py-2 text-sm bg-cyan-500 hover:bg-cyan-400 text-black font-medium rounded-lg transition-colors disabled:opacity-50"
           >
-            {loading ? "Guardando..." : "Guardar"}
+            {isSubmitting ? "Guardando..." : "Guardar"}
           </button>
         </div>
       </div>

@@ -68,8 +68,8 @@ export async function POST(req: NextRequest) {
       email: email || null,
       password: hashed,
       role,
-      companyId: companyId || null,
-      teamId: teamId || null,
+      companyId: Number(companyId),
+      teamId: Number(teamId),
     },
     select: {
       id: true,

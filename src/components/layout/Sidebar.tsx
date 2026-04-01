@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { LayoutDashboard, LogOut, LucideIcon, Users } from "lucide-react";
+import { LayoutDashboard, LogOut, LucideIcon, Users, UserCog } from "lucide-react";
 
 const navItems: {
   label: string;
@@ -13,7 +13,7 @@ const navItems: {
 }[] = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/" },
   { label: "Leads", icon: Users, href: "/leads" },
-  { label: "Usuarios", icon: Users, href: "/users", roles: ["ADMIN"] },
+  { label: "Usuarios", icon: UserCog, href: "/users", roles: ["ADMIN"] },
 ];
 
 export function Sidebar() {

@@ -23,8 +23,8 @@ export async function PATCH(
     email,
     role,
     active,
-    companyId: companyId || null,
-    teamId: teamId || null,
+    companyId: Number(companyId),
+    teamId: Number(teamId),
   };
 
   if (password) {
