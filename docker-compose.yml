@@ -1,0 +1,193 @@
+# services:
+#   # Base de datos PostgreSQL
+#   postgres:
+#     image: postgres:16-alpine
+#     container_name: crm-postgres
+#     restart: unless-stopped
+#     environment:
+#       POSTGRES_USER: ${DB_USER:-postgres}
+#       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+#       POSTGRES_DB: ${DB_NAME:-crm_db}
+#     ports:
+#       - "5432:5432"
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+#       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+#     networks:
+#       - crm-network
+#     healthcheck:
+#       test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}" ]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+
+#   # Next.js aplicación (Frontend + Backend API)
+#   nextjs:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#     container_name: crm-nextjs
+#     restart: unless-stopped
+#     environment:
+#       NODE_ENV: production
+#       DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-crm_db}
+#       # Variables para Prisma
+#       DIRECT_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-crm_db}
+#     ports:
+#       - "3000:3000"
+#     depends_on:
+#       postgres:
+#         condition: service_healthy
+#     networks:
+#       - crm-network
+#     # Para desarrollo con hot-reload (comentar en producción)
+#     # volumes:
+#     #   - .:/app
+#     #   - /app/node_modules
+#     #   - /app/.next
+
+#     # Opcional: Servicio para migraciones de Prisma
+#   prisma-migrate:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#     container_name: crm-prisma-migrate
+#     environment:
+#       DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-crm_db}
+#     depends_on:
+#       postgres:
+#         condition: service_healthy
+#     networks:
+#       - crm-network
+#     command: npx prisma migrate deploy
+#     restart: "no"
+
+#   # Opcional: Adminer para administrar BD (interfaz web)
+#   adminer:
+#     image: adminer:latest
+#     container_name: crm-adminer
+#     restart: unless-stopped
+#     ports:
+#       - "8080:8080"
+#     environment:
+#       ADMINER_DEFAULT_SERVER: postgres
+#     networks:
+#       - crm-network
+#     depends_on:
+#       - postgres
+
+# networks:
+#   crm-network:
+#     driver: bridge
+
+# volumes:
+#   postgres_data:
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: crm-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-crm_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - crm-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Servicio para desarrollo con hot reload
+  nextjs-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: crm-nextjs-dev
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-crm_db}
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-development-secret-key}
+    ports:
+      - "3000:3000"
+      - "5555:5555"
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./prisma:/app/prisma
+      - ./package.json:/app/package.json
+      - ./package-lock.json:/app/package-lock.json
+      - ./next.config.ts:/app/next.config.ts
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./middleware.ts:/app/middleware.ts
+      - ./.env.local:/app/.env.local
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - crm-network
+    command: sh -c "npx prisma generate && npm run dev"
+
+  # Servicio para producción
+  nextjs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crm-nextjs
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-crm_db}
+      DIRECT_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-crm_db}
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - crm-network
+
+  prisma-migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crm-prisma-migrate
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-crm_db}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - crm-network
+    command: npx prisma migrate deploy
+    restart: "no"
+
+  adminer:
+    image: adminer:latest
+    container_name: crm-adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    networks:
+      - crm-network
+    depends_on:
+      - postgres
+
+networks:
+  crm-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

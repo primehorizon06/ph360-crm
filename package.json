@@ -1,0 +1,47 @@
+{
+  "name": "crm-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "dev:docker": "bash scripts/docker-dev.sh",
+    "docker:up": "docker-compose up -d postgres nextjs-dev adminer",
+    "docker:down": "docker-compose down",
+    "docker:build": "docker-compose build",
+    "docker:logs": "docker-compose logs -f",
+    "docker:migrate": "docker-compose exec nextjs-dev npx prisma migrate dev",
+    "docker:studio": "docker-compose exec nextjs-dev npx prisma studio",
+    "docker:seed": "docker-compose exec nextjs-dev npx prisma db seed",
+    "docker:shell": "docker-compose exec nextjs-dev sh"
+  },
+  "prisma": {
+    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+  },
+  "dependencies": {
+    "@next-auth/prisma-adapter": "^1.0.7",
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^3.0.3",
+    "lucide-react": "^1.7.0",
+    "next": "16.2.1",
+    "next-auth": "^4.24.13",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20.19.37",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "dotenv": "^16.0.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.1",
+    "prisma": "^5.22.0",
+    "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}

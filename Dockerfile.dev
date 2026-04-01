@@ -1,0 +1,27 @@
+# Dockerfile.dev
+FROM node:20-alpine
+
+# Instalar OpenSSL
+RUN apk add --no-cache openssl
+
+WORKDIR /app
+
+# Copiar archivos de dependencias
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# Instalar dependencias
+RUN npm ci
+
+# Copiar todo el código fuente
+COPY . .
+
+# Generar Prisma Client
+RUN npx prisma generate
+
+# Instalar nodemon para hot reload
+RUN npm install -g nodemon
+
+EXPOSE 3000
+
+CMD ["npm", "run", "dev"]

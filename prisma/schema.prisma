@@ -1,0 +1,163 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── ENUMS ───────────────────────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  SUPERVISOR
+  COACH
+  AGENT
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  CONVERTED
+  LOST
+}
+
+// ─── EMPRESA ─────────────────────────────────────────────────────────────────
+
+model Company {
+  id        Int      @id @default(autoincrement())
+  name      String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users User[]
+  teams Team[]
+  leads Lead[]
+}
+
+// ─── EQUIPO ──────────────────────────────────────────────────────────────────
+
+model Team {
+  id        Int      @id @default(autoincrement())
+  name      String
+  companyId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+  users   User[]
+}
+
+// ─── USUARIO ─────────────────────────────────────────────────────────────────
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  name      String
+  email     String?  @unique
+  password  String
+  role      Role
+  active    Boolean  @default(true)
+  companyId Int?
+  teamId    Int?
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company? @relation(fields: [companyId], references: [id])
+  team    Team?    @relation(fields: [teamId], references: [id])
+  leads   Lead[]
+  notes   Note[]
+}
+
+// ─── PERMISOS ─────────────────────────────────────────────────────────────────
+
+enum PermissionScope {
+  ALL // Admin - ve todo
+  COMPANY // Supervisor - ve su empresa
+  TEAM // Coach - ve su equipo
+  OWN // Agent - ve solo lo suyo
+  NONE // Sin acceso
+}
+
+model Permission {
+  id        Int             @id @default(autoincrement())
+  role      Role
+  module    String // "leads", "users", "companies", "teams"
+  canCreate Boolean         @default(false)
+  canRead   PermissionScope @default(NONE)
+  canUpdate PermissionScope @default(NONE)
+  canDelete Boolean         @default(false)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@unique([role, module]) // Un permiso por rol/módulo
+}
+
+// ─── LEAD (CLIENTE) ──────────────────────────────────────────────────────────
+
+model Lead {
+  id          Int        @id @default(autoincrement())
+  firstName   String
+  lastName    String
+  phone1      String     @unique // No duplicados global
+  phone2      String?
+  ssn         String     @unique // Seguridad social - No duplicados global
+  address     String
+  city        String
+  state       String
+  zipCode     String
+  email       String?
+  birthDate   DateTime?
+  contactTime String?
+  status      LeadStatus @default(NEW)
+
+  // Relaciones de visibilidad
+  companyId    Int
+  assignedToId Int // Agente asignado
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company    Company    @relation(fields: [companyId], references: [id])
+  assignedTo User       @relation(fields: [assignedToId], references: [id])
+  documents  Document[]
+  notes      Note[]
+}
+
+// ─── DOCUMENTO ADJUNTO ───────────────────────────────────────────────────────
+
+model Document {
+  id        Int      @id @default(autoincrement())
+  leadId    Int
+  name      String
+  url       String
+  mimeType  String?
+  size      Int?
+  createdAt DateTime @default(now())
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+}
+
+// ─── NOTA ────────────────────────────────────────────────────────────────────
+
+model Note {
+  id        Int      @id @default(autoincrement())
+  leadId    Int
+  authorId  Int
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lead   Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id])
+}
