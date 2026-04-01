@@ -29,7 +29,9 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <SidebarContext.Provider value={{ collapsed, setCollapsed, mobileOpen, setMobileOpen }}>
+    <SidebarContext.Provider
+      value={{ collapsed, setCollapsed, mobileOpen, setMobileOpen }}
+    >
       {children}
     </SidebarContext.Provider>
   );

@@ -7,6 +7,7 @@ import { Loading } from "@/components/ui/Loading";
 import { UserTable } from "@/components/users/UserTable";
 import { UserModal } from "@/components/users/UserModal";
 import { Plus } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export interface User {
   id: number;
@@ -76,21 +77,15 @@ export default function UsersPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Usuarios</h1>
-          <p className="text-white/40 text-sm mt-1">
-            {users.length} usuarios registrados
-          </p>
-        </div>
-        <button
-          onClick={handleNew}
-          className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-black font-medium px-4 py-2 rounded-lg text-sm transition-colors"
-        >
-          <Plus size={16} />
-          Nuevo Usuario
-        </button>
-      </div>
+      <PageHeader
+        title="Usuarios"
+        description={`${users.length} usuarios registrados`}
+        action={{
+          label: "Nuevo Usuario",
+          icon: Plus,
+          onClick: handleNew,
+        }}
+      />
 
       {/* Tabla */}
       <UserTable users={users} onEdit={handleEdit} onDelete={handleDelete} />

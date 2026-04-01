@@ -14,6 +14,7 @@ import {
 import { CompanyModal } from "@/components/companies/CompanyModal";
 import { TeamModal } from "@/components/companies/TeamModal";
 import { CustomSelect } from "@/components/ui/Select";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 interface Team {
   id: number;
@@ -117,9 +118,9 @@ export default function CompaniesPage() {
   return (
     <div className="space-y-6">
       {/* Buscador y filtros */}
-      <div className="flex items-center max-w-md m-auto gap-3">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2 flex-1">
-          <Search size={16} className="text-white/40" />
+          <Search size={16} className="text-white/40 shrink-0" />
           <input
             type="text"
             placeholder="Buscar franquicia..."
@@ -128,7 +129,6 @@ export default function CompaniesPage() {
             className="bg-transparent text-sm text-white/70 placeholder:text-white/30 outline-none w-full"
           />
         </div>
-
         <CustomSelect
           name="filter"
           value={
@@ -146,21 +146,15 @@ export default function CompaniesPage() {
         />
       </div>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Franquicias</h1>
-          <p className="text-white/40 text-sm mt-1">
-            {filtered.length} de {companies.length} franquicias registradas
-          </p>
-        </div>
-        <button
-          onClick={() => setCompanyModal({ open: true, company: null })}
-          className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-black font-medium px-4 py-2 rounded-lg text-sm transition-colors"
-        >
-          <Plus size={16} />
-          Nueva Franquicia
-        </button>
-      </div>
+      <PageHeader
+        title="Franquicias"
+        description={`${filtered.length} de ${companies.length} franquicias registradas`}
+        action={{
+          label: "Nueva Franquicia",
+          icon: Plus,
+          onClick: () => setCompanyModal({ open: true, company: null }),
+        }}
+      />
 
       {/* Lista acordeón */}
       <div className="space-y-2">
@@ -170,31 +164,41 @@ export default function CompaniesPage() {
             className="bg-[#13151c] border border-white/10 rounded-xl overflow-hidden"
           >
             {/* Empresa */}
-            <div className="flex items-center justify-between px-4 py-3">
+            <div className="flex items-start justify-between px-4 py-3 gap-2">
               <button
                 onClick={() => toggleExpand(company)}
-                className="flex items-center gap-3 flex-1 text-left"
+                className="flex items-start gap-3 flex-1 text-left min-w-0"
               >
                 {expanded.includes(company.id) ? (
-                  <ChevronDown size={16} className="text-cyan-400" />
+                  <ChevronDown
+                    size={16}
+                    className="text-cyan-400 mt-0.5 shrink-0"
+                  />
                 ) : (
-                  <ChevronRight size={16} className="text-white/40" />
+                  <ChevronRight
+                    size={16}
+                    className="text-white/40 mt-0.5 shrink-0"
+                  />
                 )}
-                <div>
-                  <p className="text-white font-medium">{company.name}</p>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-white font-medium truncate">
+                      {company.name}
+                    </p>
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${company.active ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}
+                    >
+                      {company.active ? "Activa" : "Inactiva"}
+                    </span>
+                  </div>
                   <p className="text-white/40 text-xs mt-0.5">
                     {company._count.teams} equipos · {company._count.users}{" "}
                     usuarios
                   </p>
                 </div>
-                <span
-                  className={`ml-3 text-xs px-2 py-0.5 rounded-full ${company.active ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}
-                >
-                  {company.active ? "Activa" : "Inactiva"}
-                </span>
               </button>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 shrink-0">
                 <button
                   onClick={() => setCompanyModal({ open: true, company })}
                   className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors"
