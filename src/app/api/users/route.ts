@@ -3,16 +3,31 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { Role } from "@prisma/client";
 
 // GET — Listar usuarios (solo ADMIN)
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
 
-  if (!session || session.user.role !== "ADMIN") {
+  if (!session) {
+    return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const teamId = searchParams.get("teamId");
+  const roleFilter = searchParams.get("role");
+
+  // Solo ADMIN puede ver todos los usuarios
+  // Otros roles solo pueden consultar agentes para asignar leads
+  if (session.user.role !== "ADMIN" && !teamId) {
     return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
   }
 
   const users = await prisma.user.findMany({
+    where: {
+      ...(teamId ? { teamId: Number(teamId) } : {}),
+      ...(roleFilter ? { role: roleFilter as Role } : {}),
+    },
     select: {
       id: true,
       username: true,

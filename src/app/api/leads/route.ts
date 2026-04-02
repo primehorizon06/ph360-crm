@@ -42,6 +42,9 @@ export async function GET() {
       city: true,
       state: true,
       status: true,
+      companyId: true,
+      teamId: true,
+      assignedToId: true,
       createdAt: true,
       assignedTo: {
         select: { id: true, name: true, team: { select: { name: true } } },

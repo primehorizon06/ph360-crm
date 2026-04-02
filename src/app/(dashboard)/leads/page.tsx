@@ -4,19 +4,24 @@ import { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Loading } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Plus, Search } from "lucide-react";
+import { Pencil, Plus, Search } from "lucide-react";
 import { useSidebar } from "@/components/layout/SidebarContext";
+import { LeadEditModal } from "@/components/leads/LeadEditModal";
 
 interface Lead {
   id: number;
   firstName: string;
-  lastName?: string;
+  lastName?: string | null;
   phone1: string;
-  email?: string;
-  city?: string;
-  state?: string;
+  phone2?: string | null;
+  email?: string | null;
+  city?: string | null;
+  state?: string | null;
   status: string;
   createdAt: string;
+  companyId: number;
+  teamId: number;
+  assignedToId: number;
   company: { name: string };
   assignedTo: {
     id: number;
@@ -43,12 +48,13 @@ const statusLabels: Record<string, string> = {
 
 export default function LeadsPage() {
   const { data: session, status } = useSession();
-  const { setLeadsModalOpen, setOnLeadCreated, onLeadCreated } = useSidebar();
+  const { setLeadsModalOpen, setOnLeadCreated } = useSidebar();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("ALL");
   const isAdmin = session?.user?.role === "ADMIN";
+  const [editingLead, setEditingLead] = useState<Lead | null>(null);
 
   const loadLeads = useCallback(async () => {
     setLoading(true);
@@ -138,6 +144,7 @@ export default function LeadsPage() {
                   "Equipo",
                   "Status",
                   "Fecha",
+                  "Acciones",
                 ].map((h) => (
                   <th
                     key={h}
@@ -187,6 +194,14 @@ export default function LeadsPage() {
                   <td className="px-4 py-3 text-xs text-white/30">
                     {new Date(lead.createdAt).toLocaleDateString("es-CO")}
                   </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => setEditingLead(lead)}
+                      className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -225,6 +240,17 @@ export default function LeadsPage() {
           </div>
         )}
       </div>
+      {editingLead && (
+        <LeadEditModal
+          key={editingLead.id}
+          lead={editingLead}
+          onClose={() => setEditingLead(null)}
+          onSave={() => {
+            setEditingLead(null);
+            loadLeads();
+          }}
+        />
+      )}
     </div>
   );
 }

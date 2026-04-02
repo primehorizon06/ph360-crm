@@ -20,12 +20,24 @@ export async function PATCH(
 
   const data: Record<string, unknown> = {
     name,
-    email,
+    email: email || null,
     role,
     active,
     companyId: Number(companyId),
     teamId: Number(teamId),
   };
+
+  if (email) {
+    const existing = await prisma.user.findFirst({
+      where: { email, NOT: { id: Number(id) } },
+    });
+    if (existing) {
+      return NextResponse.json(
+        { error: "El email ya está en uso" },
+        { status: 409 },
+      );
+    }
+  }
 
   if (password) {
     data.password = await bcrypt.hash(password, 10);
