@@ -166,7 +166,7 @@ async function main() {
       username: "admin",
       name: "Administrador",
       email: "admin@crm.com",
-      password: "admin123", // ⚠️ cambiar por hash en producción
+      password: "$2a$12$E09WuJa0HxohXduerw0qeerKqOodekgADtHyoNAJdpaNna1BI92BG", 
       role: Role.ADMIN,
       companyId: company.id,
     },
