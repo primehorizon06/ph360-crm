@@ -44,6 +44,7 @@ export function Sidebar() {
     setMobileOpen,
     leadsModalOpen,
     setLeadsModalOpen,
+    onLeadCreated,
   } = useSidebar();
 
   return (
@@ -162,7 +163,10 @@ export function Sidebar() {
       {leadsModalOpen && (
         <LeadModal
           onClose={() => setLeadsModalOpen(false)}
-          onSave={() => setLeadsModalOpen(false)}
+          onSave={() => {
+            setLeadsModalOpen(false);
+            onLeadCreated?.();
+          }}
         />
       )}
     </>
