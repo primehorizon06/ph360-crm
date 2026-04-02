@@ -1,7 +1,7 @@
 "use client";
 
 import { Search, Bell, Menu } from "lucide-react";
-import { useSidebar } from "@/context/SidebarContext";
+import { useSidebar } from "@/components/layout/SidebarContext";
 import { Avatar } from "../ui/Avatar";
 import { useSession } from "next-auth/react";
 

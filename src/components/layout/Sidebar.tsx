@@ -12,8 +12,10 @@ import {
   Building2,
   ChevronLeft,
   ChevronRight,
+  Plus,
 } from "lucide-react";
-import { useSidebar } from "@/context/SidebarContext";
+import { useSidebar } from "@/components/layout/SidebarContext";
+import { LeadModal } from "../leads/LeadModal";
 
 const navItems: {
   label: string;
@@ -35,7 +37,14 @@ const navItems: {
 export function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const { collapsed, setCollapsed, mobileOpen, setMobileOpen } = useSidebar();
+  const {
+    collapsed,
+    setCollapsed,
+    mobileOpen,
+    setMobileOpen,
+    leadsModalOpen,
+    setLeadsModalOpen,
+  } = useSidebar();
 
   return (
     <>
@@ -114,6 +123,23 @@ export function Sidebar() {
             })}
         </nav>
 
+        <div className="px-3 pb-3">
+          <div className="relative group">
+            <button
+              onClick={() => setLeadsModalOpen(true)}
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 w-full transition-colors ${collapsed ? "justify-center" : ""}`}
+            >
+              <Plus size={18} />
+              {!collapsed && "Nuevo Lead"}
+            </button>
+            {collapsed && (
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-[#1e2030] border border-white/10 rounded-lg text-xs text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                Nuevo Lead
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Footer */}
         <div className="p-3 border-t border-white/10">
           <div className="relative group">
@@ -132,6 +158,13 @@ export function Sidebar() {
           </div>
         </div>
       </aside>
+
+      {leadsModalOpen && (
+        <LeadModal
+          onClose={() => setLeadsModalOpen(false)}
+          onSave={() => setLeadsModalOpen(false)}
+        />
+      )}
     </>
   );
 }

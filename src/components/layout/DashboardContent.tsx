@@ -1,6 +1,6 @@
 "use client";
 
-import { useSidebar } from "@/context/SidebarContext";
+import { useSidebar } from "@/components/layout/SidebarContext";
 import { Header } from "./Header";
 
 export function DashboardContent({ children }: { children: React.ReactNode }) {

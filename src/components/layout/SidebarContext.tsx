@@ -7,6 +7,8 @@ interface SidebarContextType {
   setCollapsed: (val: boolean) => void;
   mobileOpen: boolean;
   setMobileOpen: (val: boolean) => void;
+  leadsModalOpen: boolean;
+  setLeadsModalOpen: (val: boolean) => void;
 }
 
 const SidebarContext = createContext<SidebarContextType>({
@@ -14,11 +16,14 @@ const SidebarContext = createContext<SidebarContextType>({
   setCollapsed: () => {},
   mobileOpen: false,
   setMobileOpen: () => {},
+  leadsModalOpen: false,
+  setLeadsModalOpen: () => {},
 });
 
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [leadsModalOpen, setLeadsModalOpen] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -29,9 +34,11 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <SidebarContext.Provider
-      value={{ collapsed, setCollapsed, mobileOpen, setMobileOpen }}
-    >
+    <SidebarContext.Provider value={{
+      collapsed, setCollapsed,
+      mobileOpen, setMobileOpen,
+      leadsModalOpen, setLeadsModalOpen,
+    }}>
       {children}
     </SidebarContext.Provider>
   );

@@ -52,9 +52,9 @@ model Team {
   companyId Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  company Company @relation(fields: [companyId], references: [id])
-  users   User[]
+  company   Company  @relation(fields: [companyId], references: [id])
+  users     User[]
+  leads     Lead[]
 }
 
 // ─── USUARIO ─────────────────────────────────────────────────────────────────
@@ -106,32 +106,30 @@ model Permission {
 // ─── LEAD (CLIENTE) ──────────────────────────────────────────────────────────
 
 model Lead {
-  id          Int        @id @default(autoincrement())
-  firstName   String
-  lastName    String
-  phone1      String     @unique // No duplicados global
-  phone2      String?
-  ssn         String     @unique // Seguridad social - No duplicados global
-  address     String
-  city        String
-  state       String
-  zipCode     String
-  email       String?
-  birthDate   DateTime?
-  contactTime String?
-  status      LeadStatus @default(NEW)
-
-  // Relaciones de visibilidad
+  id           Int        @id @default(autoincrement())
+  firstName    String
+  lastName     String?
+  phone1       String     @unique
+  phone2       String?
+  ssn          String?    @unique
+  address      String?
+  city         String?
+  state        String?
+  zipCode      String?
+  email        String?
+  birthDate    DateTime?
+  contactTime  String?
+  status       LeadStatus @default(NEW)
   companyId    Int
-  assignedToId Int // Agente asignado
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  company    Company    @relation(fields: [companyId], references: [id])
-  assignedTo User       @relation(fields: [assignedToId], references: [id])
-  documents  Document[]
-  notes      Note[]
+  teamId       Int
+  assignedToId Int
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  company      Company    @relation(fields: [companyId], references: [id])
+  team         Team       @relation(fields: [teamId], references: [id])
+  assignedTo   User       @relation(fields: [assignedToId], references: [id])
+  documents    Document[]
+  notes        Note[]
 }
 
 // ─── DOCUMENTO ADJUNTO ───────────────────────────────────────────────────────

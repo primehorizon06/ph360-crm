@@ -1,4 +1,4 @@
-import { SidebarProvider } from "@/context/SidebarContext";
+import { SidebarProvider } from "@/components/layout/SidebarContext";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { DashboardContent } from "@/components/layout/DashboardContent";
 
