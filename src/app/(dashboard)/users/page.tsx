@@ -6,8 +6,9 @@ import { useRouter } from "next/navigation";
 import { Loading } from "@/components/ui/Loading";
 import { UserTable } from "@/components/users/UserTable";
 import { UserModal } from "@/components/users/UserModal";
-import { Plus } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { CustomSelect } from "@/components/ui/Select";
 
 export interface User {
   id: number;
@@ -31,6 +32,44 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [search, setSearch] = useState("");
+  const [filterCompany, setFilterCompany] = useState("");
+  const [filterTeam, setFilterTeam] = useState("");
+  const [companies, setCompanies] = useState<{ id: number; name: string }[]>(
+    [],
+  );
+  const [teams, setTeams] = useState<{ id: number; name: string }[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      const res = await fetch("/api/companies?simple=true");
+      setCompanies(await res.json());
+    };
+    load();
+  }, []);
+
+  useEffect(() => {
+    const loadTeams = async () => {
+      if (!filterCompany) {
+        setTeams([]);
+        setFilterTeam("");
+        return;
+      }
+      const res = await fetch(`/api/teams?companyId=${filterCompany}`);
+      setTeams(await res.json());
+    };
+    loadTeams();
+  }, [filterCompany]);
+
+  const filtered = users.filter((user) => {
+    const matchSearch = `${user.name} ${user.username}`
+      .toLowerCase()
+      .includes(search.toLowerCase());
+    const matchCompany =
+      !filterCompany || String(user.companyId) === filterCompany;
+    const matchTeam = !filterTeam || String(user.teamId) === filterTeam;
+    return matchSearch && matchCompany && matchTeam;
+  });
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/auth/login");
@@ -79,7 +118,7 @@ export default function UsersPage() {
       {/* Header */}
       <PageHeader
         title="Usuarios"
-        description={`${users.length} usuarios registrados`}
+        description={`${filtered.length} de ${users.length} usuarios registrados`}
         action={{
           label: "Nuevo Usuario",
           icon: Plus,
@@ -87,8 +126,55 @@ export default function UsersPage() {
         }}
       />
 
+      {/* Filtros */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        {/* Buscador */}
+        <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2 flex-1">
+          <Search size={16} className="text-white/40 shrink-0" />
+          <input
+            type="text"
+            placeholder="Buscar por nombre o usuario..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="bg-transparent text-sm text-white/70 placeholder:text-white/30 outline-none w-full"
+          />
+        </div>
+
+        {/* Separador visual */}
+        <div className="hidden sm:flex items-center">
+          <div className="w-px h-8 bg-white/10" />
+        </div>
+
+        {/* Filtro franquicia */}
+        <CustomSelect
+          name="filterCompany"
+          value={
+            companies.find((c) => String(c.id) === filterCompany)?.name ??
+            "Todas las franquicias"
+          }
+          onChange={(val) => {
+            setFilterCompany(val);
+            setFilterTeam("");
+          }}
+          options={["", ...companies.map((c) => String(c.id))]}
+          labels={["Todas las franquicias", ...companies.map((c) => c.name)]}
+        />
+
+        {/* Filtro equipo */}
+        <CustomSelect
+          name="filterTeam"
+          value={
+            teams.find((t) => String(t.id) === filterTeam)?.name ??
+            "Todos los equipos"
+          }
+          onChange={(val) => setFilterTeam(val)}
+          options={["", ...teams.map((t) => String(t.id))]}
+          labels={["Todos los equipos", ...teams.map((t) => t.name)]}
+        />
+      </div>
+
       {/* Tabla */}
-      <UserTable users={users} onEdit={handleEdit} onDelete={handleDelete} />
+      <UserTable users={filtered} onEdit={handleEdit} onDelete={handleDelete} />
 
       {/* Modal */}
       {modalOpen && (
