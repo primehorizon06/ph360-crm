@@ -7,44 +7,10 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Pencil, Plus, Search } from "lucide-react";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import { LeadEditModal } from "@/components/leads/LeadEditModal";
-
-interface Lead {
-  id: number;
-  firstName: string;
-  lastName?: string | null;
-  phone1: string;
-  phone2?: string | null;
-  email?: string | null;
-  city?: string | null;
-  state?: string | null;
-  status: string;
-  createdAt: string;
-  companyId: number;
-  teamId: number;
-  assignedToId: number;
-  company: { name: string };
-  assignedTo: {
-    id: number;
-    name: string;
-    team?: { name: string };
-  };
-}
-
-const statusColors: Record<string, string> = {
-  NEW: "bg-blue-500/20 text-blue-400",
-  CONTACTED: "bg-yellow-500/20 text-yellow-400",
-  QUALIFIED: "bg-purple-500/20 text-purple-400",
-  CONVERTED: "bg-green-500/20 text-green-400",
-  LOST: "bg-red-500/20 text-red-400",
-};
-
-const statusLabels: Record<string, string> = {
-  NEW: "Nuevo",
-  CONTACTED: "Contactado",
-  QUALIFIED: "Calificado",
-  CONVERTED: "Convertido",
-  LOST: "Perdido",
-};
+import { useRouter } from "next/navigation";
+import { Lead } from "@/utils/interfaces/leads";
+import { STATUS, STATUS_COLORS } from "@/utils/constants/leads";
+import { CustomSelect } from "@/components/ui/Select";
 
 export default function LeadsPage() {
   const { data: session, status } = useSession();
@@ -55,6 +21,7 @@ export default function LeadsPage() {
   const [filterStatus, setFilterStatus] = useState("ALL");
   const isAdmin = session?.user?.role === "ADMIN";
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
+  const router = useRouter();
 
   const loadLeads = useCallback(async () => {
     setLoading(true);
@@ -110,21 +77,13 @@ export default function LeadsPage() {
         </div>
 
         <div className="flex gap-2 flex-wrap">
-          {["ALL", "NEW", "CONTACTED", "QUALIFIED", "CONVERTED", "LOST"].map(
-            (s) => (
-              <button
-                key={s}
-                onClick={() => setFilterStatus(s)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                  filterStatus === s
-                    ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
-                    : "bg-white/5 text-white/40 hover:text-white border border-transparent"
-                }`}
-              >
-                {s === "ALL" ? "Todos" : statusLabels[s]}
-              </button>
-            ),
-          )}
+          <CustomSelect
+            name="filterStatus"
+            value={STATUS[filterStatus] ?? "Todos"}
+            onChange={(val) => setFilterStatus(val)}
+            options={["ALL", ...Object.keys(STATUS)]}
+            labels={["Todos", ...Object.values(STATUS)]}
+          />
         </div>
       </div>
 
@@ -137,14 +96,11 @@ export default function LeadsPage() {
                 {[
                   "Nombre",
                   "Teléfono",
-                  "Ciudad",
-                  "Estado",
                   ...(isAdmin ? ["Franquicia"] : []),
                   "Agente",
                   "Equipo",
-                  "Status",
-                  "Fecha",
-                  "Acciones",
+                  "Estado",
+                  "Fecha"
                 ].map((h) => (
                   <th
                     key={h}
@@ -159,6 +115,7 @@ export default function LeadsPage() {
               {filtered.map((lead) => (
                 <tr
                   key={lead.id}
+                  onClick={() => router.push(`/leads/${lead.id}`)}
                   className="hover:bg-white/5 transition-colors cursor-pointer"
                 >
                   <td className="px-4 py-3 text-sm text-white font-medium">
@@ -166,12 +123,6 @@ export default function LeadsPage() {
                   </td>
                   <td className="px-4 py-3 text-sm text-white/70">
                     {lead.phone1}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-white/50">
-                    {lead.city ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-white/50">
-                    {lead.state ?? "—"}
                   </td>
                   {isAdmin && (
                     <td className="px-4 py-3 text-sm text-white/50">
@@ -186,22 +137,22 @@ export default function LeadsPage() {
                   </td>
                   <td className="px-4 py-3">
                     <span
-                      className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[lead.status]}`}
+                      className={`text-xs px-2 py-1 rounded-full font-medium ${STATUS_COLORS[lead.status]}`}
                     >
-                      {statusLabels[lead.status]}
+                      {STATUS[lead.status]}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-xs text-white/30">
                     {new Date(lead.createdAt).toLocaleDateString("es-CO")}
                   </td>
-                  <td className="px-4 py-3">
+                  {/* <td className="px-4 py-3">
                     <button
                       onClick={() => setEditingLead(lead)}
                       className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors"
                     >
                       <Pencil size={14} />
                     </button>
-                  </td>
+                  </td> */}
                 </tr>
               ))}
             </tbody>
@@ -211,7 +162,11 @@ export default function LeadsPage() {
         {/* Tarjetas móvil */}
         <div className="md:hidden divide-y divide-white/5">
           {filtered.map((lead) => (
-            <div key={lead.id} className="p-4 space-y-2">
+            <div
+              key={lead.id}
+              onClick={() => router.push(`/leads/${lead.id}`)}
+              className="p-4 space-y-2 cursor-pointer hover:bg-white/5 transition-colors"
+            >
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <p className="text-white font-medium text-sm">
@@ -220,9 +175,9 @@ export default function LeadsPage() {
                   <p className="text-white/40 text-xs">{lead.phone1}</p>
                 </div>
                 <span
-                  className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${statusColors[lead.status]}`}
+                  className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${STATUS_COLORS[lead.status]}`}
                 >
-                  {statusLabels[lead.status]}
+                  {STATUS[lead.status]}
                 </span>
               </div>
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/40">

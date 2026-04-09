@@ -87,6 +87,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  console.log("usuario", user);
+
   // Validar duplicados globales
   const existingPhone = await prisma.lead.findUnique({ where: { phone1 } });
   if (existingPhone)

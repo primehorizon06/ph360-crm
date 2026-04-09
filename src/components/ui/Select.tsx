@@ -46,11 +46,15 @@ export function CustomSelect({
   function handleOpen() {
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+
       setDropdownStyle({
         position: "fixed",
         top: rect.bottom + 4,
-        left: rect.left,
-        width: rect.width,
+        right: viewportWidth - rect.right,
+        minWidth: rect.width,
+        width: "max-content",
+        maxWidth: "240px",
         zIndex: 9999,
       });
     }

@@ -7,41 +7,8 @@ import { leadSchema, LeadFormData } from "@/lib/validations/lead";
 import { X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { CustomSelect } from "../ui/Select";
-
-interface Lead {
-  id: number;
-  firstName: string;
-  lastName?: string | null;
-  phone1: string;
-  phone2?: string | null;
-  ssn?: string | null;
-  address?: string | null;
-  city?: string | null;
-  state?: string | null;
-  zipCode?: string | null;
-  email?: string | null;
-  birthDate?: string | null;
-  contactTime?: string | null;
-  status: string;
-  companyId: number;
-  teamId: number;
-  assignedToId: number;
-}
-
-interface Props {
-  lead: Lead;
-  onClose: () => void;
-  onSave: () => void;
-}
-
-const statuses = ["NEW", "CONTACTED", "QUALIFIED", "CONVERTED", "LOST"];
-const statusLabels: Record<string, string> = {
-  NEW: "Nuevo",
-  CONTACTED: "Contactado",
-  QUALIFIED: "Calificado",
-  CONVERTED: "Convertido",
-  LOST: "Perdido",
-};
+import { Props } from "@/utils/interfaces/leadEditModal";
+import { STATUS } from "@/utils/constants/leads";
 
 export function LeadEditModal({ lead, onClose, onSave }: Props) {
   const { data: session } = useSession();
@@ -78,7 +45,7 @@ export function LeadEditModal({ lead, onClose, onSave }: Props) {
   const [status, setStatus] = useState(lead.status);
   const [companyId, setCompanyId] = useState(String(lead.companyId));
   const [teamId, setTeamId] = useState(String(lead.teamId));
-  const [assignedToId, setAssignedToId] = useState(String(lead.assignedToId));
+  const [assignedToId, setAssignedToId] = useState(String(lead.assignedTo.id));
 
   // Cargar empresas (solo admin)
   useEffect(() => {
@@ -140,7 +107,7 @@ export function LeadEditModal({ lead, onClose, onSave }: Props) {
     { label: "Seguridad Social", name: "ssn", type: "text" },
     { label: "Dirección", name: "address", type: "text" },
     { label: "Ciudad", name: "city", type: "text" },
-    { label: "Estado", name: "state", type: "text" },
+    { label: "Estado", name: "status", type: "text" },
     { label: "Código Postal", name: "zipCode", type: "text" },
     { label: "Email", name: "email", type: "email" },
     { label: "Fecha de nacimiento", name: "birthDate", type: "date" },
@@ -194,10 +161,10 @@ export function LeadEditModal({ lead, onClose, onSave }: Props) {
               <label className="text-xs text-white/40 mb-1 block">Estado</label>
               <CustomSelect
                 name="status"
-                value={statusLabels[status]}
+                value={STATUS[status]}
                 onChange={setStatus}
-                options={statuses}
-                labels={statuses.map((s) => statusLabels[s])}
+                options={Object.keys(STATUS)}
+                labels={Object.values(STATUS)}
               />
             </div>
 

@@ -17,7 +17,11 @@ export async function GET(
     include: {
       company: { select: { id: true, name: true } },
       assignedTo: {
-        select: { id: true, name: true, team: { select: { name: true } } },
+        select: {
+          id: true,
+          name: true,
+          team: { select: { name: true } },
+        },
       },
     },
   });
@@ -40,6 +44,8 @@ export async function PATCH(
   const user = session.user;
   const role = user.role;
   const body = await req.json();
+  console.log("body recibido:", body); // ← aquí
+  console.log("status recibido:", body.status);
 
   // Obtener lead actual
   const existing = await prisma.lead.findUnique({ where: { id: Number(id) } });

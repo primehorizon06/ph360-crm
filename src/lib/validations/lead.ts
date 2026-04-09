@@ -13,6 +13,7 @@ export const leadSchema = z.object({
   email: z.string().email("Email inválido").optional().or(z.literal("")),
   birthDate: z.string().optional().or(z.literal("")),
   contactTime: z.string().optional().or(z.literal("")),
+  status: z.string(),
 });
 
 export type LeadFormData = z.infer<typeof leadSchema>;

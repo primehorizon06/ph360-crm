@@ -23,11 +23,13 @@ enum Role {
 }
 
 enum LeadStatus {
-  NEW
-  CONTACTED
-  QUALIFIED
-  CONVERTED
-  LOST
+  newLead
+  leadWithData
+  pendingSS
+  pendingAnalysis
+  pendingAccount
+  pendingPayments
+  suspended
 }
 
 // ─── EMPRESA ─────────────────────────────────────────────────────────────────
@@ -119,7 +121,7 @@ model Lead {
   email        String?
   birthDate    DateTime?
   contactTime  String?
-  status       LeadStatus @default(NEW)
+  status       LeadStatus @default(newLead)
   companyId    Int
   teamId       Int
   assignedToId Int
