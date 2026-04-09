@@ -1,178 +1,135 @@
-import { PrismaClient, Role, PermissionScope } from "@prisma/client";
+import {
+  PrismaClient,
+  Role,
+  PermissionScope,
+  LeadStatus,
+} from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  // ─── PERMISOS ─────────────────────────────────────────────────────────────
-  const permissions = [
-    // ADMIN
-    {
-      role: Role.ADMIN,
-      module: "leads",
-      canCreate: true,
-      canRead: PermissionScope.ALL,
-      canUpdate: PermissionScope.ALL,
-      canDelete: true,
-    },
-    {
-      role: Role.ADMIN,
-      module: "users",
-      canCreate: true,
-      canRead: PermissionScope.ALL,
-      canUpdate: PermissionScope.ALL,
-      canDelete: true,
-    },
-    {
-      role: Role.ADMIN,
-      module: "companies",
-      canCreate: true,
-      canRead: PermissionScope.ALL,
-      canUpdate: PermissionScope.ALL,
-      canDelete: true,
-    },
-    {
-      role: Role.ADMIN,
-      module: "teams",
-      canCreate: true,
-      canRead: PermissionScope.ALL,
-      canUpdate: PermissionScope.ALL,
-      canDelete: true,
-    },
-
-    // SUPERVISOR
-    {
-      role: Role.SUPERVISOR,
-      module: "leads",
-      canCreate: true,
-      canRead: PermissionScope.COMPANY,
-      canUpdate: PermissionScope.COMPANY,
-      canDelete: true,
-    },
-    {
-      role: Role.SUPERVISOR,
-      module: "users",
-      canCreate: true,
-      canRead: PermissionScope.COMPANY,
-      canUpdate: PermissionScope.COMPANY,
-      canDelete: false,
-    },
-    {
-      role: Role.SUPERVISOR,
-      module: "companies",
-      canCreate: false,
-      canRead: PermissionScope.COMPANY,
-      canUpdate: PermissionScope.NONE,
-      canDelete: false,
-    },
-    {
-      role: Role.SUPERVISOR,
-      module: "teams",
-      canCreate: true,
-      canRead: PermissionScope.COMPANY,
-      canUpdate: PermissionScope.COMPANY,
-      canDelete: true,
-    },
-
-    // COACH
-    {
-      role: Role.COACH,
-      module: "leads",
-      canCreate: true,
-      canRead: PermissionScope.TEAM,
-      canUpdate: PermissionScope.TEAM,
-      canDelete: false,
-    },
-    {
-      role: Role.COACH,
-      module: "users",
-      canCreate: false,
-      canRead: PermissionScope.TEAM,
-      canUpdate: PermissionScope.NONE,
-      canDelete: false,
-    },
-    {
-      role: Role.COACH,
-      module: "companies",
-      canCreate: false,
-      canRead: PermissionScope.NONE,
-      canUpdate: PermissionScope.NONE,
-      canDelete: false,
-    },
-    {
-      role: Role.COACH,
-      module: "teams",
-      canCreate: false,
-      canRead: PermissionScope.TEAM,
-      canUpdate: PermissionScope.NONE,
-      canDelete: false,
-    },
-
-    // AGENT
-    {
-      role: Role.AGENT,
-      module: "leads",
-      canCreate: true,
-      canRead: PermissionScope.OWN,
-      canUpdate: PermissionScope.OWN,
-      canDelete: false,
-    },
-    {
-      role: Role.AGENT,
-      module: "users",
-      canCreate: false,
-      canRead: PermissionScope.NONE,
-      canUpdate: PermissionScope.NONE,
-      canDelete: false,
-    },
-    {
-      role: Role.AGENT,
-      module: "companies",
-      canCreate: false,
-      canRead: PermissionScope.NONE,
-      canUpdate: PermissionScope.NONE,
-      canDelete: false,
-    },
-    {
-      role: Role.AGENT,
-      module: "teams",
-      canCreate: false,
-      canRead: PermissionScope.NONE,
-      canUpdate: PermissionScope.NONE,
-      canDelete: false,
-    },
-  ];
-
-  for (const permission of permissions) {
-    await prisma.permission.upsert({
-      where: {
-        role_module: { role: permission.role, module: permission.module },
-      },
-      update: permission,
-      create: permission,
-    });
-  }
-
-  // ─── EMPRESA Y USUARIO ADMIN INICIAL ──────────────────────────────────────
+  // ─── EMPRESA ──────────────────────────────────────────────────────────────
   const company = await prisma.company.upsert({
     where: { id: 1 },
     update: {},
     create: { name: "Prime Horizon 360 Inc" },
   });
 
-  await prisma.user.upsert({
+  // ─── TEAMS ────────────────────────────────────────────────────────────────
+  const teamA = await prisma.team.create({
+    data: { name: "Team Alpha", companyId: company.id },
+  });
+
+  const teamB = await prisma.team.create({
+    data: { name: "Team Beta", companyId: company.id },
+  });
+
+  // ─── USERS ────────────────────────────────────────────────────────────────
+  const admin = await prisma.user.upsert({
     where: { email: "admin@crm.com" },
     update: {},
     create: {
       username: "admin",
       name: "Administrador",
       email: "admin@crm.com",
-      password: "$2a$12$E09WuJa0HxohXduerw0qeerKqOodekgADtHyoNAJdpaNna1BI92BG", 
+      password: "hashedpassword",
       role: Role.ADMIN,
       companyId: company.id,
     },
   });
 
-  console.log("✅ Seed completado");
+  const supervisor = await prisma.user.create({
+    data: {
+      username: "supervisor",
+      name: "Supervisor 1",
+      email: "supervisor@crm.com",
+      password: "hashedpassword",
+      role: Role.SUPERVISOR,
+      companyId: company.id,
+    },
+  });
+
+  const coachA = await prisma.user.create({
+    data: {
+      username: "coachA",
+      name: "Coach Alpha",
+      email: "coachA@crm.com",
+      password: "hashedpassword",
+      role: Role.COACH,
+      companyId: company.id,
+      teamId: teamA.id,
+    },
+  });
+
+  const agentA1 = await prisma.user.create({
+    data: {
+      username: "agentA1",
+      name: "Agent A1",
+      email: "agentA1@crm.com",
+      password: "hashedpassword",
+      role: Role.AGENT,
+      companyId: company.id,
+      teamId: teamA.id,
+    },
+  });
+
+  const agentB1 = await prisma.user.create({
+    data: {
+      username: "agentB1",
+      name: "Agent B1",
+      email: "agentB1@crm.com",
+      password: "hashedpassword",
+      role: Role.AGENT,
+      companyId: company.id,
+      teamId: teamB.id,
+    },
+  });
+
+  // ─── LEADS ────────────────────────────────────────────────────────────────
+  const leads = [];
+
+  for (let i = 1; i <= 10; i++) {
+    const lead = await prisma.lead.create({
+      data: {
+        firstName: `Lead${i}`,
+        lastName: "Test",
+        phone1: `300000000${i}`,
+        email: `lead${i}@mail.com`,
+        status: Object.values(LeadStatus)[i % 5],
+        companyId: company.id,
+        teamId: i % 2 === 0 ? teamA.id : teamB.id,
+        assignedToId: i % 2 === 0 ? agentA1.id : agentB1.id,
+      },
+    });
+
+    leads.push(lead);
+  }
+
+  // ─── NOTES ────────────────────────────────────────────────────────────────
+  for (const lead of leads) {
+    await prisma.note.create({
+      data: {
+        leadId: lead.id,
+        authorId: supervisor.id,
+        content: `Seguimiento inicial para ${lead.firstName}`,
+      },
+    });
+  }
+
+  // ─── DOCUMENTS ────────────────────────────────────────────────────────────
+  for (const lead of leads.slice(0, 5)) {
+    await prisma.document.create({
+      data: {
+        leadId: lead.id,
+        name: "ID Document",
+        url: "https://example.com/doc.pdf",
+        mimeType: "application/pdf",
+        size: 123456,
+      },
+    });
+  }
+
+  console.log("✅ Seed completo con data realista");
 }
 
 main()
