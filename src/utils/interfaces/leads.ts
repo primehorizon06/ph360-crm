@@ -17,6 +17,7 @@ export interface Lead {
   teamId: number;
   company: { name: string };
   createdAt: string;
+  updatedAt: string;
   assignedTo: {
     id: number;
     name: string;

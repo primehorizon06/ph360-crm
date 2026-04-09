@@ -38,8 +38,10 @@ async function main() {
     },
   });
 
-  const supervisor = await prisma.user.create({
-    data: {
+  const supervisor = await prisma.user.upsert({
+    where: { email: "supervisor@crm.com" },
+    update: {},
+    create: {
       username: "supervisor",
       name: "Supervisor 1",
       email: "supervisor@crm.com",
@@ -49,8 +51,10 @@ async function main() {
     },
   });
 
-  const coachA = await prisma.user.create({
-    data: {
+  const coachA = await prisma.user.upsert({
+    where: { email: "coachA@crm.com" },
+    update: {},
+    create: {
       username: "coachA",
       name: "Coach Alpha",
       email: "coachA@crm.com",
@@ -61,8 +65,10 @@ async function main() {
     },
   });
 
-  const agentA1 = await prisma.user.create({
-    data: {
+  const agentA1 = await prisma.user.upsert({
+    where: { email: "agentA1@crm.com" },
+    update: {},
+    create: {
       username: "agentA1",
       name: "Agent A1",
       email: "agentA1@crm.com",
@@ -73,8 +79,10 @@ async function main() {
     },
   });
 
-  const agentB1 = await prisma.user.create({
-    data: {
+  const agentB1 = await prisma.user.upsert({
+    where: { email: "agentB1@crm.com" },
+    update: {},
+    create: {
       username: "agentB1",
       name: "Agent B1",
       email: "agentB1@crm.com",
@@ -88,6 +96,8 @@ async function main() {
   // ─── LEADS ────────────────────────────────────────────────────────────────
   const leads = [];
 
+  const leadStatuses = Object.values(LeadStatus);
+
   for (let i = 1; i <= 10; i++) {
     const lead = await prisma.lead.create({
       data: {
@@ -95,7 +105,7 @@ async function main() {
         lastName: "Test",
         phone1: `300000000${i}`,
         email: `lead${i}@mail.com`,
-        status: Object.values(LeadStatus)[i % 5],
+        status: leadStatuses[(i - 1) % leadStatuses.length],
         companyId: company.id,
         teamId: i % 2 === 0 ? teamA.id : teamB.id,
         assignedToId: i % 2 === 0 ? agentA1.id : agentB1.id,

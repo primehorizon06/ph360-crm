@@ -7,6 +7,7 @@ export const STATUS: Record<string, string> = {
   pendingAnalysis: "Pendiente análisis",
   pendingAccount: "Pendiente cuenta",
   pendingPayments: "Pendiente pagos",
+  suspended: "Suspendido",
 };
 
 export const STATUS_COLORS: Record<string, string> = {
