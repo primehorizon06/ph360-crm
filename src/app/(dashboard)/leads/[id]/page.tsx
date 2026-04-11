@@ -9,6 +9,7 @@ import { Lead, TABS_NAME } from "@/utils/interfaces/leads";
 import { LeadDetailHeader } from "../detail/LeadDetailHeader";
 import { LeadDetailTabs } from "../detail/LeadDetailTabs";
 import { PersonalTab } from "../detail/tabs/PersonalTab";
+import { NotesTab } from "../detail/tabs/NotesTab";
 
 export default function LeadDetailPage() {
   const { id } = useParams();
@@ -61,8 +62,8 @@ export default function LeadDetailPage() {
 
       <div className="max-h-[60vh] overflow-y-auto pr-2 pb-2">
         {activeTab === "personal" && <PersonalTab lead={lead} />}
-        {/* {activeTab === "notes" && <ComingSoon label="Notas" />}
-        {activeTab === "reminders" && <ComingSoon label="Recordatorios" />}
+        {activeTab === "notes" && <NotesTab leadId={lead.id} />}
+        {/*{activeTab === "reminders" && <ComingSoon label="Recordatorios" />}
         {activeTab === "documents" && <ComingSoon label="Adjuntos" />}
         {activeTab === "products" && <ComingSoon label="Productos" />} */}
       </div>
