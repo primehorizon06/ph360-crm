@@ -53,11 +53,13 @@
 .btn-satin {
   background: linear-gradient(135deg, #c3c4e1 0%, #767792 100%);
 }
+
 /* Black Glass Effect */
 .glass-card {
   background: rgba(25, 27, 36, 0.863);
   backdrop-filter: blur(20px);
 }
+
 /* Custom Focus Glow */
 .input-focus-glow:focus {
   outline: none;
@@ -67,4 +69,181 @@
 
 button {
   cursor: pointer;
+}
+
+/* globals.css - Reemplaza la sección del calendario con esto */
+
+/* Contenedor principal del calendario */
+.react-datepicker {
+  background-color: #13151c !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 0.75rem !important;
+  font-family: sans-serif !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Header del calendario */
+.react-datepicker__header {
+  background-color: #1a1c23 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-top-right-radius: 0.75rem !important;
+}
+
+.react-datepicker__header.react-datepicker__header--has-time-select {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-top-right-radius: 0 !important;
+  border-top-left-radius: 0.75rem !important;
+}
+
+.react-datepicker__header--time {
+  padding-bottom: 9px !important;
+}
+
+/* Texto del mes y año */
+.react-datepicker__current-month {
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+/* Navegación (mes anterior/siguiente) */
+.react-datepicker__navigation {
+  top: 7px !important;
+  height: 23px !important;
+}
+
+.react-datepicker__navigation-icon::before {
+  border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
+  border-color: white !important;
+}
+
+/* Días de la semana (Lu, Ma, Mi...) */
+.react-datepicker__day-name {
+  color: rgba(255, 255, 255, 0.4) !important;
+  font-size: 0.75rem !important;
+}
+
+/* Números de los días */
+.react-datepicker__day {
+  color: rgba(255, 255, 255, 0.8) !important;
+  border-radius: 0.5rem !important;
+  transition: all 0.2s !important;
+}
+
+.react-datepicker__day:hover {
+  background-color: rgba(0, 218, 243, 0.2) !important;
+}
+
+/* Día seleccionado */
+.react-datepicker__week .react-datepicker__day--today {
+  background-color: #00daf3 !important;
+  color: black !important;
+}
+
+.react-datepicker__day--today:hover {
+  background-color: #00c4db !important;
+}
+
+/* Día actual */
+.react-datepicker__day--today {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+  font-weight: bold !important;
+}
+
+/* Día fuera de mes */
+.react-datepicker__day--outside-month {
+  color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Contenedor de la hora */
+.react-datepicker__time-container {
+  border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.react-datepicker__time-container .react-datepicker__time {
+  background-color: #13151c !important;
+}
+
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box {
+  background-color: #13151c !important;
+}
+
+/* Título de la hora ("Hora") */
+.react-datepicker-time__header {
+  color: white !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+}
+
+/* Lista de horas */
+.react-datepicker__time-list {
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent !important;
+}
+
+.react-datepicker__time-list::-webkit-scrollbar {
+  width: 6px !important;
+}
+
+.react-datepicker__time-list::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.react-datepicker__time-list::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 3px !important;
+}
+
+.react-datepicker__time-list::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Items de hora */
+.react-datepicker__time-list-item {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.react-datepicker__time-list-item:hover {
+  background-color: rgba(0, 218, 243, 0.2) !important;
+}
+
+/* Hora seleccionada */
+.react-datepicker__time-list-item--selected {
+  background-color: #00daf3 !important;
+  color: black !important;
+}
+
+.react-datepicker__time-list-item--selected:hover {
+  background-color: #00c4db !important;
+}
+
+/* Años y meses dropdown */
+.react-datepicker__year-dropdown,
+.react-datepicker__month-dropdown {
+  background-color: #13151c !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 0.5rem !important;
+}
+
+.react-datepicker__year-option,
+.react-datepicker__month-option {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.react-datepicker__year-option:hover,
+.react-datepicker__month-option:hover {
+  background-color: rgba(0, 218, 243, 0.2) !important;
+}
+
+.react-datepicker__year-option--selected,
+.react-datepicker__month-option--selected {
+  background-color: #00daf3 !important;
+  color: black !important;
+}
+
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list li.react-datepicker__time-list-item {
+  height: auto !important;
 }

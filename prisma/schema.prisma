@@ -75,10 +75,12 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  company Company? @relation(fields: [companyId], references: [id])
-  team    Team?    @relation(fields: [teamId], references: [id])
-  leads   Lead[]
-  notes   Note[]
+  company           Company?   @relation(fields: [companyId], references: [id])
+  team              Team?      @relation(fields: [teamId], references: [id])
+  leads             Lead[]
+  notes             Note[]
+  remindersAssigned Reminder[] @relation("ReminderAssignedTo")
+  remindersCreated  Reminder[] @relation("ReminderCreatedBy")
 }
 
 // ─── PERMISOS ─────────────────────────────────────────────────────────────────
@@ -132,6 +134,7 @@ model Lead {
   assignedTo   User       @relation(fields: [assignedToId], references: [id])
   documents    Document[]
   notes        Note[]
+  reminders    Reminder[]
 }
 
 // ─── DOCUMENTO ADJUNTO ───────────────────────────────────────────────────────
@@ -174,4 +177,21 @@ model Note {
 
   lead   Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
   author User @relation(fields: [authorId], references: [id])
+}
+
+// ─── REMINDER ────────────────────────────────────────────────────────────────────
+model Reminder {
+  id           Int      @id @default(autoincrement())
+  leadId       Int
+  scheduledAt  DateTime
+  reason       String
+  status       String   @default("PENDING") // PENDING, COMPLETED, NOTIFIED
+  lastNotifiedAt DateTime?
+  assignedToId Int
+  createdById  Int
+  createdAt    DateTime @default(now())
+  
+  lead       Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  assignedTo User @relation("ReminderAssignedTo", fields: [assignedToId], references: [id], map: "fk_reminder_assigned_to")
+  createdBy  User @relation("ReminderCreatedBy", fields: [createdById], references: [id], map: "fk_reminder_created_by")
 }

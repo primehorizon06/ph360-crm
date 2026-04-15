@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { Plus, FileText } from "lucide-react";
 import { Note, PropsNotesTab } from "@/utils/interfaces/notes";
-import { NoteCard } from "./notes/NoteCard";
-import { NoteModal } from "./notes/NoteModal";
+import { NoteCard } from "@/components/notes/NoteCard";
+import { NoteModal } from "@/components/notes/NoteModal";
 
 export function NotesTab({ leadId }: PropsNotesTab) {
   const [notes, setNotes] = useState<Note[]>([]);
