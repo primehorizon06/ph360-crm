@@ -50,6 +50,13 @@ export function UserModal({ user, onClose, onSave }: Props) {
   });
 
   const companyId = watch("companyId");
+  const role = watch("role");
+
+  useEffect(() => {
+    if (!["AGENT", "COACH"].includes(role)) {
+      setValue("teamId", "");
+    }
+  }, [role]);
 
   // Cargar empresas
   useEffect(() => {
@@ -60,7 +67,6 @@ export function UserModal({ user, onClose, onSave }: Props) {
     load();
   }, []);
 
-  // Cargar equipos según empresa
   useEffect(() => {
     const loadTeams = async () => {
       if (!companyId) {
@@ -90,10 +96,16 @@ export function UserModal({ user, onClose, onSave }: Props) {
     const method = user ? "PATCH" : "POST";
     const url = user ? `/api/users/${user.id}` : "/api/users";
 
+    const payload = {
+      ...data,
+      teamId: data.teamId ? Number(data.teamId) : null,
+      companyId: Number(data.companyId),
+    };
+
     const res = await fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
 
     if (!res.ok) {
@@ -218,7 +230,10 @@ export function UserModal({ user, onClose, onSave }: Props) {
                 setValue("teamId", "");
               }}
               options={["", ...companies.map((c) => String(c.id))]}
-              labels={["Seleccionar franquicia", ...companies.map((c) => c.name)]}
+              labels={[
+                "Seleccionar franquicia",
+                ...companies.map((c) => c.name),
+              ]}
             />
             {errors.companyId && (
               <p className="text-red-400 text-xs mt-1">

@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { username, name, email, password, role, companyId, teamId } = body;
+  const { username, name, email, password, role, companyId } = body;
 
   if (!username || !name || !password || !role) {
     return NextResponse.json(
@@ -75,6 +75,7 @@ export async function POST(req: NextRequest) {
   }
 
   const hashed = await bcrypt.hash(password, 10);
+  const teamId = body.teamId ? Number(body.teamId) : null;
 
   const user = await prisma.user.create({
     data: {
@@ -84,7 +85,7 @@ export async function POST(req: NextRequest) {
       password: hashed,
       role,
       companyId: Number(companyId),
-      teamId: Number(teamId),
+      teamId,
     },
     select: {
       id: true,

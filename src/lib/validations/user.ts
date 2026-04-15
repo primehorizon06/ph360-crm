@@ -23,19 +23,28 @@ const baseSchema = z
     confirmPassword: z.string().optional().or(z.literal("")),
     role: z.enum(["ADMIN", "SUPERVISOR", "COACH", "AGENT"]),
     companyId: z.string().min(1, "La franquicia es requerida"),
-    teamId: z.string().min(1, "El equipo es requerido"),
+    teamId: z.string().optional().or(z.literal("")),
     active: z.boolean(),
   })
-  .refine(
-    (data) => {
-      if (data.password && data.password !== data.confirmPassword) return false;
-      return true;
-    },
-    {
-      message: "Las contraseñas no coinciden",
-      path: ["confirmPassword"],
-    },
-  );
+  .superRefine((data, ctx) => {
+    if (data.password && data.password !== data.confirmPassword) {
+      ctx.addIssue({
+        path: ["confirmPassword"],
+        code: "custom",
+        message: "Las contraseñas no coinciden",
+      });
+    }
+
+    const requiresTeam = ["AGENT", "COACH"].includes(data.role);
+
+    if (requiresTeam && !data.teamId) {
+      ctx.addIssue({
+        path: ["teamId"],
+        code: "custom",
+        message: "El equipo es requerido",
+      });
+    }
+  });
 
 export const userSchema = baseSchema;
 
