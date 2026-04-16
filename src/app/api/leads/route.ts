@@ -78,7 +78,6 @@ export async function POST(req: NextRequest) {
     birthDate,
     contactTime,
   } = body;
-  console.log(body);
 
   if (!firstName || !phone1 || !user.companyId || !user.id) {
     return NextResponse.json(
@@ -86,8 +85,6 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     );
   }
-
-  console.log("usuario", user);
 
   // Validar duplicados globales
   const existingPhone = await prisma.lead.findUnique({ where: { phone1 } });

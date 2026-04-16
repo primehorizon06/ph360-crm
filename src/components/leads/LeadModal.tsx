@@ -97,7 +97,6 @@ export function LeadModal({ onClose, onSave }: Props) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {fields.map((field) => {
-              console.log("field", field);
               if (field.type === "select" && field.name === "status") {
                 return (
                   <Controller

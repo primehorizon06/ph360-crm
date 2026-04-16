@@ -68,37 +68,35 @@ export function ReminderModal({ leadId, onClose, onSave }: ReminderModalProps) {
     const selectedAgent = agents.find(
       (agent) => agent.name === data.assignedToId,
     );
-    // Preparar datos para la API
+
+    if (!selectedAgent) {
+      setServerError("Selecciona un responsable válido");
+      setIsSubmitting(false);
+      return;
+    }
+
     const payload = {
-      scheduledAt: data.scheduledAt.toISOString(), // Convertir Date a ISO string
+      leadId: leadId, // ID del lead actual
+      scheduledAt: data.scheduledAt.toISOString(),
       reason: data.reason,
-      assignedToId: selectedAgent?.id, // Convertir a número
-      leadId: Number(leadId),
+      assignedToId: selectedAgent.id,
     };
 
-    try {
-      const res = await fetch(`/api/leads/${leadId}/reminders`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+    const res = await fetch("/api/reminders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
 
-      if (!res.ok) {
-        const error = await res.json();
-        setServerError(error.error || "Error al guardar");
-        return;
-      }
-
-      onSave();
-      onClose();
-    } catch (error) {
-      console.error("Error saving reminder:", error);
-      setServerError("Error de conexión");
-    } finally {
+    if (!res.ok) {
+      const error = await res.json();
+      setServerError(error.error || "Error al guardar");
       setIsSubmitting(false);
+      return;
     }
+
+    onSave();
+    onClose();
   };
 
   return (

@@ -5,6 +5,7 @@ import { Plus, FileText } from "lucide-react";
 import { Note, PropsNotesTab } from "@/utils/interfaces/notes";
 import { NoteCard } from "@/components/notes/NoteCard";
 import { NoteModal } from "@/components/notes/NoteModal";
+import { Loading } from "@/components/ui/Loading";
 
 export function NotesTab({ leadId }: PropsNotesTab) {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -39,7 +40,7 @@ export function NotesTab({ leadId }: PropsNotesTab) {
 
       {loading ? (
         <div className="text-center py-8 text-white/30 text-sm">
-          Cargando...
+          <Loading />
         </div>
       ) : notes.length === 0 ? (
         <div className="bg-[#13151c] border border-white/10 rounded-xl p-12 flex flex-col items-center justify-center gap-2">

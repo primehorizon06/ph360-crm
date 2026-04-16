@@ -181,7 +181,6 @@ export function LeadEditModal({ lead, onClose, onSave }: Props) {
                     "Seleccionar"
                   }
                   onChange={(val) => {
-                      console.log("companyId seleccionado:", val);
                     setCompanyId(val);
                     setTeamId("");
                     setAssignedToId("");

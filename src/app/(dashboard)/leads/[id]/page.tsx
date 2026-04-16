@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState, useTransition } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Loading } from "@/components/ui/Loading";
 import { LeadEditModal } from "@/components/leads/LeadEditModal";
@@ -15,12 +15,22 @@ import { RemindersTab } from "../detail/tabs/RemindersTab";
 export default function LeadDetailPage() {
   const { id } = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session } = useSession();
   const role = session?.user?.role;
   const [lead, setLead] = useState<Lead | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
-  const [activeTab, setActiveTab] = useState<TABS_NAME>("personal");
+  const [, startTransition] = useTransition();
+
+  // Obtener la tab de la URL directamente
+  const tabFromUrl = searchParams.get("tab") as TABS_NAME;
+  const isValidTab =
+    tabFromUrl && ["personal", "notes", "reminders"].includes(tabFromUrl);
+
+  const [activeTab, setActiveTab] = useState<TABS_NAME>(
+    isValidTab ? tabFromUrl : "personal",
+  );
 
   async function loadLead() {
     setLoading(true);
@@ -43,6 +53,28 @@ export default function LeadDetailPage() {
     loadLead();
   }
 
+  const handleTabChange = (tab: TABS_NAME) => {
+    setActiveTab(tab);
+    const params = new URLSearchParams(searchParams);
+    params.set("tab", tab);
+    startTransition(() => {
+      router.push(`/leads/${id}?${params.toString()}`, { scroll: false });
+    });
+  };
+
+  // Escuchar cambios en la URL (para botones atrás/adelante)
+  useEffect(() => {
+    const handlePopState = () => {
+      const newTab = searchParams.get("tab") as TABS_NAME;
+      if (newTab && ["personal", "notes", "reminders"].includes(newTab)) {
+        setActiveTab(newTab);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [searchParams]);
+
   useEffect(() => {
     loadLead();
   }, [id]);
@@ -59,14 +91,12 @@ export default function LeadDetailPage() {
         onEdit={() => setEditing(true)}
       />
 
-      <LeadDetailTabs activeTab={activeTab} onChange={setActiveTab} />
+      <LeadDetailTabs activeTab={activeTab} onChange={handleTabChange} />
 
       <div className="max-h-[60vh] overflow-y-auto pr-2 pb-2">
         {activeTab === "personal" && <PersonalTab lead={lead} />}
         {activeTab === "notes" && <NotesTab leadId={lead.id} />}
         {activeTab === "reminders" && <RemindersTab leadId={lead.id} />}
-        {/*{activeTab === "documents" && <ComingSoon label="Adjuntos" />}
-        {activeTab === "products" && <ComingSoon label="Productos" />} */}
       </div>
 
       {editing && (

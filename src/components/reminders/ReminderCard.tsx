@@ -3,7 +3,7 @@ import { Bell, User } from "lucide-react";
 
 export function ReminderCard({ reminder }: { reminder: Reminder }) {
   const date = new Date(reminder.scheduledAt);
-  const isPast = date < new Date();
+  const isPast = date < new Date() && reminder.status !== "COMPLETED";
 
   return (
     <div

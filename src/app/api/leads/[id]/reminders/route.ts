@@ -21,10 +21,13 @@ export async function GET(
       createdAt: true,
       assignedTo: { select: { id: true, name: true, role: true } },
       createdBy: { select: { id: true, name: true } },
+      status: true,
+      leadId: true,
+      lead: { select: { id: true } },
     },
     orderBy: { scheduledAt: "asc" },
   });
-  console.log("reminders", reminders);
+  
   return NextResponse.json(reminders);
 }
 

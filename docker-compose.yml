@@ -44,7 +44,7 @@ services:
       - ./tsconfig.json:/app/tsconfig.json
       - ./middleware.ts:/app/middleware.ts
       - ./.env.local:/app/.env.local
-      - /app/node_modules
+      - ./node_modules:/app/node_modules
       - /app/.next
     depends_on:
       postgres:

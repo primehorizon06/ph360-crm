@@ -1,6 +1,7 @@
 import { SidebarProvider } from "@/components/layout/SidebarContext";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { DashboardContent } from "@/components/layout/DashboardContent";
+import { Toaster } from "sonner";
 
 export default function DashboardLayout({
   children,
@@ -13,6 +14,7 @@ export default function DashboardLayout({
         <Sidebar />
         <DashboardContent>{children}</DashboardContent>
       </div>
+      <Toaster position="top-right" richColors closeButton theme="dark" />
     </SidebarProvider>
   );
 }

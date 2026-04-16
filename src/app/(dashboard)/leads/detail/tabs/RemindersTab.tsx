@@ -5,6 +5,7 @@ import { Plus, Bell } from "lucide-react";
 import { ReminderCard } from "@/components/reminders/ReminderCard";
 import { ReminderModal } from "@/components/reminders/ReminderModal";
 import { useReminders } from "@/hooks/useReminders";
+import { Loading } from "@/components/ui/Loading";
 
 export function RemindersTab({ leadId }: { leadId: number }) {
   const { reminders, loading, upcoming, past, reload } = useReminders(leadId);
@@ -27,7 +28,7 @@ export function RemindersTab({ leadId }: { leadId: number }) {
       </div>
 
       {loading ? (
-        <p>Cargando...</p>
+        <Loading />
       ) : reminders.length === 0 ? (
         <div className="text-center">
           <Bell />
