@@ -11,6 +11,7 @@ import { LeadDetailTabs } from "../detail/LeadDetailTabs";
 import { PersonalTab } from "../detail/tabs/PersonalTab";
 import { NotesTab } from "../detail/tabs/NotesTab";
 import { RemindersTab } from "../detail/tabs/RemindersTab";
+import { AttachmentsTab } from "../detail/tabs/AttachmentsTab";
 
 export default function LeadDetailPage() {
   const { id } = useParams();
@@ -66,7 +67,7 @@ export default function LeadDetailPage() {
   useEffect(() => {
     const handlePopState = () => {
       const newTab = searchParams.get("tab") as TABS_NAME;
-      if (newTab && ["personal", "notes", "reminders"].includes(newTab)) {
+      if (newTab && ["personal", "notes", "reminders", "attachments"].includes(newTab)) {
         setActiveTab(newTab);
       }
     };
@@ -97,6 +98,7 @@ export default function LeadDetailPage() {
         {activeTab === "personal" && <PersonalTab lead={lead} />}
         {activeTab === "notes" && <NotesTab leadId={lead.id} />}
         {activeTab === "reminders" && <RemindersTab leadId={lead.id} />}
+        {activeTab === "attachments" && <AttachmentsTab leadId={lead.id} />}
       </div>
 
       {editing && (

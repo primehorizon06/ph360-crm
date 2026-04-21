@@ -50,7 +50,7 @@ export function NoteCard({ note }: { note: Note }) {
           {/* PDFs en lista */}
           {note.attachments.filter((a) => a.mimeType === "application/pdf")
             .length > 0 && (
-            <div className="flex flex-col gap-1.5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {note.attachments
                 .filter((a) => a.mimeType === "application/pdf")
                 .map((a) => (

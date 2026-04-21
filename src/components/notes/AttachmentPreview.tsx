@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { File, ImageIcon, X, ZoomIn } from "lucide-react";;
+import { File, X, ZoomIn } from "lucide-react";;
 
 interface NoteAttachment {
   id: number;
@@ -92,7 +92,7 @@ export function AttachmentPreview({
         // PDF — link con preview al hacer clic
         <button
           onClick={() => setLightboxOpen(true)}
-          className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/50 rounded-lg px-3 py-2 transition-colors group w-full"
+          className="flex items-center mt-auto gap-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/50 rounded-lg px-3 py-2 transition-colors group w-full"
         >
           <File size={14} className="text-red-400 shrink-0" />
           <span className="text-xs text-white/60 truncate flex-1 group-hover:text-white transition-colors">

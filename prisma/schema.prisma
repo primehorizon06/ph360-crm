@@ -32,6 +32,11 @@ enum LeadStatus {
   suspended
 }
 
+enum TypeCustomer {
+  lead
+  customer
+}
+
 // ─── EMPRESA ─────────────────────────────────────────────────────────────────
 
 model Company {
@@ -110,12 +115,12 @@ model Permission {
 // ─── LEAD (CLIENTE) ──────────────────────────────────────────────────────────
 
 model Lead {
-  id           Int        @id @default(autoincrement())
+  id           Int          @id @default(autoincrement())
   firstName    String
   lastName     String?
-  phone1       String     @unique
+  phone1       String       @unique
   phone2       String?
-  ssn          String?    @unique
+  ssn          String?      @unique
   address      String?
   city         String?
   state        String?
@@ -123,15 +128,16 @@ model Lead {
   email        String?
   birthDate    DateTime?
   contactTime  String?
-  status       LeadStatus @default(newLead)
+  status       LeadStatus   @default(newLead)
   companyId    Int
   teamId       Int
   assignedToId Int
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  company      Company    @relation(fields: [companyId], references: [id])
-  team         Team       @relation(fields: [teamId], references: [id])
-  assignedTo   User       @relation(fields: [assignedToId], references: [id])
+  type         TypeCustomer @default(lead)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  company      Company      @relation(fields: [companyId], references: [id])
+  team         Team         @relation(fields: [teamId], references: [id])
+  assignedTo   User         @relation(fields: [assignedToId], references: [id])
   documents    Document[]
   notes        Note[]
   reminders    Reminder[]
@@ -181,16 +187,16 @@ model Note {
 
 // ─── REMINDER ────────────────────────────────────────────────────────────────────
 model Reminder {
-  id           Int      @id @default(autoincrement())
-  leadId       Int
-  scheduledAt  DateTime
-  reason       String
-  status       String   @default("PENDING") // PENDING, COMPLETED, NOTIFIED
+  id             Int       @id @default(autoincrement())
+  leadId         Int
+  scheduledAt    DateTime
+  reason         String
+  status         String    @default("PENDING")
   lastNotifiedAt DateTime?
-  assignedToId Int
-  createdById  Int
-  createdAt    DateTime @default(now())
-  
+  assignedToId   Int
+  createdById    Int
+  createdAt      DateTime  @default(now())
+
   lead       Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
   assignedTo User @relation("ReminderAssignedTo", fields: [assignedToId], references: [id], map: "fk_reminder_assigned_to")
   createdBy  User @relation("ReminderCreatedBy", fields: [createdById], references: [id], map: "fk_reminder_created_by")

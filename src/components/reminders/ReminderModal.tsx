@@ -76,7 +76,7 @@ export function ReminderModal({ leadId, onClose, onSave }: ReminderModalProps) {
     }
 
     const payload = {
-      leadId: leadId, // ID del lead actual
+      leadId: leadId,
       scheduledAt: data.scheduledAt.toISOString(),
       reason: data.reason,
       assignedToId: selectedAgent.id,

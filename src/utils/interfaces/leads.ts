@@ -29,5 +29,6 @@ export type TABS_NAME =
   | "personal"
   | "notes"
   | "reminders"
+  | "attachments"
   | "documents"
   | "products";

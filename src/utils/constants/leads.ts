@@ -24,6 +24,6 @@ export const TABS: { key: TABS_NAME; label: string }[] = [
   { key: "personal", label: "Datos Personales" },
   { key: "notes", label: "Notas" },
   { key: "reminders", label: "Recordatorios" },
-  { key: "documents", label: "Adjuntos" },
+  { key: "attachments", label: "Adjuntos" },
   { key: "products", label: "Productos" },
 ];
