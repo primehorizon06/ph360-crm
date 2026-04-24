@@ -30,26 +30,26 @@ export function LeadDetailHeader({ lead, role, onSuspend, onEdit }: Props) {
               </span>
             </div>
             <div className="flex gap-3">
-              <p className="text-white text-sm mt-0.5 font-bold">
+              <p className="text-white text-md mt-0.5 font-bold">
                 ID <span className="bg-cyan-500/10 text-cyan-400 p-1 rounded"># {lead.id}</span> 
               </p>
               <CopyButton value={lead.id} label="Copiar ID" />
             </div>
             <div className="flex flex-col flex-wrap gap-x-4 gap-y-1 mt-2">
-              <span className="text-sm text-white">
-                <strong className="text-sm text-white/60">Teléfono(s):</strong>{" "}
+              <span className="text-lg text-white">
+                <strong className="text-lg text-white/60">Teléfono(s):</strong>{" "}
                 {lead.phone1}
                 {lead.phone2 && (
                   <span className="ml-1">/ {lead.phone2}</span>
                 )}
               </span>
               {lead.assignedTo?.name && (
-                <span className="text-sm text-white/60">
+                <span className="text-lg text-white/60">
                   <strong>Asesor:</strong> {lead.assignedTo.name}
                 </span>
               )}
               {lead.company?.name && (
-                <span className="text-sm text-white/60">
+                <span className="text-lg text-white/60">
                   <strong>Franquicia:</strong> {lead.company.name}
                 </span>
               )}

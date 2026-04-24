@@ -75,7 +75,9 @@ export function CustomSelect({
         onClick={handleOpen}
         className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-cyan-500/50 flex items-center justify-between"
       >
-        <span className="truncate">{value}</span>
+        <span className="truncate">
+          {labels?.[options.indexOf(value)] ?? value}
+        </span>
         <ChevronDown
           size={14}
           className={`text-white/40 transition-transform shrink-0 ml-2 ${open ? "rotate-180" : ""}`}
