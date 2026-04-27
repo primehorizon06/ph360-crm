@@ -55,6 +55,7 @@ export async function PATCH(
       data: {
         type: "customer",
         conversionStatus: "APPROVED",
+        convertedAt: new Date(),
       },
     });
   }

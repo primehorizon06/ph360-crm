@@ -95,7 +95,6 @@ export async function PATCH(
     data = {
       firstName: body.firstName,
       lastName: body.lastName || null,
-      phone1: body.phone1,
       phone2: body.phone2 || null,
       ssn: body.ssn || null,
       address: body.address || null,
@@ -115,7 +114,6 @@ export async function PATCH(
     data = {
       firstName: body.firstName,
       lastName: body.lastName || null,
-      phone1: body.phone1,
       phone2: body.phone2 || null,
       ssn: body.ssn || null,
       address: body.address || null,
@@ -139,13 +137,50 @@ export async function PATCH(
         { error: "El teléfono ya está registrado" },
         { status: 409 },
       );
+
+    // phone1 nuevo no puede existir como phone2 en otro registro
+    const dupAsPhone2 = await prisma.lead.findFirst({
+      where: { phone2: body.phone1, id: { not: Number(id) } },
+    });
+    if (dupAsPhone2)
+      return NextResponse.json(
+        {
+          error:
+            "El teléfono 1 ya está registrado como teléfono 2 en otro registro",
+        },
+        { status: 409 },
+      );
+  }
+
+  // Validar phone2
+  if (body.phone2 && body.phone2 !== existing.phone2) {
+    const dupAsPhone1 = await prisma.lead.findFirst({
+      where: { phone1: body.phone2, id: { not: Number(id) } },
+    });
+    if (dupAsPhone1)
+      return NextResponse.json(
+        {
+          error:
+            "El teléfono 2 ya está registrado como teléfono 1 en otro registro",
+        },
+        { status: 409 },
+      );
+
+    const dupAsPhone2 = await prisma.lead.findFirst({
+      where: { phone2: body.phone2, id: { not: Number(id) } },
+    });
+    if (dupAsPhone2)
+      return NextResponse.json(
+        { error: "El teléfono 2 ya está registrado en otro registro" },
+        { status: 409 },
+      );
   }
 
   if (body.ssn && body.ssn !== existing.ssn) {
     const dup = await prisma.lead.findUnique({ where: { ssn: body.ssn } });
     if (dup)
       return NextResponse.json(
-        { error: "La seguridad social ya está registrada" },
+        { error: "La Seguro social ya está registrada" },
         { status: 409 },
       );
   }

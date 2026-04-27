@@ -19,3 +19,18 @@ export interface Agent {
 export interface Props {
   leadId: number;
 }
+
+export interface UpdateReminderData {
+  status?: string;
+  reason?: string;
+  scheduledAt?: Date;
+  assignedToId?: number;
+  lastNotifiedAt?: Date;
+}
+
+export interface ReminderWhere {
+  assignedToId: number;
+  status?: string;
+  leadId?: number;
+  scheduledAt?: { gte: Date } | { lt: Date };
+}

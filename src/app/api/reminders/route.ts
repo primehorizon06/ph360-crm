@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { ReminderWhere, UpdateReminderData } from "@/utils/interfaces/reminders";
 
 export async function GET(req: NextRequest) {
   try {
@@ -20,12 +21,6 @@ export async function GET(req: NextRequest) {
     const past = searchParams.get("past") === "true";
 
     // Construir el where dinámicamente
-    interface ReminderWhere {
-      assignedToId: number;
-      status?: string;
-      leadId?: number;
-      scheduledAt?: { gte: Date } | { lt: Date };
-    }
 
     const where: ReminderWhere = {
       assignedToId: Number(session.user.id),
@@ -190,18 +185,14 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    interface UpdateReminderData {
-      status?: string;
-      reason?: string;
-      scheduledAt?: Date;
-      assignedToId?: number;
-    }
-
     const updateData: UpdateReminderData = {};
     if (status) updateData.status = status;
     if (reason) updateData.reason = reason;
     if (scheduledAt) updateData.scheduledAt = new Date(scheduledAt);
     if (assignedToId) updateData.assignedToId = Number(assignedToId);
+    if (status === "COMPLETED") {
+      updateData.lastNotifiedAt = new Date();
+    }
 
     const updatedReminder = await prisma.reminder.update({
       where: { id: Number(id) },

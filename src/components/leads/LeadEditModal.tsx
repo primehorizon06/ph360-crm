@@ -8,11 +8,14 @@ import { X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { CustomSelect } from "../ui/Select";
 import { Props } from "@/utils/interfaces/leadEditModal";
-import { STATUS } from "@/utils/constants/leads";
+import { CUSTOMER_STATUS, LEAD_FIELDS, STATUS } from "@/utils/constants/leads";
+import { formatPhone } from "@/utils/helpers/format";
 
-export function LeadEditModal({ lead, onClose, onSave }: Props) {
+export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
   const { data: session } = useSession();
   const role = session?.user?.role;
+  const isAdmin = role === "ADMIN";
+  const isCustomer = type === "customer";
   const [serverError, setServerError] = useState("");
   const [companies, setCompanies] = useState<{ id: number; name: string }[]>(
     [],
@@ -23,6 +26,8 @@ export function LeadEditModal({ lead, onClose, onSave }: Props) {
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LeadFormData>({
     resolver: zodResolver(leadSchema),
@@ -42,53 +47,59 @@ export function LeadEditModal({ lead, onClose, onSave }: Props) {
     },
   });
 
+  const ssnValue = watch("ssn") ?? "";
+  const phone1Value = watch("phone1") ?? "";
+  const phone2Value = watch("phone2") ?? "";
+
   const [status, setStatus] = useState(lead.status);
+  const [customerStatus, setCustomerStatus] = useState(
+    lead.customerStatus ?? "",
+  );
   const [companyId, setCompanyId] = useState(String(lead.companyId));
   const [teamId, setTeamId] = useState(String(lead.teamId));
   const [assignedToId, setAssignedToId] = useState(String(lead.assignedTo.id));
 
-  // Cargar empresas (solo admin)
   useEffect(() => {
-    if (role !== "ADMIN") return;
-    const load = async () => {
-      const res = await fetch("/api/companies?simple=true");
-      setCompanies(await res.json());
-    };
-    load();
-  }, [role]);
+    if (!isAdmin) return;
+    fetch("/api/companies?simple=true")
+      .then((r) => r.json())
+      .then(setCompanies);
+  }, [isAdmin]);
 
-  // Cargar equipos según franquicia
   useEffect(() => {
-    const load = async () => {
-      if (!companyId) return;
-      const res = await fetch(`/api/teams?companyId=${companyId}`);
-      setTeams(await res.json());
-    };
-    load();
+    if (!companyId) return;
+    fetch(`/api/teams?companyId=${companyId}`)
+      .then((r) => r.json())
+      .then(setTeams);
   }, [companyId]);
 
-  // Cargar agentes según equipo
   useEffect(() => {
-    const load = async () => {
-      if (!teamId) return;
-      const res = await fetch(`/api/users?teamId=${teamId}&role=AGENT`);
-      setAgents(await res.json());
-    };
-    load();
+    if (!teamId) return;
+    fetch(`/api/users?teamId=${teamId}&role=AGENT`)
+      .then((r) => r.json())
+      .then(setAgents);
   }, [teamId]);
+
+  function handleSsnChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const digits = e.target.value.replace(/\D/g, "").slice(0, 9);
+    let masked = digits;
+    if (digits.length > 5)
+      masked = `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5)}`;
+    else if (digits.length > 3)
+      masked = `${digits.slice(0, 3)}-${digits.slice(3)}`;
+    setValue("ssn", masked, { shouldValidate: true });
+  }
 
   async function onSubmit(data: LeadFormData) {
     setServerError("");
+    const body = isCustomer
+      ? { ...data, customerStatus, companyId, teamId, assignedToId }
+      : { ...data, status, companyId, teamId, assignedToId };
+
     const res = await fetch(`/api/leads/${lead.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...data,
-        status,
-        companyId,
-        teamId,
-        assignedToId,
-      }),
+      body: JSON.stringify(body),
     });
 
     if (!res.ok) {
@@ -99,26 +110,13 @@ export function LeadEditModal({ lead, onClose, onSave }: Props) {
     onSave();
   }
 
-  const fields = [
-    { label: "Nombres", name: "firstName", type: "text", required: true },
-    { label: "Apellidos", name: "lastName", type: "text" },
-    { label: "Teléfono 1", name: "phone1", type: "tel", required: true },
-    { label: "Teléfono 2", name: "phone2", type: "tel" },
-    { label: "Seguridad Social", name: "ssn", type: "text" },
-    { label: "Dirección", name: "address", type: "text" },
-    { label: "Ciudad", name: "city", type: "text" },
-    { label: "Estado", name: "status", type: "text" },
-    { label: "Código Postal", name: "zipCode", type: "text" },
-    { label: "Email", name: "email", type: "email" },
-    { label: "Fecha de nacimiento", name: "birthDate", type: "date" },
-    { label: "Hora de contacto", name: "contactTime", type: "time" },
-  ];
-
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-[#13151c] border border-white/10 rounded-xl w-full max-w-2xl">
         <div className="flex items-center justify-between p-5 border-b border-white/10">
-          <h2 className="text-white font-semibold text-lg">Editar Lead</h2>
+          <h2 className="text-white font-semibold text-lg">
+            {isCustomer ? "Editar Cliente" : "Editar Lead"}
+          </h2>
           <button
             onClick={onClose}
             className="text-white/40 hover:text-white transition-colors"
@@ -135,7 +133,92 @@ export function LeadEditModal({ lead, onClose, onSave }: Props) {
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {fields.map((field) => (
+            {/* phone1 — editable solo para admin, readonly para el resto */}
+            {isAdmin ? (
+              <div>
+                <label className="text-xs text-white/40 mb-1 block">
+                  Teléfono 1 <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  placeholder="(000) 000-0000"
+                  maxLength={14}
+                  value={phone1Value}
+                  onChange={(e) =>
+                    setValue("phone1", formatPhone(e.target.value), {
+                      shouldValidate: true,
+                    })
+                  }
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-cyan-500/50 tracking-widest"
+                />
+                {errors.phone1 && (
+                  <p className="text-red-400 text-xs mt-1">
+                    {errors.phone1.message}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div>
+                <label className="text-xs text-white/40 mb-1 block">
+                  Teléfono 1
+                </label>
+                <input
+                  type="tel"
+                  value={lead.phone1}
+                  disabled
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/30 outline-none cursor-not-allowed"
+                />
+              </div>
+            )}
+
+            <div>
+              <label className="text-xs text-white/40 mb-1 block">
+                Teléfono 2
+              </label>
+              <input
+                type="tel"
+                inputMode="numeric"
+                placeholder="(000) 000-0000"
+                maxLength={14}
+                value={phone2Value}
+                onChange={(e) =>
+                  setValue("phone2", formatPhone(e.target.value), {
+                    shouldValidate: true,
+                  })
+                }
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-cyan-500/50 tracking-widest"
+              />
+              {errors.phone2 && (
+                <p className="text-red-400 text-xs mt-1">
+                  {errors.phone2.message}
+                </p>
+              )}
+            </div>
+
+            {/* SSN con máscara */}
+            <div>
+              <label className="text-xs text-white/40 mb-1 block">
+                Seguro Social
+              </label>
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="000-00-0000"
+                maxLength={11}
+                value={ssnValue}
+                onChange={handleSsnChange}
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-cyan-500/50 tracking-widest"
+              />
+              {errors.ssn && (
+                <p className="text-red-400 text-xs mt-1">
+                  {errors.ssn.message}
+                </p>
+              )}
+            </div>
+
+            {/* Campos base compartidos */}
+            {LEAD_FIELDS.map((field) => (
               <div key={field.name}>
                 <label className="text-xs text-white/40 mb-1 block">
                   {field.label}
@@ -156,20 +239,30 @@ export function LeadEditModal({ lead, onClose, onSave }: Props) {
               </div>
             ))}
 
-            {/* Status */}
+            {/* Estado */}
             <div>
               <label className="text-xs text-white/40 mb-1 block">Estado</label>
-              <CustomSelect
-                name="status"
-                value={STATUS[status]}
-                onChange={setStatus}
-                options={Object.keys(STATUS)}
-                labels={Object.values(STATUS)}
-              />
+              {isCustomer ? (
+                <CustomSelect
+                  name="customerStatus"
+                  value={CUSTOMER_STATUS[customerStatus] ?? "Seleccionar"}
+                  onChange={setCustomerStatus}
+                  options={Object.keys(CUSTOMER_STATUS)}
+                  labels={Object.values(CUSTOMER_STATUS)}
+                />
+              ) : (
+                <CustomSelect
+                  name="status"
+                  value={STATUS[status]}
+                  onChange={setStatus}
+                  options={Object.keys(STATUS)}
+                  labels={Object.values(STATUS)}
+                />
+              )}
             </div>
 
             {/* Franquicia — solo ADMIN */}
-            {role === "ADMIN" && (
+            {isAdmin && (
               <div>
                 <label className="text-xs text-white/40 mb-1 block">
                   Franquicia
@@ -191,10 +284,8 @@ export function LeadEditModal({ lead, onClose, onSave }: Props) {
               </div>
             )}
 
-            {/* Equipo — ADMIN, SUPERVISOR, COACH */}
-            {(role === "ADMIN" ||
-              role === "SUPERVISOR" ||
-              role === "COACH") && (
+            {/* Equipo */}
+            {(isAdmin || role === "SUPERVISOR" || role === "COACH") && (
               <div>
                 <label className="text-xs text-white/40 mb-1 block">
                   Equipo
@@ -215,10 +306,8 @@ export function LeadEditModal({ lead, onClose, onSave }: Props) {
               </div>
             )}
 
-            {/* Agente — ADMIN, SUPERVISOR, COACH */}
-            {(role === "ADMIN" ||
-              role === "SUPERVISOR" ||
-              role === "COACH") && (
+            {/* Agente */}
+            {(isAdmin || role === "SUPERVISOR" || role === "COACH") && (
               <div>
                 <label className="text-xs text-white/40 mb-1 block">
                   Agente asignado

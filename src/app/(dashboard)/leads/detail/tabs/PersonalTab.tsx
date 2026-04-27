@@ -15,7 +15,7 @@ export function PersonalTab({ lead }: Props) {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           <InfoField label="Nombres" value={lead.firstName} />
           <InfoField label="Apellidos" value={lead.lastName} />
-          <InfoField label="Seguridad Social" value={lead.ssn} />
+          <InfoField label="Seguro social" value={lead.ssn} />
           <InfoField
             label="Fecha de nacimiento"
             value={

@@ -25,3 +25,12 @@ export function formatTotalAmount(installments: Installment[]): string {
     maximumFractionDigits: 2,
   });
 }
+
+export function formatPhone(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 10);
+  if (digits.length > 6)
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  if (digits.length > 3) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  if (digits.length > 0) return `(${digits}`;
+  return "";
+}

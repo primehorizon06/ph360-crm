@@ -18,6 +18,9 @@ export interface Lead {
   company: { name: string };
   createdAt: string;
   updatedAt: string;
+  products?: { id: number; product: string }[];
+  customerStatus?: string | null;
+  convertedAt?: string | null;
   assignedTo: {
     id: number;
     name: string;

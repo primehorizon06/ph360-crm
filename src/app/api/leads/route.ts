@@ -3,28 +3,32 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session)
     return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
 
   const user = session.user;
   const role = user.role;
+  const type =
+    new URL(req.url).searchParams.get("type") === "customer"
+      ? "customer"
+      : "lead";
 
-  let where: Record<string, unknown> = { type: "lead" };
+  let where: Record<string, unknown> = { type };
 
   switch (role) {
     case "ADMIN":
-      where = { type: "lead" };
+      where = { type };
       break;
     case "SUPERVISOR":
-      where = { type: "lead", companyId: user.companyId };
+      where = { type, companyId: user.companyId };
       break;
     case "COACH":
-      where = { type: "lead", assignedTo: { teamId: user.teamId } };
+      where = { type, assignedTo: { teamId: user.teamId } };
       break;
     case "AGENT":
-      where = { type: "lead", assignedToId: Number(user.id) };
+      where = { type, assignedToId: Number(user.id) };
       break;
     default:
       return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
@@ -42,6 +46,7 @@ export async function GET() {
       city: true,
       state: true,
       status: true,
+      customerStatus: true,
       companyId: true,
       teamId: true,
       assignedToId: true,
@@ -50,6 +55,10 @@ export async function GET() {
         select: { id: true, name: true, team: { select: { name: true } } },
       },
       company: { select: { name: true } },
+      convertedAt: true,
+      products: {
+        select: { id: true, product: true },
+      },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -98,7 +107,7 @@ export async function POST(req: NextRequest) {
     const existingSsn = await prisma.lead.findUnique({ where: { ssn } });
     if (existingSsn)
       return NextResponse.json(
-        { error: "La seguridad social ya está registrada" },
+        { error: "La Seguro social ya está registrada" },
         { status: 409 },
       );
   }

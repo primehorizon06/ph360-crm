@@ -37,6 +37,19 @@ enum TypeCustomer {
   customer
 }
 
+enum CustomerStatus {
+  CONTRACT_SENT
+  PENDING_PAYMENT_AGREEMENT
+  PENDING_DOCS
+  DISPUTE_1
+  DISPUTE_2
+  DISPUTE_3
+  ACTIVE_ALERT
+  PENDING_LOYALTY
+  LOYALTY_OK
+  CANCELLED
+}
+
 // ─── EMPRESA ─────────────────────────────────────────────────────────────────
 
 model Company {
@@ -143,6 +156,8 @@ model Lead {
   conversionNote        String?
   conversionRequestedAt DateTime?
   productApprovals      ProductApproval[]
+  customerStatus CustomerStatus?
+  convertedAt DateTime?
 
   company    Company @relation(fields: [companyId], references: [id])
   team       Team    @relation(fields: [teamId], references: [id])

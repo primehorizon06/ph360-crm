@@ -25,6 +25,7 @@ const navItems: {
 }[] = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/" },
   { label: "Leads", icon: Users, href: "/leads" },
+  { label: "Clientes", icon: Users, href: "/customers" },
   { label: "Usuarios", icon: UserCog, href: "/users", roles: ["ADMIN"] },
   {
     label: "Franquicias",
