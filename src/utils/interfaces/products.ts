@@ -20,6 +20,17 @@ export interface PaymentMethod {
   accountType?: "AHORROS" | "CHEQUES";
 }
 
+export interface ProductApproval {
+  id: number;
+  productId: number;
+  leadId: number;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  isFirstProduct: boolean;
+  note?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Product {
   id: number;
   product: ProductType;
@@ -29,10 +40,12 @@ export interface Product {
     installments: { number: number; date: string; amount: number }[];
   };
   status: "ACTIVE" | "SUSPENDED";
+  approval: ProductApproval | null;
 }
 
 export interface Props {
   leadId: string | number;
+  onProductCreated?: () => void;
 }
 
 export interface DataPicker {

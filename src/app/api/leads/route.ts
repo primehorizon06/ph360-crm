@@ -11,20 +11,20 @@ export async function GET() {
   const user = session.user;
   const role = user.role;
 
-  let where = {};
+  let where: Record<string, unknown> = { type: "lead" };
 
   switch (role) {
     case "ADMIN":
-      where = {};
+      where = { type: "lead" };
       break;
     case "SUPERVISOR":
-      where = { companyId: user.companyId };
+      where = { type: "lead", companyId: user.companyId };
       break;
     case "COACH":
-      where = { assignedTo: { teamId: user.teamId } };
+      where = { type: "lead", assignedTo: { teamId: user.teamId } };
       break;
     case "AGENT":
-      where = { assignedToId: Number(user.id) };
+      where = { type: "lead", assignedToId: Number(user.id) };
       break;
     default:
       return NextResponse.json({ error: "Sin permisos" }, { status: 403 });

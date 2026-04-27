@@ -31,7 +31,7 @@ import { PaymentPlanPicker } from "@/components/leads/PaymentPlanPicker/PaymentP
 import { formatAmount, formatDate } from "@/utils/helpers/format";
 import { ConfirmProductModal } from "@/components/leads/Confirmproductmodal/Confirmproductmodal";
 
-export function ProductsTab({ leadId }: Props) {
+export function ProductsTab({ leadId, onProductCreated }: Props) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -141,6 +141,7 @@ export function ProductsTab({ leadId }: Props) {
     setPendingData(null);
     resetForm();
     loadProducts();
+    onProductCreated?.(); 
   };
 
   // ── Render ──────────────────────────────────────────────────────────────────

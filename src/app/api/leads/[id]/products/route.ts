@@ -18,12 +18,11 @@ export async function GET(
     include: {
       paymentMethod: true,
       paymentPlan: {
-        include: {
-          installments: { orderBy: { number: "asc" } },
-        },
+        include: { installments: { orderBy: { number: "asc" } } },
       },
+      approval: true,
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: { createdAt: "asc" },
   });
 
   return NextResponse.json(products);
@@ -39,7 +38,6 @@ export async function POST(
 
   const { id } = await params;
   const body = await req.json();
-
   const { product, paymentMethod } = body;
 
   if (!product || !paymentMethod?.type)
@@ -48,6 +46,13 @@ export async function POST(
       { status: 400 },
     );
 
+  // Verificar si es el primer producto
+  const existingCount = await prisma.product.count({
+    where: { leadId: Number(id) },
+  });
+  const isFirstProduct = existingCount === 0;
+
+  // Crear el producto con su método de pago
   const leadProduct = await prisma.product.create({
     data: {
       leadId: Number(id),
@@ -55,12 +60,10 @@ export async function POST(
       paymentMethod: {
         create: {
           type: paymentMethod.type,
-          // Tarjeta
           cardType: paymentMethod.cardType ?? null,
           lastFour: paymentMethod.lastFour ?? null,
           holderName: paymentMethod.holderName ?? null,
           bank: paymentMethod.bank ?? null,
-          // Cuenta
           accountNumber: paymentMethod.accountNumber ?? null,
           accountHolder: paymentMethod.accountHolder ?? null,
           accountBank: paymentMethod.accountBank ?? null,
@@ -71,6 +74,27 @@ export async function POST(
     },
     include: { paymentMethod: true },
   });
+
+  // Crear la aprobación pendiente
+  await prisma.productApproval.create({
+    data: {
+      productId: leadProduct.id,
+      leadId: Number(id),
+      isFirstProduct,
+      status: "PENDING",
+    },
+  });
+
+  // Si es el primer producto → activar conversión pendiente en el lead
+  if (isFirstProduct) {
+    await prisma.lead.update({
+      where: { id: Number(id) },
+      data: {
+        conversionStatus: "PENDING",
+        conversionRequestedAt: new Date(),
+      },
+    });
+  }
 
   return NextResponse.json(leadProduct, { status: 201 });
 }

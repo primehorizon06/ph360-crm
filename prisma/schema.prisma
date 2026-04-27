@@ -115,33 +115,38 @@ model Permission {
 // ─── LEAD (CLIENTE) ──────────────────────────────────────────────────────────
 
 model Lead {
-  id           Int          @id @default(autoincrement())
-  firstName    String
-  lastName     String?
-  phone1       String       @unique
-  phone2       String?
-  ssn          String?      @unique
-  address      String?
-  city         String?
-  state        String?
-  zipCode      String?
-  email        String?
-  birthDate    DateTime?
-  contactTime  String?
-  status       LeadStatus   @default(newLead)
-  companyId    Int
-  teamId       Int
-  assignedToId Int
-  type         TypeCustomer @default(lead)
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  company      Company      @relation(fields: [companyId], references: [id])
-  team         Team         @relation(fields: [teamId], references: [id])
-  assignedTo   User         @relation(fields: [assignedToId], references: [id])
-  documents    Document[]
-  notes        Note[]
-  reminders    Reminder[]
-  products     Product[]
+  id                    Int               @id @default(autoincrement())
+  firstName             String
+  lastName              String?
+  phone1                String            @unique
+  phone2                String?
+  ssn                   String?           @unique
+  address               String?
+  city                  String?
+  state                 String?
+  zipCode               String?
+  email                 String?
+  birthDate             DateTime?
+  contactTime           String?
+  status                LeadStatus        @default(newLead)
+  companyId             Int
+  teamId                Int
+  assignedToId          Int
+  type                  TypeCustomer      @default(lead)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  documents             Document[]
+  notes                 Note[]
+  reminders             Reminder[]
+  products              Product[]
+  conversionStatus      ConversionStatus?
+  conversionNote        String?
+  conversionRequestedAt DateTime?
+  productApprovals      ProductApproval[]
+
+  company    Company @relation(fields: [companyId], references: [id])
+  team       Team    @relation(fields: [teamId], references: [id])
+  assignedTo User    @relation(fields: [assignedToId], references: [id])
 }
 
 // ─── DOCUMENTO ADJUNTO ───────────────────────────────────────────────────────
@@ -230,11 +235,12 @@ enum ProductStatus {
 }
 
 model Product {
-  id        Int           @id @default(autoincrement())
+  id        Int              @id @default(autoincrement())
   leadId    Int
   product   ProductType
-  createdAt DateTime      @default(now())
-  status    ProductStatus @default(ACTIVE)
+  createdAt DateTime         @default(now())
+  status    ProductStatus    @default(ACTIVE)
+  approval  ProductApproval?
 
   lead          Lead           @relation(fields: [leadId], references: [id], onDelete: Cascade)
   paymentMethod PaymentMethod?
@@ -279,4 +285,30 @@ model Installment {
   number        Int
   date          DateTime
   amount        Decimal     @db.Decimal(10, 2)
+}
+
+enum ConversionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model ProductApproval {
+  id             Int            @id @default(autoincrement())
+  productId      Int            @unique
+  leadId         Int
+  status         ApprovalStatus @default(PENDING)
+  note           String?
+  isFirstProduct Boolean        @default(false)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  lead    Lead    @relation(fields: [leadId], references: [id], onDelete: Cascade)
 }

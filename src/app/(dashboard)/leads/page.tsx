@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Loading } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Pencil, Plus, Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import { LeadEditModal } from "@/components/leads/LeadEditModal";
 import { useRouter } from "next/navigation";

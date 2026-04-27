@@ -13,6 +13,7 @@ import { NotesTab } from "../detail/tabs/NotesTab";
 import { RemindersTab } from "../detail/tabs/RemindersTab";
 import { AttachmentsTab } from "../detail/tabs/AttachmentsTab";
 import { ProductsTab } from "../detail/tabs/ProductsTab";
+import { ProductChecklist } from "@/components/leads/ProductChecklist/ProductChecklist";
 
 export default function LeadDetailPage() {
   const { id } = useParams();
@@ -21,11 +22,11 @@ export default function LeadDetailPage() {
   const { data: session } = useSession();
   const role = session?.user?.role;
   const [lead, setLead] = useState<Lead | null>(null);
+  const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [, startTransition] = useTransition();
 
-  // Obtener la tab de la URL directamente
   const tabFromUrl = searchParams.get("tab") as TABS_NAME;
   const isValidTab =
     tabFromUrl && ["personal", "notes", "reminders"].includes(tabFromUrl);
@@ -43,6 +44,21 @@ export default function LeadDetailPage() {
     }
     setLead(await res.json());
     setLoading(false);
+  }
+
+  async function loadProducts() {
+    const res = await fetch(`/api/leads/${id}/products`);
+    if (res.ok) setProducts(await res.json());
+  }
+
+  // Carga inicial — lead y productos en paralelo
+  useEffect(() => {
+    Promise.all([loadLead(), loadProducts()]);
+  }, [id]);
+
+  // Cuando el coach aprueba/rechaza → recargar ambos
+  async function handleApprovalChange() {
+    await Promise.all([loadLead(), loadProducts()]);
   }
 
   async function handleSuspend() {
@@ -64,7 +80,6 @@ export default function LeadDetailPage() {
     });
   };
 
-  // Escuchar cambios en la URL (para botones atrás/adelante)
   useEffect(() => {
     const handlePopState = () => {
       const newTab = searchParams.get("tab") as TABS_NAME;
@@ -77,14 +92,9 @@ export default function LeadDetailPage() {
         setActiveTab(newTab);
       }
     };
-
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, [searchParams]);
-
-  useEffect(() => {
-    loadLead();
-  }, [id]);
 
   if (loading) return <Loading />;
   if (!lead) return null;
@@ -98,6 +108,14 @@ export default function LeadDetailPage() {
         onEdit={() => setEditing(true)}
       />
 
+      {role === "COACH" || role === "SUPERVISOR" ? (
+        <ProductChecklist
+          leadId={lead.id}
+          products={products}
+          onApprovalChange={handleApprovalChange}
+        />
+      ) : null}
+
       <LeadDetailTabs activeTab={activeTab} onChange={handleTabChange} />
 
       <div className="max-h-[60vh] overflow-y-auto pr-2 pb-2">
@@ -105,7 +123,9 @@ export default function LeadDetailPage() {
         {activeTab === "notes" && <NotesTab leadId={lead.id} />}
         {activeTab === "reminders" && <RemindersTab leadId={lead.id} />}
         {activeTab === "attachments" && <AttachmentsTab leadId={lead.id} />}
-        {activeTab === "products" && <ProductsTab leadId={lead.id} />}
+        {activeTab === "products" && (
+          <ProductsTab leadId={lead.id} onProductCreated={loadProducts} />
+        )}
       </div>
 
       {editing && (
