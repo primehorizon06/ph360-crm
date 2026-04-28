@@ -85,7 +85,7 @@ export async function POST(
     },
   });
 
-  // Si es el primer producto → activar conversión pendiente en el lead
+  // Si es el primer producto → activar conversión pendiente
   if (isFirstProduct) {
     await prisma.lead.update({
       where: { id: Number(id) },
@@ -94,6 +94,40 @@ export async function POST(
         conversionRequestedAt: new Date(),
       },
     });
+  }
+
+  // Buscar el coach del equipo del agente asignado al lead
+  const lead = await prisma.lead.findUnique({
+    where: { id: Number(id) },
+    select: {
+      firstName: true,
+      lastName: true,
+      teamId: true,
+    },
+  });
+
+  if (lead) {
+    const coach = await prisma.user.findFirst({
+      where: {
+        teamId: lead.teamId,
+        role: "COACH",
+      },
+      select: { id: true },
+    });
+
+    if (coach) {
+      const leadName = `${lead.firstName} ${lead.lastName ?? ""}`.trim();
+      await prisma.notification.create({
+        data: {
+          userId: coach.id,
+          type: "PRODUCT_APPROVAL_PENDING",
+          title: "Producto pendiente de aprobación",
+          body: `${leadName} tiene un nuevo producto que requiere tu revisión.`,
+          leadId: Number(id),
+          productId: leadProduct.id,
+        },
+      });
+    }
   }
 
   return NextResponse.json(leadProduct, { status: 201 });

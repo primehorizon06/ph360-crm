@@ -29,7 +29,7 @@ export function DateTimePicker({
         onChange={onChange}
         showTimeSelect
         timeFormat="hh:mm aa"
-        timeIntervals={30}
+        timeIntervals={1}
         dateFormat="dd/MM/yyyy hh:mm aa"
         placeholderText={placeholderText}
         className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-cyan-500/50 flex items-center justify-between"

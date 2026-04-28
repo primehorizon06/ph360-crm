@@ -93,12 +93,13 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  company           Company?   @relation(fields: [companyId], references: [id])
-  team              Team?      @relation(fields: [teamId], references: [id])
+  company           Company?       @relation(fields: [companyId], references: [id])
+  team              Team?          @relation(fields: [teamId], references: [id])
   leads             Lead[]
   notes             Note[]
-  remindersAssigned Reminder[] @relation("ReminderAssignedTo")
-  remindersCreated  Reminder[] @relation("ReminderCreatedBy")
+  remindersAssigned Reminder[]     @relation("ReminderAssignedTo")
+  remindersCreated  Reminder[]     @relation("ReminderCreatedBy")
+  notifications     Notification[]
 }
 
 // ─── PERMISOS ─────────────────────────────────────────────────────────────────
@@ -156,12 +157,13 @@ model Lead {
   conversionNote        String?
   conversionRequestedAt DateTime?
   productApprovals      ProductApproval[]
-  customerStatus CustomerStatus?
-  convertedAt DateTime?
+  customerStatus        CustomerStatus?
+  convertedAt           DateTime?
 
-  company    Company @relation(fields: [companyId], references: [id])
-  team       Team    @relation(fields: [teamId], references: [id])
-  assignedTo User    @relation(fields: [assignedToId], references: [id])
+  company       Company        @relation(fields: [companyId], references: [id])
+  team          Team           @relation(fields: [teamId], references: [id])
+  assignedTo    User           @relation(fields: [assignedToId], references: [id])
+  notifications Notification[]
 }
 
 // ─── DOCUMENTO ADJUNTO ───────────────────────────────────────────────────────
@@ -326,4 +328,25 @@ model ProductApproval {
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   lead    Lead    @relation(fields: [leadId], references: [id], onDelete: Cascade)
+}
+
+enum NotificationType {
+  PRODUCT_APPROVAL_PENDING
+  PRODUCT_APPROVED
+  PRODUCT_REJECTED
+}
+
+model Notification {
+  id        Int              @id @default(autoincrement())
+  userId    Int // quien recibe la notificación (el coach)
+  type      NotificationType
+  title     String
+  body      String
+  leadId    Int
+  productId Int?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
 }

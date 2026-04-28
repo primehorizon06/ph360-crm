@@ -76,3 +76,11 @@ export const LEAD_FIELDS = [
     required: false,
   },
 ];
+
+export const VALID_TABS: TABS_NAME[] = [
+  "personal",
+  "notes",
+  "reminders",
+  "attachments",
+  "products",
+];

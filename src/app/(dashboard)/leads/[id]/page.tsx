@@ -14,6 +14,8 @@ import { RemindersTab } from "../detail/tabs/RemindersTab";
 import { AttachmentsTab } from "../detail/tabs/AttachmentsTab";
 import { ProductsTab } from "../detail/tabs/ProductsTab";
 import { ProductChecklist } from "@/components/leads/ProductChecklist/ProductChecklist";
+import { VALID_TABS } from "@/utils/constants/leads";
+import { Product } from "@/utils/interfaces/products";
 
 export default function LeadDetailPage() {
   const { id } = useParams();
@@ -22,14 +24,13 @@ export default function LeadDetailPage() {
   const { data: session } = useSession();
   const role = session?.user?.role;
   const [lead, setLead] = useState<Lead | null>(null);
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [, startTransition] = useTransition();
 
   const tabFromUrl = searchParams.get("tab") as TABS_NAME;
-  const isValidTab =
-    tabFromUrl && ["personal", "notes", "reminders"].includes(tabFromUrl);
+  const isValidTab = tabFromUrl && VALID_TABS.includes(tabFromUrl);
 
   const [activeTab, setActiveTab] = useState<TABS_NAME>(
     isValidTab ? tabFromUrl : "personal",
@@ -83,12 +84,7 @@ export default function LeadDetailPage() {
   useEffect(() => {
     const handlePopState = () => {
       const newTab = searchParams.get("tab") as TABS_NAME;
-      if (
-        newTab &&
-        ["personal", "notes", "reminders", "attachments", "products"].includes(
-          newTab,
-        )
-      ) {
+      if (newTab && VALID_TABS.includes(newTab)) {
         setActiveTab(newTab);
       }
     };
