@@ -28,7 +28,7 @@ export const CopyButton = ({
     <button
       onClick={handleCopy}
       title={label || "Copiar"}
-      className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs bg-white/10 hover:bg-white/20 transition ${className}`}
+      className={`flex items-center gap-1 px-2 py-1 rounded-md text-sm bg-white/10 hover:bg-white/20 transition ${className}`}
     >
       {copied ? <Check size={14} /> : <Copy size={14} />}
       <span>{copied ? "Copiado" : label || "Copiar"}</span>

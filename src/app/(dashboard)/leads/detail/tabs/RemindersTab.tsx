@@ -14,13 +14,13 @@ export function RemindersTab({ leadId }: { leadId: number }) {
   return (
     <div className="space-y-4">
       <div className="flex justify-between">
-        <p className="text-white/40 text-sm">
+        <p className="text-white/40 text-lg">
           {reminders.length} recordatorios
         </p>
 
         <button
           onClick={() => setModalOpen(true)}
-          className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-black font-medium px-4 py-2 rounded-lg text-sm transition-colors"
+          className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-black font-medium px-4 py-2 rounded-lg text-lg transition-colors"
         >
           <Plus size={16} />
           Nuevo recordatorio

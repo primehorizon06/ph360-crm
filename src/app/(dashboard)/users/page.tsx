@@ -136,7 +136,7 @@ export default function UsersPage() {
             placeholder="Buscar por nombre o usuario..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="bg-transparent text-sm text-white/70 placeholder:text-white/30 outline-none w-full"
+            className="bg-transparent text-lg text-white/70 placeholder:text-white/30 outline-none w-full"
           />
         </div>
 

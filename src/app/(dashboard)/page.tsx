@@ -38,7 +38,7 @@ export default function Home() {
               const canCreateLead = await hasPermission("leads", "create");
               console.log("Puede crear leads:", canCreateLead);
             }}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium transition"
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-lg font-medium transition"
           >
             Verificar permiso para crear leads
           </button>

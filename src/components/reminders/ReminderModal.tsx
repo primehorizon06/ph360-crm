@@ -115,7 +115,7 @@ export function ReminderModal({ leadId, onClose, onSave }: ReminderModalProps) {
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
             {serverError && (
-              <p className="text-red-400 text-sm bg-red-500/10 px-3 py-2 rounded-lg">
+              <p className="text-red-400 text-lg bg-red-500/10 px-3 py-2 rounded-lg">
                 {serverError}
               </p>
             )}
@@ -135,14 +135,14 @@ export function ReminderModal({ leadId, onClose, onSave }: ReminderModalProps) {
               )}
             />
             {errors.scheduledAt && (
-              <p className="text-red-400 text-xs mt-1">
+              <p className="text-red-400 text-sm mt-1">
                 {errors.scheduledAt.message}
               </p>
             )}
 
             {/* Asignar a */}
             <div>
-              <label className="text-xs text-white/40 mb-1 block">
+              <label className="text-sm text-white/40 mb-1 block">
                 Asignar a <span className="text-red-400">*</span>
               </label>
               <Controller
@@ -158,7 +158,7 @@ export function ReminderModal({ leadId, onClose, onSave }: ReminderModalProps) {
                 )}
               />
               {errors.assignedToId && (
-                <p className="text-red-400 text-xs mt-1">
+                <p className="text-red-400 text-sm mt-1">
                   {errors.assignedToId.message}
                 </p>
               )}
@@ -166,7 +166,7 @@ export function ReminderModal({ leadId, onClose, onSave }: ReminderModalProps) {
 
             {/* Título/Motivo */}
             <div>
-              <label className="text-xs text-white/40 mb-1 block">
+              <label className="text-sm text-white/40 mb-1 block">
                 Título <span className="text-red-400">*</span>
               </label>
               <Controller
@@ -176,14 +176,14 @@ export function ReminderModal({ leadId, onClose, onSave }: ReminderModalProps) {
                   <textarea
                     value={value}
                     onChange={onChange}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-cyan-500/50 flex items-center justify-between"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50 flex items-center justify-between"
                     placeholder="Escribe el título del recordatorio"
                     rows={3}
                   />
                 )}
               />
               {errors.reason && (
-                <p className="text-red-400 text-xs mt-1">
+                <p className="text-red-400 text-sm mt-1">
                   {errors.reason.message}
                 </p>
               )}
@@ -194,14 +194,14 @@ export function ReminderModal({ leadId, onClose, onSave }: ReminderModalProps) {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm text-white/50 hover:text-white transition-colors"
+              className="px-4 py-2 text-lg text-white/50 hover:text-white transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 text-sm bg-cyan-500 hover:bg-cyan-400 text-black font-medium rounded-lg transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-lg bg-cyan-500 hover:bg-cyan-400 text-black font-medium rounded-lg transition-colors disabled:opacity-50"
             >
               {isSubmitting ? "Guardando..." : "Guardar recordatorio"}
             </button>

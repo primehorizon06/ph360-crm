@@ -15,18 +15,18 @@ export function ReminderCard({ reminder }: { reminder: Reminder }) {
             size={14}
             className={isPast ? "text-red-400" : "text-cyan-400"}
           />
-          <h3 className="text-white font-medium text-sm">{reminder.reason}</h3>
+          <h3 className="text-white font-medium text-lg">{reminder.reason}</h3>
           {isPast && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/20 text-red-400">
+            <span className="text-sm px-2 py-0.5 rounded-full bg-red-500/20 text-red-400">
               Vencido
             </span>
           )}
         </div>
         <div className="text-right shrink-0">
-          <p className="text-xs text-white/40">
+          <p className="text-sm text-white/40">
             {date.toLocaleDateString("es-CO")}
           </p>
-          <p className="text-xs text-white/30">
+          <p className="text-sm text-white/30">
             {date.toLocaleTimeString("es-CO", {
               hour: "2-digit",
               minute: "2-digit",
@@ -35,7 +35,7 @@ export function ReminderCard({ reminder }: { reminder: Reminder }) {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-3 text-xs text-white/40">
+      <div className="flex flex-wrap gap-3 text-sm text-white/40">
         <span className="flex items-center gap-1">
           <User size={11} />
           Asignado a:{" "}

@@ -102,11 +102,11 @@ export default function LoginPage() {
               </div>
             </div>
             {error && (
-              <div className="text-red-500 text-sm text-center">{error}</div>
+              <div className="text-red-500 text-lg text-center">{error}</div>
             )}
             {/* <!-- Action Button --> */}
             <button
-              className="w-full btn-satin py-4 rounded-lg font-headline font-bold text-on-primary tracking-tight text-sm flex items-center justify-center space-x-2 active:scale-[0.98] transition-transform shadow-lg shadow-primary-container/20 cursor-pointer pointer-events-auto disabled:opacity-50 disabled:pointer-events-none"
+              className="w-full btn-satin py-4 rounded-lg font-headline font-bold text-on-primary tracking-tight text-lg flex items-center justify-center space-x-2 active:scale-[0.98] transition-transform shadow-lg shadow-primary-container/20 cursor-pointer pointer-events-auto disabled:opacity-50 disabled:pointer-events-none"
               type="submit"
               disabled={isLoading}
             >

@@ -40,16 +40,16 @@ export function ToastHandler() {
           <div className="p-3 border-b border-white/10 bg-gradient-to-r from-cyan-500/10 to-transparent">
             <div className="flex items-center gap-2">
               <Bell className="w-4 h-4 text-cyan-400" />
-              <span className="text-white font-semibold text-sm">
+              <span className="text-white font-semibold text-lg">
                 Nuevo Recordatorio
               </span>
-              <span className="text-white/40 text-xs ml-auto">{time}</span>
+              <span className="text-white/40 text-sm ml-auto">{time}</span>
             </div>
           </div>
 
           <div className="p-3">
-            <p className="text-white text-sm font-medium">{reminder.reason}</p>
-            <p className="text-white/40 text-xs mt-1">Lead: {leadName}</p>
+            <p className="text-white text-lg font-medium">{reminder.reason}</p>
+            <p className="text-white/40 text-sm mt-1">Lead: {leadName}</p>
           </div>
 
           <div className="flex border-t border-white/10">
@@ -59,7 +59,7 @@ export function ToastHandler() {
                 await markAsCompleted(reminder.id);
                 window.location.href = `/leads/${reminder.leadId}?tab=reminders`;
               }}
-              className="flex-1 px-3 py-2 text-sm text-cyan-400 hover:bg-cyan-400/10 transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-3 py-2 text-lg text-cyan-400 hover:bg-cyan-400/10 transition-colors flex items-center justify-center gap-2"
             >
               <CheckCircle className="w-4 h-4" />
               Ver y Completar
@@ -69,7 +69,7 @@ export function ToastHandler() {
                 toast.dismiss(t);
                 await markAsCompleted(reminder.id);
               }}
-              className="flex-1 px-3 py-2 text-sm text-white/50 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center gap-2 border-l border-white/10"
+              className="flex-1 px-3 py-2 text-lg text-white/50 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center gap-2 border-l border-white/10"
             >
               <Clock className="w-4 h-4" />
               Marcar Leído

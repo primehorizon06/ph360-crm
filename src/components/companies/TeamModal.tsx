@@ -76,21 +76,21 @@ export function TeamModal({ team, companyId, onClose, onSave }: Props) {
 
         <div className="p-5 space-y-4">
           {serverError && (
-            <p className="text-red-400 text-sm bg-red-500/10 px-3 py-2 rounded-lg">
+            <p className="text-red-400 text-lg bg-red-500/10 px-3 py-2 rounded-lg">
               {serverError}
             </p>
           )}
 
           <div>
-            <label className="text-xs text-white/40 mb-1 block">
+            <label className="text-sm text-white/40 mb-1 block">
               Nombre del equipo
             </label>
             <input
               {...register("name")}
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-cyan-500/50"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50"
             />
             {errors.name && (
-              <p className="text-red-400 text-xs mt-1">{errors.name.message}</p>
+              <p className="text-red-400 text-sm mt-1">{errors.name.message}</p>
             )}
           </div>
         </div>
@@ -98,14 +98,14 @@ export function TeamModal({ team, companyId, onClose, onSave }: Props) {
         <div className="flex justify-end gap-3 p-5 border-t border-white/10">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-white/50 hover:text-white transition-colors"
+            className="px-4 py-2 text-lg text-white/50 hover:text-white transition-colors"
           >
             Cancelar
           </button>
           <button
             onClick={handleSubmit(onSubmit)}
             disabled={isSubmitting}
-            className="px-4 py-2 text-sm bg-cyan-500 hover:bg-cyan-400 text-black font-medium rounded-lg transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-lg bg-cyan-500 hover:bg-cyan-400 text-black font-medium rounded-lg transition-colors disabled:opacity-50"
           >
             {isSubmitting ? "Guardando..." : "Guardar"}
           </button>

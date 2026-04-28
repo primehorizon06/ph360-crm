@@ -49,7 +49,7 @@ export function ConfirmProductModal({
 
         {/* Badge producto */}
         <span
-          className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${PRODUCT_COLORS[data.product]}`}
+          className={`inline-flex items-center gap-1.5 text-sm font-medium px-2.5 py-1 rounded-full border ${PRODUCT_COLORS[data.product]}`}
         >
           <ShoppingBag size={11} />
           {PRODUCT_LABELS[data.product]}
@@ -57,19 +57,19 @@ export function ConfirmProductModal({
 
         {/* Método de pago */}
         <div className="bg-[#0d0f14] border border-white/10 rounded-xl p-4 space-y-2">
-          <p className="text-white/30 text-xs uppercase tracking-widest font-medium">
+          <p className="text-white/30 text-sm uppercase tracking-widest font-medium">
             Método de pago
           </p>
           {data.paymentType === "TARJETA" ? (
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <CreditCard size={14} className="text-white/40" />
-                <span className="text-white/70 text-sm">
+                <span className="text-white/70 text-lg">
                   {data.cardType === "DEBITO" ? "Débito" : "Crédito"} ····{" "}
                   {data.lastFour}
                 </span>
               </div>
-              <p className="text-white/40 text-xs pl-5">
+              <p className="text-white/40 text-sm pl-5">
                 {data.holderName} · {data.bank}
               </p>
             </div>
@@ -77,11 +77,11 @@ export function ConfirmProductModal({
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <Building2 size={14} className="text-white/40" />
-                <span className="text-white/70 text-sm">
+                <span className="text-white/70 text-lg">
                   Cuenta {data.accountNumber}
                 </span>
               </div>
-              <p className="text-white/40 text-xs pl-5">
+              <p className="text-white/40 text-sm pl-5">
                 {data.accountHolder} · {data.accountBank}
               </p>
             </div>
@@ -90,14 +90,14 @@ export function ConfirmProductModal({
 
         {/* Plan de pagos */}
         <div className="bg-[#0d0f14] border border-white/10 rounded-xl p-4 space-y-2">
-          <p className="text-white/30 text-xs uppercase tracking-widest font-medium">
+          <p className="text-white/30 text-sm uppercase tracking-widest font-medium">
             Plan de pagos
           </p>
           <div className="space-y-1.5 max-h-40 overflow-y-auto">
             {installments.map((inst) => (
               <div
                 key={inst.number}
-                className="flex items-center justify-between text-xs"
+                className="flex items-center justify-between text-sm"
               >
                 <div className="flex items-center gap-2 text-white/40">
                   <span className="w-4 h-4 rounded-full bg-white/5 flex items-center justify-center text-[10px]">
@@ -116,10 +116,10 @@ export function ConfirmProductModal({
             ))}
           </div>
           <div className="flex items-center justify-between pt-1 border-t border-white/5">
-            <span className="text-white/30 text-xs">
+            <span className="text-white/30 text-sm">
               {installments.length} cuota{installments.length !== 1 ? "s" : ""}
             </span>
-            <span className="text-cyan-400 text-sm font-semibold">
+            <span className="text-cyan-400 text-lg font-semibold">
               $ {formatAmount(total)}
             </span>
           </div>
@@ -130,7 +130,7 @@ export function ConfirmProductModal({
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 py-2 rounded-lg border border-white/10 text-white/40 hover:text-white/60 hover:bg-white/5 text-sm transition-colors"
+            className="flex-1 py-2 rounded-lg border border-white/10 text-white/40 hover:text-white/60 hover:bg-white/5 text-lg transition-colors"
           >
             Revisar
           </button>
@@ -138,7 +138,7 @@ export function ConfirmProductModal({
             type="button"
             onClick={onConfirm}
             disabled={saving}
-            className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-black font-medium text-sm transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-black font-medium text-lg transition-colors"
           >
             {saving && <Loader2 size={14} className="animate-spin" />}
             {saving ? "Guardando..." : "Confirmar"}

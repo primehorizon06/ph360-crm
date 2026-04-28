@@ -36,7 +36,7 @@ function Lightbox({
         className="max-w-4xl w-full max-h-[90vh] flex flex-col items-center gap-3"
         onClick={(e) => e.stopPropagation()}
       >
-        <p className="text-white/60 text-sm truncate max-w-full">
+        <p className="text-white/60 text-lg truncate max-w-full">
           {attachment.name}
         </p>
 
@@ -85,7 +85,7 @@ export function AttachmentPreview({
             <ZoomIn size={20} className="text-white" />
           </div>
           <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-2 py-1">
-            <p className="text-xs text-white/70 truncate">{attachment.name}</p>
+            <p className="text-sm text-white/70 truncate">{attachment.name}</p>
           </div>
         </button>
       ) : (
@@ -95,11 +95,11 @@ export function AttachmentPreview({
           className="flex items-center mt-auto gap-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/50 rounded-lg px-3 py-2 transition-colors group w-full"
         >
           <File size={14} className="text-red-400 shrink-0" />
-          <span className="text-xs text-white/60 truncate flex-1 group-hover:text-white transition-colors">
+          <span className="text-sm text-white/60 truncate flex-1 group-hover:text-white transition-colors">
             {attachment.name}
           </span>
           {attachment.size && (
-            <span className="text-xs text-white/30 shrink-0">
+            <span className="text-sm text-white/30 shrink-0">
               {(attachment.size / 1024).toFixed(0)}kb
             </span>
           )}

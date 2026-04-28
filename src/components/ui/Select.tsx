@@ -73,7 +73,7 @@ export function CustomSelect({
         ref={buttonRef}
         type="button"
         onClick={handleOpen}
-        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-cyan-500/50 flex items-center justify-between"
+        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50 flex items-center justify-between"
       >
         <span className="truncate">
           {labels?.[options.indexOf(value)] ?? value}
@@ -103,14 +103,14 @@ export function CustomSelect({
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   onClick={(e) => e.stopPropagation()}
-                  className="bg-transparent text-sm text-white/70 placeholder:text-white/30 outline-none w-full"
+                  className="bg-transparent text-lg text-white/70 placeholder:text-white/30 outline-none w-full"
                 />
               </div>
             )}
 
             <div className="max-h-48 overflow-y-auto">
               {filteredOptions.length === 0 ? (
-                <p className="px-3 py-2 text-sm text-white/30">
+                <p className="px-3 py-2 text-lg text-white/30">
                   Sin resultados
                 </p>
               ) : (
@@ -126,7 +126,7 @@ export function CustomSelect({
                         setOpen(false);
                         setSearch("");
                       }}
-                      className={`w-full px-3 py-2 text-sm text-left transition-colors hover:bg-white/5 ${
+                      className={`w-full px-3 py-2 text-lg text-left transition-colors hover:bg-white/5 ${
                         value === label ? "text-cyan-400" : "text-white/70"
                       }`}
                     >

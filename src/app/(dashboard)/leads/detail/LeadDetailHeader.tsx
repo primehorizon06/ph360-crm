@@ -24,7 +24,7 @@ export function LeadDetailHeader({ lead, role, onSuspend, onEdit }: Props) {
                 {lead.firstName} {lead.lastName}
               </h1>
               <span
-                className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[lead.status]}`}
+                className={`text-sm px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[lead.status]}`}
               >
                 {STATUS[lead.status]}
               </span>
@@ -60,7 +60,7 @@ export function LeadDetailHeader({ lead, role, onSuspend, onEdit }: Props) {
             {(role === "ADMIN" || role === "SUPERVISOR") && (
               <button
                 onClick={onSuspend}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-400/70 hover:text-red-400 hover:bg-red-500/10 border border-red-500/20 transition-colors"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-lg text-red-400/70 hover:text-red-400 hover:bg-red-500/10 border border-red-500/20 transition-colors"
               >
                 <Ban size={14} />
                 Suspender
@@ -68,7 +68,7 @@ export function LeadDetailHeader({ lead, role, onSuspend, onEdit }: Props) {
             )}
             <button
               onClick={onEdit}
-              className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-black font-medium px-4 py-2 rounded-lg text-sm transition-colors"
+              className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-black font-medium px-4 py-2 rounded-lg text-lg transition-colors"
             >
               <Pencil size={14} />
               Editar

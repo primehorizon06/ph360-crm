@@ -111,7 +111,7 @@ export function LeadsListView({ type }: Props) {
             placeholder={`Buscar por nombre, teléfono, email...`}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="bg-transparent text-sm text-white/70 placeholder:text-white/30 outline-none w-full"
+            className="bg-transparent text-lg text-white/70 placeholder:text-white/30 outline-none w-full"
           />
         </div>
 
@@ -139,7 +139,7 @@ export function LeadsListView({ type }: Props) {
                 {headers.map((h) => (
                   <th
                     key={h}
-                    className="text-left px-4 py-3 text-xs text-white/40 font-medium uppercase tracking-wider"
+                    className="text-left px-4 py-3 text-sm text-white/40 font-medium uppercase tracking-wider"
                   >
                     {h}
                   </th>
@@ -153,28 +153,28 @@ export function LeadsListView({ type }: Props) {
                   onClick={() => router.push(`${basePath}/${lead.id}`)}
                   className="hover:bg-white/5 transition-colors cursor-pointer"
                 >
-                  <td className="px-4 py-3 text-sm text-white font-medium">
+                  <td className="px-4 py-3 text-lg text-white font-medium">
                     {lead.firstName} {lead.lastName}
                   </td>
-                  <td className="px-4 py-3 text-sm text-white/70">
+                  <td className="px-4 py-3 text-lg text-white/70">
                     {lead.phone1}
                   </td>
                   {isAdmin && (
-                    <td className="px-4 py-3 text-sm text-white/50">
+                    <td className="px-4 py-3 text-lg text-white/50">
                       {lead.company?.name ?? "—"}
                     </td>
                   )}
-                  <td className="px-4 py-3 text-sm text-white/50">
+                  <td className="px-4 py-3 text-lg text-white/50">
                     {lead.assignedTo?.name ?? "—"}
                   </td>
-                  <td className="px-4 py-3 text-sm text-white/50">
+                  <td className="px-4 py-3 text-lg text-white/50">
                     {lead.assignedTo?.team?.name ?? "—"}
                   </td>
 
                   {isLead ? (
                     <td className="px-4 py-3">
                       <span
-                        className={`text-xs px-2 py-1 rounded-full font-medium ${STATUS_COLORS[lead.status]}`}
+                        className={`text-sm px-2 py-1 rounded-full font-medium ${STATUS_COLORS[lead.status]}`}
                       >
                         {STATUS[lead.status]}
                       </span>
@@ -188,13 +188,13 @@ export function LeadsListView({ type }: Props) {
                             lead.products.map((p) => (
                               <span
                                 key={p.id}
-                                className={`text-xs px-2 py-0.5 rounded-full border font-medium ${PRODUCT_COLORS[p.product as ProductType]}`}
+                                className={`text-sm px-2 py-0.5 rounded-full border font-medium ${PRODUCT_COLORS[p.product as ProductType]}`}
                               >
                                 {PRODUCT_LABELS[p.product as ProductType]}
                               </span>
                             ))
                           ) : (
-                            <span className="text-white/20 text-xs">—</span>
+                            <span className="text-white/20 text-sm">—</span>
                           )}
                         </div>
                       </td>
@@ -202,18 +202,18 @@ export function LeadsListView({ type }: Props) {
                       <td className="px-4 py-3">
                         {lead.customerStatus ? (
                           <span
-                            className={`text-xs px-2 py-1 rounded-full font-medium ${CUSTOMER_STATUS_COLORS[lead.customerStatus]}`}
+                            className={`text-sm px-2 py-1 rounded-full font-medium ${CUSTOMER_STATUS_COLORS[lead.customerStatus]}`}
                           >
                             {CUSTOMER_STATUS[lead.customerStatus]}
                           </span>
                         ) : (
-                          <span className="text-white/20 text-xs">—</span>
+                          <span className="text-white/20 text-sm">—</span>
                         )}
                       </td>
                     </>
                   )}
 
-                  <td className="px-4 py-3 text-xs text-white/30">
+                  <td className="px-4 py-3 text-sm text-white/30">
                     {isLead
                       ? new Date(lead.createdAt).toLocaleDateString("es-CO")
                       : lead.convertedAt
@@ -236,26 +236,26 @@ export function LeadsListView({ type }: Props) {
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <p className="text-white font-medium text-sm">
+                  <p className="text-white font-medium text-lg">
                     {lead.firstName} {lead.lastName}
                   </p>
-                  <p className="text-white/40 text-xs">{lead.phone1}</p>
+                  <p className="text-white/40 text-sm">{lead.phone1}</p>
                 </div>
                 {isLead ? (
                   <span
-                    className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${STATUS_COLORS[lead.status]}`}
+                    className={`text-sm px-2 py-0.5 rounded-full font-medium shrink-0 ${STATUS_COLORS[lead.status]}`}
                   >
                     {STATUS[lead.status]}
                   </span>
                 ) : lead.customerStatus ? (
                   <span
-                    className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${CUSTOMER_STATUS_COLORS[lead.customerStatus]}`}
+                    className={`text-sm px-2 py-0.5 rounded-full font-medium shrink-0 ${CUSTOMER_STATUS_COLORS[lead.customerStatus]}`}
                   >
                     {CUSTOMER_STATUS[lead.customerStatus]}
                   </span>
                 ) : null}
               </div>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/40">
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-white/40">
                 {lead.city && <span>{lead.city}</span>}
                 {lead.company?.name && <span>{lead.company.name}</span>}
                 {lead.assignedTo?.name && <span>{lead.assignedTo.name}</span>}
@@ -265,7 +265,7 @@ export function LeadsListView({ type }: Props) {
                   {lead.products.map((p) => (
                     <span
                       key={p.id}
-                      className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                      className="text-sm px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
                     >
                       {p.product.replace(/_/g, " ")}
                     </span>
@@ -277,7 +277,7 @@ export function LeadsListView({ type }: Props) {
         </div>
 
         {filtered.length === 0 && (
-          <div className="text-center py-12 text-white/30 text-sm">
+          <div className="text-center py-12 text-white/30 text-lg">
             No hay {label.toLowerCase()}s registrados
           </div>
         )}

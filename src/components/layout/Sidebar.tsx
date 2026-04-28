@@ -69,7 +69,7 @@ export function Sidebar() {
         {/* Logo */}
         <div className="h-14 px-4 border-b border-white/10 flex items-center justify-between">
           {!collapsed && (
-            <p className="text-white font-semibold text-sm leading-none">
+            <p className="text-white font-semibold text-lg leading-none">
               PH360 CRM
             </p>
           )}
@@ -103,7 +103,7 @@ export function Sidebar() {
                   <Link
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-lg transition-colors ${
                       collapsed ? "justify-center" : ""
                     } ${
                       isActive
@@ -116,7 +116,7 @@ export function Sidebar() {
                   </Link>
 
                   {collapsed && (
-                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-[#1e2030] border border-white/10 rounded-lg text-xs text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-[#1e2030] border border-white/10 rounded-lg text-sm text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                       {item.label}
                     </div>
                   )}
@@ -129,13 +129,13 @@ export function Sidebar() {
           <div className="relative group">
             <button
               onClick={() => setLeadsModalOpen(true)}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 w-full transition-colors ${collapsed ? "justify-center" : ""}`}
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-lg bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 w-full transition-colors ${collapsed ? "justify-center" : ""}`}
             >
               <Plus size={18} />
               {!collapsed && "Nuevo Lead"}
             </button>
             {collapsed && (
-              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-[#1e2030] border border-white/10 rounded-lg text-xs text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-[#1e2030] border border-white/10 rounded-lg text-sm text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                 Nuevo Lead
               </div>
             )}
@@ -147,13 +147,13 @@ export function Sidebar() {
           <div className="relative group">
             <button
               onClick={() => signOut({ callbackUrl: "/auth/login" })}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-400/70 hover:text-red-400 hover:bg-red-500/10 w-full transition-colors ${collapsed ? "justify-center" : ""}`}
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-lg text-red-400/70 hover:text-red-400 hover:bg-red-500/10 w-full transition-colors ${collapsed ? "justify-center" : ""}`}
             >
               <LogOut size={18} />
               {!collapsed && "Cerrar Sesión"}
             </button>
             {collapsed && (
-              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-[#1e2030] border border-white/10 rounded-lg text-xs text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-[#1e2030] border border-white/10 rounded-lg text-sm text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                 Cerrar Sesión
               </div>
             )}

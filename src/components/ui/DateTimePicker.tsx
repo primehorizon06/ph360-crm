@@ -17,7 +17,7 @@ export function DateTimePicker({
   return (
     <div className="flex flex-col gap-2">
       {label && (
-        <label htmlFor={id} className="text-sm font-medium text-gray-700">
+        <label htmlFor={id} className="text-lg font-medium text-gray-700">
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -32,7 +32,7 @@ export function DateTimePicker({
         timeIntervals={1}
         dateFormat="dd/MM/yyyy hh:mm aa"
         placeholderText={placeholderText}
-        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-cyan-500/50 flex items-center justify-between"
+        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50 flex items-center justify-between"
         required={required}
         minDate={minDate}
         maxDate={maxDate}

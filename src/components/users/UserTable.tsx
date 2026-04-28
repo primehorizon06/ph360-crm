@@ -33,7 +33,7 @@ export function UserTable({ users, onEdit, onDelete }: Props) {
               ].map((h) => (
                 <th
                   key={h}
-                  className="text-left px-4 py-3 text-xs text-white/40 font-medium uppercase tracking-wider"
+                  className="text-left px-4 py-3 text-sm text-white/40 font-medium uppercase tracking-wider"
                 >
                   {h}
                 </th>
@@ -43,28 +43,28 @@ export function UserTable({ users, onEdit, onDelete }: Props) {
           <tbody className="divide-y divide-white/5">
             {users.map((user) => (
               <tr key={user.id} className="hover:bg-white/5 transition-colors">
-                <td className="px-4 py-3 text-sm text-white/70">
+                <td className="px-4 py-3 text-lg text-white/70">
                   {user.username}
                 </td>
-                <td className="px-4 py-3 text-sm text-white font-medium">
+                <td className="px-4 py-3 text-lg text-white font-medium">
                   {user.name}
                 </td>
                 <td className="px-4 py-3">
                   <span
-                    className={`text-xs px-2 py-1 rounded-full font-medium ${roleColors[user.role]}`}
+                    className={`text-sm px-2 py-1 rounded-full font-medium ${roleColors[user.role]}`}
                   >
                     {user.role}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-sm text-white/50">
+                <td className="px-4 py-3 text-lg text-white/50">
                   {user.company?.name ?? "—"}
                 </td>
-                <td className="px-4 py-3 text-sm text-white/50">
+                <td className="px-4 py-3 text-lg text-white/50">
                   {user.team?.name ?? "—"}
                 </td>
                 <td className="px-4 py-3">
                   <span
-                    className={`text-xs px-2 py-1 rounded-full font-medium ${user.active ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}
+                    className={`text-sm px-2 py-1 rounded-full font-medium ${user.active ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}
                   >
                     {user.active ? "Activo" : "Inactivo"}
                   </span>
@@ -99,28 +99,28 @@ export function UserTable({ users, onEdit, onDelete }: Props) {
             className="p-4 flex items-start justify-between gap-3"
           >
             <div className="flex items-start gap-3 min-w-0">
-              <div className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-black font-bold text-sm shrink-0">
+              <div className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-black font-bold text-lg shrink-0">
                 {user.name[0].toUpperCase()}
               </div>
               <div className="min-w-0">
-                <p className="text-white font-medium text-sm truncate">
+                <p className="text-white font-medium text-lg truncate">
                   {user.name}
                 </p>
-                <p className="text-white/40 text-xs">{user.username}</p>
+                <p className="text-white/40 text-sm">{user.username}</p>
                 <div className="flex flex-wrap items-center gap-2 mt-1.5">
                   <span
-                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${roleColors[user.role]}`}
+                    className={`text-sm px-2 py-0.5 rounded-full font-medium ${roleColors[user.role]}`}
                   >
                     {user.role}
                   </span>
                   <span
-                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${user.active ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}
+                    className={`text-sm px-2 py-0.5 rounded-full font-medium ${user.active ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}
                   >
                     {user.active ? "Activo" : "Inactivo"}
                   </span>
                 </div>
                 {user.company?.name && (
-                  <p className="text-white/30 text-xs mt-1">
+                  <p className="text-white/30 text-sm mt-1">
                     {user.company.name}{" "}
                     {user.team?.name ? `· ${user.team.name}` : ""}
                   </p>
@@ -146,7 +146,7 @@ export function UserTable({ users, onEdit, onDelete }: Props) {
       </div>
 
       {users.length === 0 && (
-        <div className="text-center py-12 text-white/30 text-sm">
+        <div className="text-center py-12 text-white/30 text-lg">
           No hay usuarios registrados
         </div>
       )}

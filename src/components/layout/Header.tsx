@@ -32,7 +32,7 @@ export function Header() {
             <input
               type="text"
               placeholder="Buscar..."
-              className="bg-transparent text-sm text-white/70 placeholder:text-white/30 outline-none w-full"
+              className="bg-transparent text-lg text-white/70 placeholder:text-white/30 outline-none w-full"
             />
           </div>
         </div>
@@ -46,10 +46,10 @@ export function Header() {
           <NotificationBell />
           <div className="flex items-center gap-2 pl-4 border-l border-white/10">
             <div className="text-right hidden sm:block">
-              <p className="text-sm text-white font-medium leading-none">
+              <p className="text-lg text-white font-medium leading-none">
                 {session?.user?.name}
               </p>
-              <p className="text-xs text-white/40 mt-0.5">
+              <p className="text-sm text-white/40 mt-0.5">
                 {session?.user?.role}
               </p>
             </div>

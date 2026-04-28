@@ -29,7 +29,7 @@ export function RejectModal({ onConfirm, onCancel, saving }: Props) {
           </button>
         </div>
 
-        <p className="text-white/40 text-sm">
+        <p className="text-white/40 text-lg">
           Explica al asesor qué debe corregir antes de volver a solicitar
           aprobación.
         </p>
@@ -39,14 +39,14 @@ export function RejectModal({ onConfirm, onCancel, saving }: Props) {
           onChange={(e) => setNote(e.target.value)}
           placeholder="Ej: Falta el reporte de crédito actualizado..."
           rows={4}
-          className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all resize-none"
+          className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all resize-none"
         />
 
         <div className="flex gap-3">
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 py-2 rounded-lg border border-white/10 text-white/40 hover:text-white/60 hover:bg-white/5 text-sm transition-colors"
+            className="flex-1 py-2 rounded-lg border border-white/10 text-white/40 hover:text-white/60 hover:bg-white/5 text-lg transition-colors"
           >
             Cancelar
           </button>
@@ -54,7 +54,7 @@ export function RejectModal({ onConfirm, onCancel, saving }: Props) {
             type="button"
             onClick={() => onConfirm(note)}
             disabled={saving || !note.trim()}
-            className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-red-500 hover:bg-red-400 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-sm transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-red-500 hover:bg-red-400 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-lg transition-colors"
           >
             {saving && <Loader2 size={14} className="animate-spin" />}
             {saving ? "Rechazando..." : "Confirmar rechazo"}

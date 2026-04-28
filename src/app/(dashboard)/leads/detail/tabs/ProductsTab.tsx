@@ -150,13 +150,13 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <p className="text-white/40 text-sm">
+        <p className="text-white/40 text-lg">
           {products.length} producto{products.length !== 1 ? "s" : ""}
         </p>
         {!showForm && (
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-black font-medium px-4 py-2 rounded-lg text-sm transition-colors"
+            className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-black font-medium px-4 py-2 rounded-lg text-lg transition-colors"
           >
             <Plus size={16} />
             Asociar producto
@@ -171,7 +171,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
           className="bg-[#13151c] border border-white/10 rounded-xl p-4 space-y-4"
         >
           <div className="flex items-center justify-between">
-            <p className="text-white/60 text-sm font-medium">Nuevo producto</p>
+            <p className="text-white/60 text-lg font-medium">Nuevo producto</p>
             <button
               type="button"
               onClick={resetForm}
@@ -183,7 +183,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
 
           {/* Producto */}
           <div className="space-y-1">
-            <label className="text-sm text-white/40">Producto</label>
+            <label className="text-lg text-white/40">Producto</label>
             <Controller
               control={control}
               name="product"
@@ -199,14 +199,14 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
               )}
             />
             {errors.product && (
-              <p className="text-red-400 text-sm">{errors.product.message}</p>
+              <p className="text-red-400 text-lg">{errors.product.message}</p>
             )}
           </div>
 
           {/* Método de pago */}
           {product && (
             <div className="space-y-1">
-              <label className="text-sm text-white/40">Método de pago</label>
+              <label className="text-lg text-white/40">Método de pago</label>
               <Controller
                 control={control}
                 name="paymentType"
@@ -218,7 +218,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                           key={type}
                           type="button"
                           onClick={() => field.onChange(type)}
-                          className={`flex items-center justify-center gap-2 py-2.5 rounded-lg border text-sm font-medium transition-all ${
+                          className={`flex items-center justify-center gap-2 py-2.5 rounded-lg border text-lg font-medium transition-all ${
                             field.value === type
                               ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400"
                               : "border-white/10 bg-white/5 text-white/40 hover:text-white/60"
@@ -243,7 +243,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
           {paymentType === "TARJETA" && (
             <div className="space-y-3">
               <div className="space-y-1">
-                <label className="text-sm text-white/40">Tipo de tarjeta</label>
+                <label className="text-lg text-white/40">Tipo de tarjeta</label>
                 <Controller
                   control={control}
                   name="cardType"
@@ -254,7 +254,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                           key={ct}
                           type="button"
                           onClick={() => field.onChange(ct)}
-                          className={`py-2 rounded-lg border text-sm font-medium transition-all ${
+                          className={`py-2 rounded-lg border text-lg font-medium transition-all ${
                             field.value === ct
                               ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400"
                               : "border-white/10 bg-white/5 text-white/40 hover:text-white/60"
@@ -267,14 +267,14 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                   )}
                 />
                 {"cardType" in errors && errors.cardType && (
-                  <p className="text-red-400 text-sm">
+                  <p className="text-red-400 text-lg">
                     {errors.cardType.message}
                   </p>
                 )}
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm text-white/40">
+                <label className="text-lg text-white/40">
                   Últimos 4 dígitos
                 </label>
                 <input
@@ -283,42 +283,42 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                   inputMode="numeric"
                   maxLength={4}
                   placeholder="0000"
-                  className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all tracking-widest"
+                  className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all tracking-widest"
                 />
                 {"lastFour" in errors && errors.lastFour && (
-                  <p className="text-red-400 text-sm">
+                  <p className="text-red-400 text-lg">
                     {errors.lastFour.message}
                   </p>
                 )}
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm text-white/40">
+                <label className="text-lg text-white/40">
                   Nombre del titular
                 </label>
                 <input
                   {...register("holderName")}
                   type="text"
                   placeholder="Como aparece en la tarjeta"
-                  className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
+                  className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
                 />
                 {"holderName" in errors && errors.holderName && (
-                  <p className="text-red-400 text-sm">
+                  <p className="text-red-400 text-lg">
                     {errors.holderName.message}
                   </p>
                 )}
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm text-white/40">Banco</label>
+                <label className="text-lg text-white/40">Banco</label>
                 <input
                   {...register("bank")}
                   type="text"
                   placeholder="Ej. Chase, Bank of America..."
-                  className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
+                  className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
                 />
                 {"bank" in errors && errors.bank && (
-                  <p className="text-red-400 text-sm">{errors.bank.message}</p>
+                  <p className="text-red-400 text-lg">{errors.bank.message}</p>
                 )}
               </div>
             </div>
@@ -328,7 +328,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
           {paymentType === "CUENTA" && (
             <div className="space-y-3">
               <div className="space-y-1">
-                <label className="text-sm text-white/40">
+                <label className="text-lg text-white/40">
                   Número de cuenta
                 </label>
                 <input
@@ -336,42 +336,42 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                   type="text"
                   inputMode="numeric"
                   placeholder="Número de cuenta"
-                  className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
+                  className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
                 />
                 {"accountNumber" in errors && errors.accountNumber && (
-                  <p className="text-red-400 text-sm">
+                  <p className="text-red-400 text-lg">
                     {errors.accountNumber.message}
                   </p>
                 )}
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm text-white/40">
+                <label className="text-lg text-white/40">
                   Titular de la cuenta
                 </label>
                 <input
                   {...register("accountHolder")}
                   type="text"
                   placeholder="Nombre del titular"
-                  className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
+                  className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
                 />
                 {"accountHolder" in errors && errors.accountHolder && (
-                  <p className="text-red-400 text-sm">
+                  <p className="text-red-400 text-lg">
                     {errors.accountHolder.message}
                   </p>
                 )}
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm text-white/40">Banco</label>
+                <label className="text-lg text-white/40">Banco</label>
                 <input
                   {...register("accountBank")}
                   type="text"
                   placeholder="Ej. Chase, Bank of America..."
-                  className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
+                  className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
                 />
                 {"accountBank" in errors && errors.accountBank && (
-                  <p className="text-red-400 text-sm">
+                  <p className="text-red-400 text-lg">
                     {errors.accountBank.message}
                   </p>
                 )}
@@ -379,17 +379,17 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
 
               {/* Número de ruta */}
               <div className="space-y-1">
-                <label className="text-xs text-white/40">Número de ruta</label>
+                <label className="text-sm text-white/40">Número de ruta</label>
                 <input
                   {...register("routingNumber")}
                   type="text"
                   inputMode="numeric"
                   maxLength={9}
                   placeholder="000000000"
-                  className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all tracking-widest"
+                  className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all tracking-widest"
                 />
                 {"routingNumber" in errors && errors.routingNumber && (
-                  <p className="text-red-400 text-xs">
+                  <p className="text-red-400 text-sm">
                     {errors.routingNumber.message}
                   </p>
                 )}
@@ -397,7 +397,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
 
               {/* Tipo de cuenta */}
               <div className="space-y-1">
-                <label className="text-xs text-white/40">Tipo de cuenta</label>
+                <label className="text-sm text-white/40">Tipo de cuenta</label>
                 <Controller
                   control={control}
                   name="accountType"
@@ -408,7 +408,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                           key={type}
                           type="button"
                           onClick={() => field.onChange(type)}
-                          className={`py-2 rounded-lg border text-sm font-medium transition-all ${
+                          className={`py-2 rounded-lg border text-lg font-medium transition-all ${
                             field.value === type
                               ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400"
                               : "border-white/10 bg-white/5 text-white/40 hover:text-white/60"
@@ -421,7 +421,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                   )}
                 />
                 {"accountType" in errors && errors.accountType && (
-                  <p className="text-red-400 text-xs">
+                  <p className="text-red-400 text-sm">
                     {errors.accountType.message}
                   </p>
                 )}
@@ -445,7 +445,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
           {paymentType && (
             <button
               type="submit"
-              className="flex items-center justify-center gap-2 w-full bg-cyan-500 hover:bg-cyan-400 text-black font-medium px-4 py-2 rounded-lg text-sm transition-colors"
+              className="flex items-center justify-center gap-2 w-full bg-cyan-500 hover:bg-cyan-400 text-black font-medium px-4 py-2 rounded-lg text-lg transition-colors"
             >
               <Plus size={15} />
               Asociar producto
@@ -462,7 +462,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
       ) : products.length === 0 ? (
         <div className="bg-[#13151c] border border-white/10 rounded-xl p-12 flex flex-col items-center justify-center gap-2">
           <ShoppingBag size={32} className="text-white/20" />
-          <p className="text-white/50 text-sm">No hay productos asociados</p>
+          <p className="text-white/50 text-lg">No hay productos asociados</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
@@ -481,7 +481,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                 {/* Badge + total */}
                 <div className="flex items-start justify-between gap-2">
                   <span
-                    className={`inline-flex items-center gap-1.5 text-sm font-medium px-2.5 py-1 rounded-full border ${PRODUCT_COLORS[lp.product]}`}
+                    className={`inline-flex items-center gap-1.5 text-lg font-medium px-2.5 py-1 rounded-full border ${PRODUCT_COLORS[lp.product]}`}
                   >
                     <ShoppingBag size={11} />
                     {PRODUCT_LABELS[lp.product]}
@@ -561,7 +561,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                         }`}
                       >
                         <div className="flex items-center gap-1.5 text-white text-lg">
-                          <span className="w-4.5 h-4.5 rounded-full bg-white/5 flex items-center justify-center text-sm">
+                          <span className="w-4.5 h-4.5 rounded-full bg-white/5 flex items-center justify-center text-lg">
                             {inst.number}
                           </span>
                           {formatDate(inst.date)}

@@ -127,7 +127,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
 
         <div className="p-5 max-h-[70vh] overflow-y-auto space-y-4">
           {serverError && (
-            <p className="text-red-400 text-sm bg-red-500/10 px-3 py-2 rounded-lg">
+            <p className="text-red-400 text-lg bg-red-500/10 px-3 py-2 rounded-lg">
               {serverError}
             </p>
           )}
@@ -136,7 +136,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
             {/* phone1 — editable solo para admin, readonly para el resto */}
             {isAdmin ? (
               <div>
-                <label className="text-xs text-white/40 mb-1 block">
+                <label className="text-sm text-white/40 mb-1 block">
                   Teléfono 1 <span className="text-red-400">*</span>
                 </label>
                 <input
@@ -150,30 +150,30 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
                       shouldValidate: true,
                     })
                   }
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-cyan-500/50 tracking-widest"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50 tracking-widest"
                 />
                 {errors.phone1 && (
-                  <p className="text-red-400 text-xs mt-1">
+                  <p className="text-red-400 text-sm mt-1">
                     {errors.phone1.message}
                   </p>
                 )}
               </div>
             ) : (
               <div>
-                <label className="text-xs text-white/40 mb-1 block">
+                <label className="text-sm text-white/40 mb-1 block">
                   Teléfono 1
                 </label>
                 <input
                   type="tel"
                   value={lead.phone1}
                   disabled
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/30 outline-none cursor-not-allowed"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white/30 outline-none cursor-not-allowed"
                 />
               </div>
             )}
 
             <div>
-              <label className="text-xs text-white/40 mb-1 block">
+              <label className="text-sm text-white/40 mb-1 block">
                 Teléfono 2
               </label>
               <input
@@ -187,10 +187,10 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
                     shouldValidate: true,
                   })
                 }
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-cyan-500/50 tracking-widest"
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50 tracking-widest"
               />
               {errors.phone2 && (
-                <p className="text-red-400 text-xs mt-1">
+                <p className="text-red-400 text-sm mt-1">
                   {errors.phone2.message}
                 </p>
               )}
@@ -198,7 +198,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
 
             {/* SSN con máscara */}
             <div>
-              <label className="text-xs text-white/40 mb-1 block">
+              <label className="text-sm text-white/40 mb-1 block">
                 Seguro Social
               </label>
               <input
@@ -208,10 +208,10 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
                 maxLength={11}
                 value={ssnValue}
                 onChange={handleSsnChange}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-cyan-500/50 tracking-widest"
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50 tracking-widest"
               />
               {errors.ssn && (
-                <p className="text-red-400 text-xs mt-1">
+                <p className="text-red-400 text-sm mt-1">
                   {errors.ssn.message}
                 </p>
               )}
@@ -220,7 +220,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
             {/* Campos base compartidos */}
             {LEAD_FIELDS.map((field) => (
               <div key={field.name}>
-                <label className="text-xs text-white/40 mb-1 block">
+                <label className="text-sm text-white/40 mb-1 block">
                   {field.label}
                   {field.required && (
                     <span className="text-red-400 ml-1">*</span>
@@ -229,10 +229,10 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
                 <input
                   type={field.type}
                   {...register(field.name as keyof LeadFormData)}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-cyan-500/50"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50"
                 />
                 {errors[field.name as keyof LeadFormData] && (
-                  <p className="text-red-400 text-xs mt-1">
+                  <p className="text-red-400 text-sm mt-1">
                     {errors[field.name as keyof LeadFormData]?.message}
                   </p>
                 )}
@@ -241,7 +241,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
 
             {/* Estado */}
             <div>
-              <label className="text-xs text-white/40 mb-1 block">Estado</label>
+              <label className="text-sm text-white/40 mb-1 block">Estado</label>
               {isCustomer ? (
                 <CustomSelect
                   name="customerStatus"
@@ -264,7 +264,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
             {/* Franquicia — solo ADMIN */}
             {isAdmin && (
               <div>
-                <label className="text-xs text-white/40 mb-1 block">
+                <label className="text-sm text-white/40 mb-1 block">
                   Franquicia
                 </label>
                 <CustomSelect
@@ -287,7 +287,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
             {/* Equipo */}
             {(isAdmin || role === "SUPERVISOR" || role === "COACH") && (
               <div>
-                <label className="text-xs text-white/40 mb-1 block">
+                <label className="text-sm text-white/40 mb-1 block">
                   Equipo
                 </label>
                 <CustomSelect
@@ -309,7 +309,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
             {/* Agente */}
             {(isAdmin || role === "SUPERVISOR" || role === "COACH") && (
               <div>
-                <label className="text-xs text-white/40 mb-1 block">
+                <label className="text-sm text-white/40 mb-1 block">
                   Agente asignado
                 </label>
                 <CustomSelect
@@ -331,14 +331,14 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
         <div className="flex justify-end gap-3 p-5 border-t border-white/10">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-white/50 hover:text-white transition-colors"
+            className="px-4 py-2 text-lg text-white/50 hover:text-white transition-colors"
           >
             Cancelar
           </button>
           <button
             onClick={handleSubmit(onSubmit)}
             disabled={isSubmitting}
-            className="px-4 py-2 text-sm bg-cyan-500 hover:bg-cyan-400 text-black font-medium rounded-lg transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-lg bg-cyan-500 hover:bg-cyan-400 text-black font-medium rounded-lg transition-colors disabled:opacity-50"
           >
             {isSubmitting ? "Guardando..." : "Guardar"}
           </button>

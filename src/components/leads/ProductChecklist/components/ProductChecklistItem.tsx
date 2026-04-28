@@ -81,11 +81,11 @@ export function ProductChecklistItem({
           className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/5 transition-colors"
         >
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border text-amber-400 bg-amber-500/10 border-amber-500/20">
+            <span className="inline-flex items-center gap-1.5 text-sm font-medium px-2.5 py-1 rounded-full border text-amber-400 bg-amber-500/10 border-amber-500/20">
               <ShoppingBag size={11} />
               {PRODUCT_LABELS[product.product as keyof typeof PRODUCT_LABELS]}
             </span>
-            <span className="text-white/30 text-xs">
+            <span className="text-white/30 text-sm">
               {checkedCount}/{ALL_STEPS_APPROVAL.length} revisados
             </span>
           </div>
@@ -137,7 +137,7 @@ export function ProductChecklistItem({
                     />
                   )}
                   <span
-                    className={`text-sm transition-colors ${
+                    className={`text-lg transition-colors ${
                       checked[step.id]
                         ? "text-white/60 line-through"
                         : "text-white/70"
@@ -165,7 +165,7 @@ export function ProductChecklistItem({
                 type="button"
                 onClick={() => setShowRejectModal(true)}
                 disabled={saving}
-                className="flex-1 py-2 rounded-lg border border-red-500/20 text-red-400/70 hover:text-red-400 hover:bg-red-500/10 text-sm transition-colors disabled:opacity-50"
+                className="flex-1 py-2 rounded-lg border border-red-500/20 text-red-400/70 hover:text-red-400 hover:bg-red-500/10 text-lg transition-colors disabled:opacity-50"
               >
                 Rechazar
               </button>
@@ -178,7 +178,7 @@ export function ProductChecklistItem({
                     ? "Completa todos los pasos requeridos"
                     : undefined
                 }
-                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed text-black font-medium text-sm transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed text-black font-medium text-lg transition-colors"
               >
                 {saving ? <Loader2 size={14} className="animate-spin" /> : null}
                 {saving
@@ -190,7 +190,7 @@ export function ProductChecklistItem({
             </div>
 
             {!allRequiredChecked && (
-              <p className="text-amber-400/60 text-xs text-center">
+              <p className="text-amber-400/60 text-sm text-center">
                 Completa todos los pasos requeridos para aprobar
               </p>
             )}

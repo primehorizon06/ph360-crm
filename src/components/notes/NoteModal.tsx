@@ -81,13 +81,13 @@ export function NoteModal({ leadId, onClose, onSave }: Props) {
 
         <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
           {serverError && (
-            <p className="text-red-400 text-sm bg-red-500/10 px-3 py-2 rounded-lg">
+            <p className="text-red-400 text-lg bg-red-500/10 px-3 py-2 rounded-lg">
               {serverError}
             </p>
           )}
 
           <div>
-            <label className="text-xs text-white/40 mb-1 block">
+            <label className="text-sm text-white/40 mb-1 block">
               Título <span className="text-red-400">*</span>
             </label>
             <Controller
@@ -103,37 +103,37 @@ export function NoteModal({ leadId, onClose, onSave }: Props) {
               )}
             />
             {errors.title && (
-              <p className="text-red-400 text-xs mt-1">
+              <p className="text-red-400 text-sm mt-1">
                 {errors.title.message}
               </p>
             )}
           </div>
 
           <div>
-            <label className="text-xs text-white/40 mb-1 block">
+            <label className="text-sm text-white/40 mb-1 block">
               Contenido <span className="text-red-400">*</span>
             </label>
             <textarea
               {...register("content")}
               rows={5}
               placeholder="Escribe aquí los detalles de la nota..."
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-cyan-500/50 resize-none"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50 resize-none"
             />
             {errors.content && (
-              <p className="text-red-400 text-xs mt-1">
+              <p className="text-red-400 text-sm mt-1">
                 {errors.content.message}
               </p>
             )}
           </div>
 
           <div>
-            <label className="text-xs text-white/40 mb-1 block">
+            <label className="text-sm text-white/40 mb-1 block">
               Adjuntos (imágenes y PDF)
             </label>
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 border-dashed rounded-lg px-4 py-3 text-sm text-white/50 hover:text-white transition-colors w-full"
+              className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 border-dashed rounded-lg px-4 py-3 text-lg text-white/50 hover:text-white transition-colors w-full"
             >
               <Paperclip size={16} />
               Seleccionar archivos
@@ -163,10 +163,10 @@ export function NoteModal({ leadId, onClose, onSave }: Props) {
                           className="text-cyan-400 shrink-0"
                         />
                       )}
-                      <span className="text-xs text-white/60 truncate">
+                      <span className="text-sm text-white/60 truncate">
                         {file.name}
                       </span>
-                      <span className="text-xs text-white/30 shrink-0">
+                      <span className="text-sm text-white/30 shrink-0">
                         {(file.size / 1024).toFixed(0)}kb
                       </span>
                     </div>
@@ -187,14 +187,14 @@ export function NoteModal({ leadId, onClose, onSave }: Props) {
         <div className="flex justify-end gap-3 p-5 border-t border-white/10">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-white/50 hover:text-white transition-colors"
+            className="px-4 py-2 text-lg text-white/50 hover:text-white transition-colors"
           >
             Cancelar
           </button>
           <button
             onClick={handleSubmit(onSubmit)}
             disabled={isSubmitting}
-            className="px-4 py-2 text-sm bg-cyan-500 hover:bg-cyan-400 text-black font-medium rounded-lg transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-lg bg-cyan-500 hover:bg-cyan-400 text-black font-medium rounded-lg transition-colors disabled:opacity-50"
           >
             {isSubmitting ? "Guardando..." : "Guardar nota"}
           </button>

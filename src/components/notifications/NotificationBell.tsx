@@ -100,7 +100,7 @@ export function NotificationBell() {
       >
         <Bell className="w-5 h-5 text-white" />
         {totalCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-cyan-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+          <span className="absolute -top-1 -right-1 bg-cyan-500 text-white text-sm rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
             {totalCount > 9 ? "9+" : totalCount}
           </span>
         )}
@@ -117,12 +117,12 @@ export function NotificationBell() {
             {pendingReminders.length > 0 && (
               <>
                 <div className="p-3 border-b border-white/10 flex justify-between items-center bg-white/5">
-                  <h3 className="text-white/70 text-xs font-medium uppercase tracking-widest">
+                  <h3 className="text-white/70 text-sm font-medium uppercase tracking-widest">
                     Recordatorios
                   </h3>
                   <button
                     onClick={markAllRemindersCompleted}
-                    className="text-xs text-cyan-400 hover:text-cyan-300"
+                    className="text-sm text-cyan-400 hover:text-cyan-300"
                   >
                     Marcar todos
                   </button>
@@ -138,13 +138,13 @@ export function NotificationBell() {
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <p className="text-white text-sm font-medium">
+                          <p className="text-white text-lg font-medium">
                             {reminder.reason}
                           </p>
-                          <p className="text-white/40 text-xs mt-0.5">
+                          <p className="text-white/40 text-sm mt-0.5">
                             Lead: {reminder.lead.fullName}
                           </p>
-                          <p className="text-cyan-400 text-xs mt-0.5">
+                          <p className="text-cyan-400 text-sm mt-0.5">
                             {new Date(reminder.scheduledAt).toLocaleString(
                               "es",
                             )}
@@ -167,12 +167,12 @@ export function NotificationBell() {
             {notifications.length > 0 && (
               <>
                 <div className="p-3 border-b border-white/10 flex justify-between items-center bg-white/5">
-                  <h3 className="text-white/70 text-xs font-medium uppercase tracking-widest">
+                  <h3 className="text-white/70 text-sm font-medium uppercase tracking-widest">
                     Aprobaciones
                   </h3>
                   <button
                     onClick={markAllNotificationsRead}
-                    className="text-xs text-cyan-400 hover:text-cyan-300"
+                    className="text-sm text-cyan-400 hover:text-cyan-300"
                   >
                     Marcar todas
                   </button>
@@ -191,13 +191,13 @@ export function NotificationBell() {
                             className="text-amber-400 shrink-0 mt-0.5"
                           />
                           <div className="min-w-0">
-                            <p className="text-white text-sm font-medium">
+                            <p className="text-white text-lg font-medium">
                               {n.title}
                             </p>
-                            <p className="text-white/40 text-xs mt-0.5">
+                            <p className="text-white/40 text-sm mt-0.5">
                               {n.body}
                             </p>
-                            <p className="text-white/20 text-xs mt-0.5">
+                            <p className="text-white/20 text-sm mt-0.5">
                               {new Date(n.createdAt).toLocaleString("es")}
                             </p>
                           </div>
@@ -217,7 +217,7 @@ export function NotificationBell() {
 
             {/* Estado vacío */}
             {totalCount === 0 && (
-              <div className="p-6 text-center text-white/30 text-sm">
+              <div className="p-6 text-center text-white/30 text-lg">
                 No hay notificaciones pendientes
               </div>
             )}

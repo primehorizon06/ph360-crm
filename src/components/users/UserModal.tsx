@@ -154,7 +154,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
           </div>
 
           {serverError && (
-            <p className="text-red-400 text-sm bg-red-500/10 px-3 py-2 rounded-lg">
+            <p className="text-red-400 text-lg bg-red-500/10 px-3 py-2 rounded-lg">
               {serverError}
             </p>
           )}
@@ -183,17 +183,17 @@ export function UserModal({ user, onClose, onSave }: Props) {
             },
           ].map((field) => (
             <div key={field.name}>
-              <label className="text-xs text-white/40 mb-1 block">
+              <label className="text-sm text-white/40 mb-1 block">
                 {field.label}
               </label>
               <input
                 type={field.type}
                 disabled={field.disabled}
                 {...register(field.name as keyof UserFormData)}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-cyan-500/50 disabled:opacity-40"
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50 disabled:opacity-40"
               />
               {errors[field.name as keyof UserFormData] && (
-                <p className="text-red-400 text-xs mt-1">
+                <p className="text-red-400 text-sm mt-1">
                   {errors[field.name as keyof UserFormData]?.message}
                 </p>
               )}
@@ -202,7 +202,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
 
           {/* Rol */}
           <div>
-            <label className="text-xs text-white/40 mb-1 block">Rol</label>
+            <label className="text-sm text-white/40 mb-1 block">Rol</label>
             <CustomSelect
               name="role"
               value={watch("role")}
@@ -210,13 +210,13 @@ export function UserModal({ user, onClose, onSave }: Props) {
               options={roles}
             />
             {errors.role && (
-              <p className="text-red-400 text-xs mt-1">{errors.role.message}</p>
+              <p className="text-red-400 text-sm mt-1">{errors.role.message}</p>
             )}
           </div>
 
           {/* Empresa */}
           <div>
-            <label className="text-xs text-white/40 mb-1 block">
+            <label className="text-sm text-white/40 mb-1 block">
               Franquicia <span className="text-red-400">*</span>
             </label>
             <CustomSelect
@@ -236,7 +236,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
               ]}
             />
             {errors.companyId && (
-              <p className="text-red-400 text-xs mt-1">
+              <p className="text-red-400 text-sm mt-1">
                 {errors.companyId.message}
               </p>
             )}
@@ -244,7 +244,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
 
           {/* Equipo */}
           <div>
-            <label className="text-xs text-white/40 mb-1 block">
+            <label className="text-sm text-white/40 mb-1 block">
               Equipo <span className="text-red-400">*</span>
             </label>
             <CustomSelect
@@ -258,7 +258,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
               labels={["Seleccionar equipo", ...teams.map((t) => t.name)]}
             />
             {errors.teamId && (
-              <p className="text-red-400 text-xs mt-1">
+              <p className="text-red-400 text-sm mt-1">
                 {errors.teamId.message}
               </p>
             )}
@@ -273,7 +273,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
                 {...register("active")}
                 className="accent-cyan-500"
               />
-              <label htmlFor="active" className="text-sm text-white/70">
+              <label htmlFor="active" className="text-lg text-white/70">
                 Usuario activo
               </label>
             </div>
@@ -284,14 +284,14 @@ export function UserModal({ user, onClose, onSave }: Props) {
         <div className="flex justify-end gap-3 p-5 border-t border-white/10">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-white/50 hover:text-white transition-colors"
+            className="px-4 py-2 text-lg text-white/50 hover:text-white transition-colors"
           >
             Cancelar
           </button>
           <button
             onClick={handleSubmit(onSubmit)}
             disabled={isSubmitting}
-            className="px-4 py-2 text-sm bg-cyan-500 hover:bg-cyan-400 text-black font-medium rounded-lg transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-lg bg-cyan-500 hover:bg-cyan-400 text-black font-medium rounded-lg transition-colors disabled:opacity-50"
           >
             {isSubmitting ? "Guardando..." : "Guardar"}
           </button>

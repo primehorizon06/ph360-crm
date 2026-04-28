@@ -113,14 +113,14 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <p className="text-white/40 text-sm">
+        <p className="text-white/40 text-lg">
           {filtered.length} de {attachments.length} adjunto
           {filtered.length !== 1 ? "s" : ""}
         </p>
         {hasFilters && (
           <button
             onClick={clearFilters}
-            className="flex items-center gap-1 text-xs text-white/40 hover:text-white/70 transition-colors"
+            className="flex items-center gap-1 text-sm text-white/40 hover:text-white/70 transition-colors"
           >
             <X size={12} />
             Limpiar filtros
@@ -132,7 +132,7 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
       <div className="bg-[#13151c] border border-white/10 rounded-xl p-4 space-y-3">
         <div className="grid grid-cols-3 gap-3">
           <div className="space-y-1">
-            <label className="flex items-center gap-1.5 text-xs text-white/40">
+            <label className="flex items-center gap-1.5 text-sm text-white/40">
               <Calendar size={11} />
               Desde
             </label>
@@ -140,11 +140,11 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all [color-scheme:dark]"
+              className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all [color-scheme:dark]"
             />
           </div>
           <div className="space-y-1">
-            <label className="flex items-center gap-1.5 text-xs text-white/40">
+            <label className="flex items-center gap-1.5 text-sm text-white/40">
               <Calendar size={11} />
               Hasta
             </label>
@@ -153,11 +153,11 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
               min={dateFrom || undefined}
-              className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all [color-scheme:dark]"
+              className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all [color-scheme:dark]"
             />
           </div>
           <div className="space-y-1">
-          <label className="flex items-center gap-1.5 text-xs text-white/40">
+          <label className="flex items-center gap-1.5 text-sm text-white/40">
             <User size={11} />
             Autor
           </label>
@@ -171,7 +171,7 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
               placeholder="Buscar por nombre de autor..."
               value={authorSearch}
               onChange={(e) => setAuthorSearch(e.target.value)}
-              className="w-full bg-[#0d0f14] border border-white/10 rounded-lg pl-8 py-2 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
+              className="w-full bg-[#0d0f14] border border-white/10 rounded-lg pl-8 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
             />
             {authorSearch && (
               <button
@@ -190,14 +190,14 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
 
       {/* Uploader */}
       <div className="bg-[#13151c] border border-white/10 rounded-xl p-4 space-y-3">
-        <p className="text-white/30 text-xs font-medium uppercase tracking-widest">
+        <p className="text-white/30 text-sm font-medium uppercase tracking-widest">
           Subir archivos
         </p>
 
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 border-dashed rounded-lg px-4 py-3 text-sm text-white/50 hover:text-white transition-colors w-full"
+          className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 border-dashed rounded-lg px-4 py-3 text-lg text-white/50 hover:text-white transition-colors w-full"
         >
           <Paperclip size={16} />
           Seleccionar archivos
@@ -224,10 +224,10 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
                   ) : (
                     <ImageIcon size={14} className="text-cyan-400 shrink-0" />
                   )}
-                  <span className="text-xs text-white/60 truncate">
+                  <span className="text-sm text-white/60 truncate">
                     {file.name}
                   </span>
-                  <span className="text-xs text-white/30 shrink-0">
+                  <span className="text-sm text-white/30 shrink-0">
                     {(file.size / 1024).toFixed(0)} kb
                   </span>
                 </div>
@@ -242,14 +242,14 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
             ))}
 
             {uploadError && (
-              <p className="text-red-400 text-xs px-1">{uploadError}</p>
+              <p className="text-red-400 text-sm px-1">{uploadError}</p>
             )}
 
             <button
               type="button"
               onClick={handleUpload}
               disabled={uploading}
-              className="flex items-center justify-center gap-2 w-full bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed text-black font-medium px-4 py-2 rounded-lg text-sm transition-colors"
+              className="flex items-center justify-center gap-2 w-full bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed text-black font-medium px-4 py-2 rounded-lg text-lg transition-colors"
             >
               {uploading ? (
                 <Loader2 size={15} className="animate-spin" />
@@ -266,13 +266,13 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
 
       {/* List */}
       {loading ? (
-        <div className="text-center py-8 text-white/30 text-sm">
+        <div className="text-center py-8 text-white/30 text-lg">
           <Loading />
         </div>
       ) : filtered.length === 0 ? (
         <div className="bg-[#13151c] border border-white/10 rounded-xl p-12 flex flex-col items-center justify-center gap-2">
           <Paperclip size={32} className="text-white/20" />
-          <p className="text-white/30 text-sm">
+          <p className="text-white/30 text-lg">
             {hasFilters
               ? "Sin resultados para los filtros aplicados"
               : "No hay adjuntos aún"}
@@ -287,7 +287,7 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
             >
               <AttachmentPreview attachment={att} />
               <div className="mt-auto min-w-0">
-                <span className="text-white/30 text-xs flex items-center gap-1">
+                <span className="text-white/30 text-sm flex items-center gap-1">
                   <User size={10} />
                   {att.author.name}
                 </span>

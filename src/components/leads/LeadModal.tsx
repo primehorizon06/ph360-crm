@@ -76,14 +76,14 @@ export function LeadModal({ onClose, onSave }: Props) {
 
         <div className="p-5 max-h-[70vh] overflow-y-auto">
           {serverError && (
-            <p className="text-red-400 text-sm bg-red-500/10 px-3 py-2 rounded-lg mb-4">
+            <p className="text-red-400 text-lg bg-red-500/10 px-3 py-2 rounded-lg mb-4">
               {serverError}
             </p>
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-xs text-white/40 mb-1 block">
+              <label className="text-sm text-white/40 mb-1 block">
                 Teléfono 1 <span className="text-red-400">*</span>
               </label>
               <input
@@ -93,16 +93,16 @@ export function LeadModal({ onClose, onSave }: Props) {
                 maxLength={14}
                 value={phone1Value}
                 onChange={(e) => setValue("phone1", formatPhone(e.target.value), { shouldValidate: true })}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-cyan-500/50 tracking-widest"
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50 tracking-widest"
               />
               {errors.phone1 && (
-                <p className="text-red-400 text-xs mt-1">
+                <p className="text-red-400 text-sm mt-1">
                   {errors.phone1.message}
                 </p>
               )}
             </div>
             <div>
-              <label className="text-xs text-white/40 mb-1 block">
+              <label className="text-sm text-white/40 mb-1 block">
                 Teléfono 2
               </label>
               <input
@@ -112,10 +112,10 @@ export function LeadModal({ onClose, onSave }: Props) {
                 maxLength={14}
                 value={phone2Value}
                 onChange={(e) => setValue("phone2", formatPhone(e.target.value), { shouldValidate: true })}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-cyan-500/50 tracking-widest"
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50 tracking-widest"
               />
               {errors.phone2 && (
-                <p className="text-red-400 text-xs mt-1">
+                <p className="text-red-400 text-sm mt-1">
                   {errors.phone2.message}
                 </p>
               )}
@@ -123,7 +123,7 @@ export function LeadModal({ onClose, onSave }: Props) {
 
             {/* SSN con máscara */}
             <div>
-              <label className="text-xs text-white/40 mb-1 block">
+              <label className="text-sm text-white/40 mb-1 block">
                 Seguro Social
               </label>
               <input
@@ -133,10 +133,10 @@ export function LeadModal({ onClose, onSave }: Props) {
                 maxLength={11}
                 value={ssnValue}
                 onChange={handleSsnChange}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-cyan-500/50 tracking-widest"
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50 tracking-widest"
               />
               {errors.ssn && (
-                <p className="text-red-400 text-xs mt-1">
+                <p className="text-red-400 text-sm mt-1">
                   {errors.ssn.message}
                 </p>
               )}
@@ -145,7 +145,7 @@ export function LeadModal({ onClose, onSave }: Props) {
             {/* Campos base compartidos */}
             {LEAD_FIELDS.map((field) => (
               <div key={field.name}>
-                <label className="text-xs text-white/40 mb-1 block">
+                <label className="text-sm text-white/40 mb-1 block">
                   {field.label}
                   {field.required && (
                     <span className="text-red-400 ml-1">*</span>
@@ -154,10 +154,10 @@ export function LeadModal({ onClose, onSave }: Props) {
                 <input
                   type={field.type}
                   {...register(field.name as keyof LeadFormData)}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-cyan-500/50"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50"
                 />
                 {errors[field.name as keyof LeadFormData] && (
-                  <p className="text-red-400 text-xs mt-1">
+                  <p className="text-red-400 text-sm mt-1">
                     {errors[field.name as keyof LeadFormData]?.message}
                   </p>
                 )}
@@ -170,7 +170,7 @@ export function LeadModal({ onClose, onSave }: Props) {
               control={control}
               render={({ field: { value, onChange } }) => (
                 <div>
-                  <label className="text-xs text-white/40 mb-1 block">
+                  <label className="text-sm text-white/40 mb-1 block">
                     Estado
                   </label>
                   <CustomSelect
@@ -182,7 +182,7 @@ export function LeadModal({ onClose, onSave }: Props) {
                     searchable
                   />
                   {errors.status && (
-                    <p className="text-red-400 text-xs mt-1">
+                    <p className="text-red-400 text-sm mt-1">
                       {errors.status.message}
                     </p>
                   )}
@@ -195,14 +195,14 @@ export function LeadModal({ onClose, onSave }: Props) {
         <div className="flex justify-end gap-3 p-5 border-t border-white/10">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-white/50 hover:text-white transition-colors"
+            className="px-4 py-2 text-lg text-white/50 hover:text-white transition-colors"
           >
             Cancelar
           </button>
           <button
             onClick={handleSubmit(onSubmit)}
             disabled={isSubmitting}
-            className="px-4 py-2 text-sm bg-cyan-500 hover:bg-cyan-400 text-black font-medium rounded-lg transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-lg bg-cyan-500 hover:bg-cyan-400 text-black font-medium rounded-lg transition-colors disabled:opacity-50"
           >
             {isSubmitting ? "Guardando..." : "Crear Lead"}
           </button>

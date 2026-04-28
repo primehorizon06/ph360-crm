@@ -126,7 +126,7 @@ export default function CompaniesPage() {
             placeholder="Buscar franquicia..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="bg-transparent text-sm text-white/70 placeholder:text-white/30 outline-none w-full"
+            className="bg-transparent text-lg text-white/70 placeholder:text-white/30 outline-none w-full"
           />
         </div>
         <CustomSelect
@@ -186,12 +186,12 @@ export default function CompaniesPage() {
                       {company.name}
                     </p>
                     <span
-                      className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${company.active ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}
+                      className={`text-sm px-2 py-0.5 rounded-full shrink-0 ${company.active ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}
                     >
                       {company.active ? "Activa" : "Inactiva"}
                     </span>
                   </div>
-                  <p className="text-white/40 text-xs mt-0.5">
+                  <p className="text-white/40 text-sm mt-0.5">
                     {company._count.teams} equipos · {company._count.users}{" "}
                     usuarios
                   </p>
@@ -224,8 +224,8 @@ export default function CompaniesPage() {
                   >
                     <div className="flex items-center gap-2">
                       <Users size={14} className="text-white/40" />
-                      <span className="text-sm text-white/70">{team.name}</span>
-                      <span className="text-xs text-white/30">
+                      <span className="text-lg text-white/70">{team.name}</span>
+                      <span className="text-sm text-white/30">
                         {team._count.users} usuarios
                       </span>
                     </div>
@@ -260,7 +260,7 @@ export default function CompaniesPage() {
                       companyId: company.id,
                     })
                   }
-                  className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 text-sm transition-colors mt-1"
+                  className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 text-lg transition-colors mt-1"
                 >
                   <Plus size={14} />
                   Nuevo equipo
@@ -271,7 +271,7 @@ export default function CompaniesPage() {
         ))}
 
         {companies.length === 0 && (
-          <div className="text-center py-12 text-white/30 text-sm">
+          <div className="text-center py-12 text-white/30 text-lg">
             No hay franquicias registradas
           </div>
         )}
