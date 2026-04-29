@@ -44,8 +44,6 @@ export async function PATCH(
   const user = session.user;
   const role = user.role;
   const body = await req.json();
-  console.log("body recibido:", body); // ← aquí
-  console.log("status recibido:", body.status);
 
   // Obtener lead actual
   const existing = await prisma.lead.findUnique({ where: { id: Number(id) } });
@@ -108,6 +106,7 @@ export async function PATCH(
       assignedToId: body.assignedToId
         ? Number(body.assignedToId)
         : existing.assignedToId,
+      customerStatus: body.customerStatus || existing.customerStatus,
     };
   } else {
     // Agent solo edita datos básicos
@@ -124,6 +123,7 @@ export async function PATCH(
       birthDate: body.birthDate ? new Date(body.birthDate) : null,
       contactTime: body.contactTime || null,
       status: body.status,
+      customerStatus: body.customerStatus || existing.customerStatus,
     };
   }
 

@@ -57,7 +57,6 @@ export const CUSTOMER_STATUS_COLORS: Record<string, string> = {
 export const LEAD_FIELDS = [
   { label: "Nombres", name: "firstName", type: "text", required: true },
   { label: "Apellidos", name: "lastName", type: "text", required: false },
-  { label: "Teléfono 2", name: "phone2", type: "tel", required: false },
   { label: "Dirección", name: "address", type: "text", required: false },
   { label: "Ciudad", name: "city", type: "text", required: false },
   { label: "Estado/Provincia", name: "state", type: "text", required: false },

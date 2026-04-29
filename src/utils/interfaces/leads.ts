@@ -1,6 +1,7 @@
 export interface Lead {
   id: number;
   firstName: string;
+  type: "lead" | "customer";
   lastName?: string | null;
   phone1: string;
   phone2?: string | null;

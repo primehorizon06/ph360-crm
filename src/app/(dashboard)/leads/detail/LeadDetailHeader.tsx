@@ -2,7 +2,12 @@
 
 import { Ban, Pencil } from "lucide-react";
 import { Lead } from "@/utils/interfaces/leads";
-import { STATUS, STATUS_COLORS } from "@/utils/constants/leads";
+import {
+  CUSTOMER_STATUS,
+  CUSTOMER_STATUS_COLORS,
+  STATUS,
+  STATUS_COLORS,
+} from "@/utils/constants/leads";
 import { CopyButton } from "@/components/ui/CopyButton";
 
 interface Props {
@@ -13,7 +18,6 @@ interface Props {
 }
 
 export function LeadDetailHeader({ lead, role, onSuspend, onEdit }: Props) {
-
   return (
     <>
       <div className="bg-[#13151c] border border-white/10 rounded-xl p-5">
@@ -23,15 +27,31 @@ export function LeadDetailHeader({ lead, role, onSuspend, onEdit }: Props) {
               <h1 className="text-xl font-bold text-white">
                 {lead.firstName} {lead.lastName}
               </h1>
-              <span
-                className={`text-sm px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[lead.status]}`}
-              >
-                {STATUS[lead.status]}
-              </span>
+              {lead.type === "customer" && (
+                <span
+                  className={`text-sm px-2 py-0.5 rounded-full font-medium ${CUSTOMER_STATUS_COLORS[lead?.customerStatus as keyof typeof CUSTOMER_STATUS_COLORS]}`}
+                >
+                  {
+                    CUSTOMER_STATUS[
+                      lead.customerStatus as keyof typeof CUSTOMER_STATUS
+                    ]
+                  }
+                </span>
+              )}
+              {lead.type === "lead" && (
+                <span
+                  className={`text-sm px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[lead?.status as keyof typeof STATUS_COLORS]}`}
+                >
+                  {STATUS_COLORS[lead.status as keyof typeof STATUS_COLORS]}
+                </span>
+              )}
             </div>
             <div className="flex gap-3">
               <p className="text-white text-md mt-0.5 font-bold">
-                ID <span className="bg-cyan-500/10 text-cyan-400 p-1 rounded"># {lead.id}</span> 
+                ID{" "}
+                <span className="bg-cyan-500/10 text-cyan-400 p-1 rounded">
+                  # {lead.id}
+                </span>
               </p>
               <CopyButton value={lead.id} label="Copiar ID" />
             </div>
@@ -39,9 +59,7 @@ export function LeadDetailHeader({ lead, role, onSuspend, onEdit }: Props) {
               <span className="text-lg text-white">
                 <strong className="text-lg text-white/60">Teléfono(s):</strong>{" "}
                 {lead.phone1}
-                {lead.phone2 && (
-                  <span className="ml-1">/ {lead.phone2}</span>
-                )}
+                {lead.phone2 && <span className="ml-1">/ {lead.phone2}</span>}
               </span>
               {lead.assignedTo?.name && (
                 <span className="text-lg text-white/60">

@@ -44,6 +44,8 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
       email: lead.email ?? "",
       birthDate: lead.birthDate ? lead.birthDate.split("T")[0] : "",
       contactTime: lead.contactTime ?? "",
+      status: lead.status,
+      customerStatus: lead.customerStatus ?? "",
     },
   });
 
@@ -124,225 +126,228 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
             <X size={18} />
           </button>
         </div>
+        <form onSubmit={handleSubmit(onSubmit, (errors) => console.log("Errores zod:", errors))}>
+          <div className="p-5 max-h-[70vh] overflow-y-auto space-y-4">
+            {serverError && (
+              <p className="text-red-400 text-lg bg-red-500/10 px-3 py-2 rounded-lg">
+                {serverError}
+              </p>
+            )}
 
-        <div className="p-5 max-h-[70vh] overflow-y-auto space-y-4">
-          {serverError && (
-            <p className="text-red-400 text-lg bg-red-500/10 px-3 py-2 rounded-lg">
-              {serverError}
-            </p>
-          )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* phone1 — editable solo para admin, readonly para el resto */}
+              {isAdmin ? (
+                <div>
+                  <label className="text-sm text-white/40 mb-1 block">
+                    Teléfono 1 <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    placeholder="(000) 000-0000"
+                    maxLength={14}
+                    value={phone1Value}
+                    onChange={(e) =>
+                      setValue("phone1", formatPhone(e.target.value), {
+                        shouldValidate: true,
+                      })
+                    }
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50 tracking-widest"
+                  />
+                  {errors.phone1 && (
+                    <p className="text-red-400 text-sm mt-1">
+                      {errors.phone1.message}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <label className="text-sm text-white/40 mb-1 block">
+                    Teléfono 1
+                  </label>
+                  <input
+                    type="tel"
+                    value={lead.phone1}
+                    disabled
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white/30 outline-none cursor-not-allowed"
+                  />
+                </div>
+              )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* phone1 — editable solo para admin, readonly para el resto */}
-            {isAdmin ? (
               <div>
                 <label className="text-sm text-white/40 mb-1 block">
-                  Teléfono 1 <span className="text-red-400">*</span>
+                  Teléfono 2
                 </label>
                 <input
                   type="tel"
                   inputMode="numeric"
                   placeholder="(000) 000-0000"
                   maxLength={14}
-                  value={phone1Value}
+                  value={phone2Value}
                   onChange={(e) =>
-                    setValue("phone1", formatPhone(e.target.value), {
+                    setValue("phone2", formatPhone(e.target.value), {
                       shouldValidate: true,
                     })
                   }
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50 tracking-widest"
                 />
-                {errors.phone1 && (
+                {errors.phone2 && (
                   <p className="text-red-400 text-sm mt-1">
-                    {errors.phone1.message}
+                    {errors.phone2.message}
                   </p>
                 )}
               </div>
-            ) : (
+
+              {/* SSN con máscara */}
               <div>
                 <label className="text-sm text-white/40 mb-1 block">
-                  Teléfono 1
+                  Seguro Social
                 </label>
                 <input
-                  type="tel"
-                  value={lead.phone1}
-                  disabled
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white/30 outline-none cursor-not-allowed"
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="000-00-0000"
+                  maxLength={11}
+                  value={ssnValue}
+                  onChange={handleSsnChange}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50 tracking-widest"
                 />
+                {errors.ssn && (
+                  <p className="text-red-400 text-sm mt-1">
+                    {errors.ssn.message}
+                  </p>
+                )}
               </div>
-            )}
 
-            <div>
-              <label className="text-sm text-white/40 mb-1 block">
-                Teléfono 2
-              </label>
-              <input
-                type="tel"
-                inputMode="numeric"
-                placeholder="(000) 000-0000"
-                maxLength={14}
-                value={phone2Value}
-                onChange={(e) =>
-                  setValue("phone2", formatPhone(e.target.value), {
-                    shouldValidate: true,
-                  })
-                }
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50 tracking-widest"
-              />
-              {errors.phone2 && (
-                <p className="text-red-400 text-sm mt-1">
-                  {errors.phone2.message}
-                </p>
-              )}
-            </div>
-
-            {/* SSN con máscara */}
-            <div>
-              <label className="text-sm text-white/40 mb-1 block">
-                Seguro Social
-              </label>
-              <input
-                type="text"
-                inputMode="numeric"
-                placeholder="000-00-0000"
-                maxLength={11}
-                value={ssnValue}
-                onChange={handleSsnChange}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50 tracking-widest"
-              />
-              {errors.ssn && (
-                <p className="text-red-400 text-sm mt-1">
-                  {errors.ssn.message}
-                </p>
-              )}
-            </div>
-
-            {/* Campos base compartidos */}
-            {LEAD_FIELDS.map((field) => (
-              <div key={field.name}>
-                <label className="text-sm text-white/40 mb-1 block">
-                  {field.label}
-                  {field.required && (
-                    <span className="text-red-400 ml-1">*</span>
+              {/* Campos base compartidos */}
+              {LEAD_FIELDS.map((field) => (
+                <div key={field.name}>
+                  <label className="text-sm text-white/40 mb-1 block">
+                    {field.label}
+                    {field.required && (
+                      <span className="text-red-400 ml-1">*</span>
+                    )}
+                  </label>
+                  <input
+                    type={field.type}
+                    {...register(field.name as keyof LeadFormData)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50"
+                  />
+                  {errors[field.name as keyof LeadFormData] && (
+                    <p className="text-red-400 text-sm mt-1">
+                      {errors[field.name as keyof LeadFormData]?.message}
+                    </p>
                   )}
+                </div>
+              ))}
+
+              {/* Estado */}
+              <div>
+                <label className="text-sm text-white/40 mb-1 block">
+                  Estado
                 </label>
-                <input
-                  type={field.type}
-                  {...register(field.name as keyof LeadFormData)}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50"
-                />
-                {errors[field.name as keyof LeadFormData] && (
-                  <p className="text-red-400 text-sm mt-1">
-                    {errors[field.name as keyof LeadFormData]?.message}
-                  </p>
+                {isCustomer ? (
+                  <CustomSelect
+                    name="customerStatus"
+                    value={CUSTOMER_STATUS[customerStatus] ?? "Seleccionar"}
+                    onChange={setCustomerStatus}
+                    options={Object.keys(CUSTOMER_STATUS)}
+                    labels={Object.values(CUSTOMER_STATUS)}
+                  />
+                ) : (
+                  <CustomSelect
+                    name="status"
+                    value={STATUS[status]}
+                    onChange={setStatus}
+                    options={Object.keys(STATUS)}
+                    labels={Object.values(STATUS)}
+                  />
                 )}
               </div>
-            ))}
 
-            {/* Estado */}
-            <div>
-              <label className="text-sm text-white/40 mb-1 block">Estado</label>
-              {isCustomer ? (
-                <CustomSelect
-                  name="customerStatus"
-                  value={CUSTOMER_STATUS[customerStatus] ?? "Seleccionar"}
-                  onChange={setCustomerStatus}
-                  options={Object.keys(CUSTOMER_STATUS)}
-                  labels={Object.values(CUSTOMER_STATUS)}
-                />
-              ) : (
-                <CustomSelect
-                  name="status"
-                  value={STATUS[status]}
-                  onChange={setStatus}
-                  options={Object.keys(STATUS)}
-                  labels={Object.values(STATUS)}
-                />
+              {/* Franquicia — solo ADMIN */}
+              {isAdmin && (
+                <div>
+                  <label className="text-sm text-white/40 mb-1 block">
+                    Franquicia
+                  </label>
+                  <CustomSelect
+                    name="companyId"
+                    value={
+                      companies.find((c) => String(c.id) === companyId)?.name ??
+                      "Seleccionar"
+                    }
+                    onChange={(val) => {
+                      setCompanyId(val);
+                      setTeamId("");
+                      setAssignedToId("");
+                    }}
+                    options={companies.map((c) => String(c.id))}
+                    labels={companies.map((c) => c.name)}
+                  />
+                </div>
+              )}
+
+              {/* Equipo */}
+              {(isAdmin || role === "SUPERVISOR" || role === "COACH") && (
+                <div>
+                  <label className="text-sm text-white/40 mb-1 block">
+                    Equipo
+                  </label>
+                  <CustomSelect
+                    name="teamId"
+                    value={
+                      teams.find((t) => String(t.id) === teamId)?.name ??
+                      "Seleccionar"
+                    }
+                    onChange={(val) => {
+                      setTeamId(val);
+                      setAssignedToId("");
+                    }}
+                    options={teams.map((t) => String(t.id))}
+                    labels={teams.map((t) => t.name)}
+                  />
+                </div>
+              )}
+
+              {/* Agente */}
+              {(isAdmin || role === "SUPERVISOR" || role === "COACH") && (
+                <div>
+                  <label className="text-sm text-white/40 mb-1 block">
+                    Agente asignado
+                  </label>
+                  <CustomSelect
+                    searchable
+                    name="assignedToId"
+                    value={
+                      agents.find((a) => String(a.id) === assignedToId)?.name ??
+                      "Seleccionar"
+                    }
+                    onChange={setAssignedToId}
+                    options={agents.map((a) => String(a.id))}
+                    labels={agents.map((a) => a.name)}
+                  />
+                </div>
               )}
             </div>
-
-            {/* Franquicia — solo ADMIN */}
-            {isAdmin && (
-              <div>
-                <label className="text-sm text-white/40 mb-1 block">
-                  Franquicia
-                </label>
-                <CustomSelect
-                  name="companyId"
-                  value={
-                    companies.find((c) => String(c.id) === companyId)?.name ??
-                    "Seleccionar"
-                  }
-                  onChange={(val) => {
-                    setCompanyId(val);
-                    setTeamId("");
-                    setAssignedToId("");
-                  }}
-                  options={companies.map((c) => String(c.id))}
-                  labels={companies.map((c) => c.name)}
-                />
-              </div>
-            )}
-
-            {/* Equipo */}
-            {(isAdmin || role === "SUPERVISOR" || role === "COACH") && (
-              <div>
-                <label className="text-sm text-white/40 mb-1 block">
-                  Equipo
-                </label>
-                <CustomSelect
-                  name="teamId"
-                  value={
-                    teams.find((t) => String(t.id) === teamId)?.name ??
-                    "Seleccionar"
-                  }
-                  onChange={(val) => {
-                    setTeamId(val);
-                    setAssignedToId("");
-                  }}
-                  options={teams.map((t) => String(t.id))}
-                  labels={teams.map((t) => t.name)}
-                />
-              </div>
-            )}
-
-            {/* Agente */}
-            {(isAdmin || role === "SUPERVISOR" || role === "COACH") && (
-              <div>
-                <label className="text-sm text-white/40 mb-1 block">
-                  Agente asignado
-                </label>
-                <CustomSelect
-                  searchable
-                  name="assignedToId"
-                  value={
-                    agents.find((a) => String(a.id) === assignedToId)?.name ??
-                    "Seleccionar"
-                  }
-                  onChange={setAssignedToId}
-                  options={agents.map((a) => String(a.id))}
-                  labels={agents.map((a) => a.name)}
-                />
-              </div>
-            )}
           </div>
-        </div>
 
-        <div className="flex justify-end gap-3 p-5 border-t border-white/10">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-lg text-white/50 hover:text-white transition-colors"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={handleSubmit(onSubmit)}
-            disabled={isSubmitting}
-            className="px-4 py-2 text-lg bg-cyan-500 hover:bg-cyan-400 text-black font-medium rounded-lg transition-colors disabled:opacity-50"
-          >
-            {isSubmitting ? "Guardando..." : "Guardar"}
-          </button>
-        </div>
+          <div className="flex justify-end gap-3 p-5 border-t border-white/10">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-lg text-white/50 hover:text-white transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              disabled={isSubmitting}
+              type="submit"
+              className="px-4 py-2 text-lg bg-cyan-500 hover:bg-cyan-400 text-black font-medium rounded-lg transition-colors disabled:opacity-50"
+            >
+              {isSubmitting ? "Guardando..." : "Guardar Edición"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

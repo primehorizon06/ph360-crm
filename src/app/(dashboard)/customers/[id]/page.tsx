@@ -14,6 +14,8 @@ import { RemindersTab } from "@/app/(dashboard)/leads/detail/tabs/RemindersTab";
 import { AttachmentsTab } from "@/app/(dashboard)/leads/detail/tabs/AttachmentsTab";
 import { ProductsTab } from "@/app/(dashboard)/leads/detail/tabs/ProductsTab";
 import { ProductChecklist } from "@/components/leads/ProductChecklist/ProductChecklist";
+import { Product } from "@/utils/interfaces/products";
+import { VALID_TABS } from "@/utils/constants/leads";
 
 export default function CustomerDetailPage() {
   const { id } = useParams();
@@ -22,17 +24,13 @@ export default function CustomerDetailPage() {
   const { data: session } = useSession();
   const role = session?.user?.role;
   const [lead, setLead] = useState<Lead | null>(null);
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [, startTransition] = useTransition();
 
   const tabFromUrl = searchParams.get("tab") as TABS_NAME;
-  const isValidTab =
-    tabFromUrl &&
-    ["personal", "notes", "reminders", "attachments", "products"].includes(
-      tabFromUrl,
-    );
+  const isValidTab = tabFromUrl && VALID_TABS.includes(tabFromUrl);
 
   const [activeTab, setActiveTab] = useState<TABS_NAME>(
     isValidTab ? tabFromUrl : "personal",
@@ -90,12 +88,7 @@ export default function CustomerDetailPage() {
   useEffect(() => {
     const handlePopState = () => {
       const newTab = searchParams.get("tab") as TABS_NAME;
-      if (
-        newTab &&
-        ["personal", "notes", "reminders", "attachments", "products"].includes(
-          newTab,
-        )
-      ) {
+      if (newTab && VALID_TABS.includes(newTab)) {
         setActiveTab(newTab);
       }
     };
@@ -115,13 +108,14 @@ export default function CustomerDetailPage() {
         onEdit={() => setEditing(true)}
       />
 
-      {role === "COACH" && (
-        <ProductChecklist
-          leadId={lead.id}
-          products={products}
-          onApprovalChange={handleApprovalChange}
-        />
-      )}
+      {role === "COACH" ||
+        (role === "SUPERVISOR" && (
+          <ProductChecklist
+            leadId={lead.id}
+            products={products}
+            onApprovalChange={handleApprovalChange}
+          />
+        ))}
 
       <LeadDetailTabs activeTab={activeTab} onChange={handleTabChange} />
 

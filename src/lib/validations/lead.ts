@@ -25,6 +25,7 @@ export const leadSchema = z.object({
   birthDate: z.string().optional().or(z.literal("")),
   contactTime: z.string().optional().or(z.literal("")),
   status: z.string(),
+  customerStatus: z.string().optional().or(z.literal("")),
 });
 
 export type LeadFormData = z.infer<typeof leadSchema>;

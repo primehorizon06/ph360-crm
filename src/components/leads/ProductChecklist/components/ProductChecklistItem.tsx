@@ -1,3 +1,5 @@
+"use client";
+
 import {
   CheckCircle2,
   ChevronDown,
@@ -15,6 +17,7 @@ import {
   PRE_CHECKED_FOR_SUBSEQUENT,
 } from "@/utils/constants/productChecklist";
 import { buildInitialChecked } from "@/utils/helpers/buildInitialChecked";
+import { useRouter } from "next/navigation";
 
 export function ProductChecklistItem({
   leadId,
@@ -34,6 +37,7 @@ export function ProductChecklistItem({
   const [expanded, setExpanded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const router = useRouter();
 
   if (!approval || approval.status !== "PENDING") return null;
 
@@ -42,7 +46,6 @@ export function ProductChecklistItem({
   const allRequiredChecked = requiredSteps.every((s) => checked[s.id]);
 
   const checkedCount = ALL_STEPS_APPROVAL.filter((s) => checked[s.id]).length;
-  //   const totalRequired = requiredSteps.length;
 
   function toggle(stepId: number) {
     setChecked((prev) => ({ ...prev, [stepId]: !prev[stepId] }));
@@ -50,13 +53,31 @@ export function ProductChecklistItem({
 
   async function handleApprove() {
     setSaving(true);
-    await fetch(`/api/leads/${leadId}/products/${product.id}/approval`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "APPROVE" }),
-    });
+    const res = await fetch(
+      `/api/leads/${leadId}/products/${product.id}/approval`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "APPROVE" }),
+      },
+    );
+
     setSaving(false);
+
+    if (!res.ok) {
+      alert("Error al aprobar el producto");
+      return;
+    }
+
     onApprovalChange();
+
+    // Solo redirigir si es el primer producto (pasa a cliente)
+    if (isFirstProduct) {
+      router.push(`/customers/${leadId}`);
+    } else {
+      // Producto subsiguiente — no cambia de sección
+      onApprovalChange();
+    }
   }
 
   async function handleReject(note: string) {
