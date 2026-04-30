@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Loading } from "@/components/ui/Loading";
 import { LeadEditModal } from "@/components/leads/LeadEditModal";
 import { Lead, TABS_NAME } from "@/utils/interfaces/leads";
@@ -28,6 +29,8 @@ export default function CustomerDetailPage() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [, startTransition] = useTransition();
+
+  usePageTitle(lead?.name ? `${lead.name} - Cliente` : "Cliente");
 
   const tabFromUrl = searchParams.get("tab") as TABS_NAME;
   const isValidTab = tabFromUrl && VALID_TABS.includes(tabFromUrl);

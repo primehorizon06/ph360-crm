@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { Loading } from "@/components/ui/Loading";
 
 export default function LoginPage() {
+  useEffect(() => {
+    document.title = "Iniciar Sesión | PH360 CRM";
+  }, []);
+
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");

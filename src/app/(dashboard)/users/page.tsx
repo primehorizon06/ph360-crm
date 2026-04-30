@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { useRouter } from "next/navigation";
 import { Loading } from "@/components/ui/Loading";
 import { UserTable } from "@/components/users/UserTable";
@@ -26,6 +27,7 @@ export interface User {
 }
 
 export default function UsersPage() {
+  usePageTitle("Usuarios");
   const { data: session, status } = useSession();
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);

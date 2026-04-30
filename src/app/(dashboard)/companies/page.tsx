@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Loading } from "@/components/ui/Loading";
 import {
   Plus,
@@ -33,6 +34,7 @@ interface Company {
 }
 
 export default function CompaniesPage() {
+  usePageTitle("Empresas y Equipos");
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<number[]>([]);
