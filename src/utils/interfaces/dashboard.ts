@@ -16,22 +16,30 @@ export interface DashboardKpis {
 }
 
 export interface DashboardData {
-  meta: {
-    year: number;
-    month: number;
-    quincena: number;
-    companyId: number | null;
-    role: string;
-  };
   companies: { id: number; name: string }[];
   kpis: DashboardKpis;
   installmentStatusDist: { status: string; count: number }[];
   customerStatus: { status: string | null; count: number }[];
   productos: { type: string; count: number }[];
-  agentRanking: { name: string; recaudo: number; conversiones: number }[];
+  agentRanking: {
+    id: number;
+    name: string;
+    recaudo: number;
+    conversiones: number;
+  }[];
   revenuePorDia: { day: number; amount: number }[];
   leadsPerDay: { day: number; count: number }[];
   recaudoPorFranquicia: { companyId: number; name: string; recaudo: number }[];
+  meta: {
+    year: number;
+    month: number;
+    quincena: number;
+    companyId: number | null;
+    teamId: number | null;
+    agentId: number | null;
+    role: string;
+    currentUserId: number;
+  };
 }
 
 export const MONTHS = [

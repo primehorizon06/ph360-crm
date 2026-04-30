@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import {
-  DashboardData,
   fmt,
   delta,
   isUp,
@@ -18,7 +17,6 @@ import {
   SkeletonChart,
 } from "@/components/dashboard/ChartCard";
 
-// Meta fija por quincena — en el futuro puede venir de la API
 const META_QUINCENA = 5_000;
 
 export function FranchiseDashboard({
@@ -33,14 +31,12 @@ export function FranchiseDashboard({
   useEffect(() => {
     if (!data) return;
 
-    // Gráfico dual: recaudo diario vs quincenal acumulado (dos líneas)
     if (recaudoDualRef.current) {
       const labels = data.revenuePorDia.map((d) => String(d.day));
       const values = data.revenuePorDia.map((d) => d.amount);
       drawAreaLine(recaudoDualRef.current, labels, values, "#06b6d4");
     }
 
-    // Barra: estado de cartera (customerStatus)
     if (carteraRef.current && data.customerStatus.length > 0) {
       const labels = data.customerStatus.map(
         (s) => CUSTOMER_STATUS_LABELS[s.status ?? ""] ?? s.status ?? "—",
@@ -70,12 +66,19 @@ export function FranchiseDashboard({
   if (!data) return null;
   const { kpis, agentRanking } = data;
 
-  const metaPct =
-    META_QUINCENA > 0
-      ? Math.min(Math.round((kpis.revenue / META_QUINCENA) * 100), 100)
-      : 0;
+  const metaPctRaw =
+    META_QUINCENA > 0 ? Math.min((kpis.revenue / META_QUINCENA) * 100, 100) : 0;
+  const metaPctDisplay =
+    metaPctRaw === 0
+      ? "0%"
+      : metaPctRaw < 1
+        ? metaPctRaw.toFixed(1) + "%"
+        : Math.round(metaPctRaw) + "%";
+
   const todayLeads =
     data.leadsPerDay.find((d) => d.day === new Date().getDate())?.count ?? 0;
+
+  const currentUserId = data.meta.currentUserId;
 
   return (
     <div className="space-y-6">
@@ -121,21 +124,27 @@ export function FranchiseDashboard({
             </p>
           </div>
           <span
-            className={`text-2xl font-bold ${metaPct >= 100 ? "text-emerald-500" : metaPct >= 70 ? "text-amber-500" : "text-red-400"}`}
+            className={`text-2xl font-bold ${
+              metaPctRaw >= 100
+                ? "text-emerald-500"
+                : metaPctRaw >= 70
+                  ? "text-amber-500"
+                  : "text-red-400"
+            }`}
           >
-            {metaPct}%
+            {metaPctDisplay}
           </span>
         </div>
         <div className="h-4 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-700 ${
-              metaPct >= 100
+              metaPctRaw >= 100
                 ? "bg-emerald-500"
-                : metaPct >= 70
+                : metaPctRaw >= 70
                   ? "bg-amber-500"
                   : "bg-red-400"
             }`}
-            style={{ width: metaPct + "%" }}
+            style={{ width: metaPctRaw + "%" }}
           />
         </div>
         <div className="flex justify-between mt-1.5 text-md text-zinc-400">
@@ -205,24 +214,49 @@ export function FranchiseDashboard({
                 const maxRec = agentRanking[0].recaudo || 1;
                 const pct = Math.round((a.recaudo / maxRec) * 100);
                 const medalColors = ["#f59e0b", "#9ca3af", "#cd7c54"];
+                const isMe = currentUserId === a.id;
                 return (
-                  <div key={i} className="flex items-center gap-2">
+                  <div
+                    key={i}
+                    className={`flex items-center gap-2 rounded-lg px-2 py-1 transition-colors ${
+                      isMe ? "bg-cyan-500/10 ring-1 ring-cyan-500/30" : ""
+                    }`}
+                  >
                     <span
                       className={`text-md font-bold w-5 text-center ${i < 3 ? "" : "text-zinc-400"}`}
                       style={i < 3 ? { color: medalColors[i] } : {}}
                     >
                       {i + 1}
                     </span>
-                    <span className="text-md text-zinc-600 dark:text-zinc-300 w-24 truncate font-medium">
+                    <span
+                      className={`text-md w-24 truncate font-medium ${
+                        isMe
+                          ? "text-cyan-400"
+                          : "text-zinc-600 dark:text-zinc-300"
+                      }`}
+                    >
                       {a.name}
+                      {isMe && (
+                        <span className="ml-1 text-[10px] font-semibold uppercase tracking-wider text-cyan-400">
+                          tú
+                        </span>
+                      )}
                     </span>
                     <div className="flex-1 h-3.5 bg-zinc-100 dark:bg-zinc-800 rounded overflow-hidden">
                       <div
-                        className="h-full bg-cyan-500 rounded transition-all"
+                        className={`h-full rounded transition-all ${
+                          isMe ? "bg-cyan-400" : "bg-cyan-500"
+                        }`}
                         style={{ width: pct + "%" }}
                       />
                     </div>
-                    <span className="text-md font-semibold text-zinc-700 dark:text-zinc-200 w-16 text-right">
+                    <span
+                      className={`text-md font-semibold w-16 text-right ${
+                        isMe
+                          ? "text-cyan-400"
+                          : "text-zinc-700 dark:text-zinc-200"
+                      }`}
+                    >
                       {fmt(a.recaudo)}
                     </span>
                     <span className="text-md text-zinc-400 w-14 text-right">

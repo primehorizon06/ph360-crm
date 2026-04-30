@@ -94,7 +94,11 @@ export function drawAreaLine(
   values.forEach((v, i) => {
     const x = padL + i * xStep;
     const y = padT + H2 * (1 - v / max);
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
   });
   ctx.lineTo(padL + (values.length - 1) * xStep, padT + H2);
   ctx.lineTo(padL, padT + H2);
@@ -112,7 +116,11 @@ export function drawAreaLine(
   values.forEach((v, i) => {
     const x = padL + i * xStep;
     const y = padT + H2 * (1 - v / max);
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
   });
   ctx.stroke();
 
