@@ -247,3 +247,32 @@ button {
 .react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list li.react-datepicker__time-list-item {
   height: auto !important;
 }
+
+/* Month-Year picker */
+.react-datepicker__month-text {
+  color: rgba(255, 255, 255, 0.8) !important;
+  border-radius: 0.5rem !important;
+  transition: all 0.2s !important;
+}
+
+.react-datepicker__month-text:hover {
+  background-color: rgba(0, 218, 243, 0.2) !important;
+  color: white !important;
+}
+
+.react-datepicker__month-text--selected,
+.react-datepicker__month-text--keyboard-selected {
+  background-color: #00daf3 !important;
+  color: black !important;
+  font-weight: 600 !important;
+}
+
+.react-datepicker__month-text--disabled {
+  color: rgba(255, 255, 255, 0.2) !important;
+  cursor: not-allowed !important;
+}
+
+.react-datepicker-year-header {
+  color: white !important;
+  font-weight: 600 !important;
+}

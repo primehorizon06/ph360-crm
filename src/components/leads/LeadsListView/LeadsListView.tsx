@@ -87,7 +87,7 @@ export function LeadsListView({ type }: Props) {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="w-full  mx-auto px-4 sm:px-8 pt-8 pb-16 space-y-6">
       <PageHeader
         title={isLead ? "Leads" : "Clientes"}
         description={`${filtered.length} de ${leads.length} ${label.toLowerCase()}s`}

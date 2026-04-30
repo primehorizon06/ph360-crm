@@ -296,12 +296,14 @@ model PaymentPlan {
 }
 
 model Installment {
-  id            Int         @id @default(autoincrement())
+  id            Int               @id @default(autoincrement())
   paymentPlanId Int
-  paymentPlan   PaymentPlan @relation(fields: [paymentPlanId], references: [id], onDelete: Cascade)
+  paymentPlan   PaymentPlan       @relation(fields: [paymentPlanId], references: [id], onDelete: Cascade)
   number        Int
   date          DateTime
-  amount        Decimal     @db.Decimal(10, 2)
+  amount        Decimal           @db.Decimal(10, 2)
+  status        InstallmentStatus @default(PENDING)
+  paidAt        DateTime?
 }
 
 enum ConversionStatus {
@@ -349,4 +351,11 @@ model Notification {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+}
+
+enum InstallmentStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
 }

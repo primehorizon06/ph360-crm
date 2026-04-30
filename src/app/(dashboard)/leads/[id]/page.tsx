@@ -30,7 +30,7 @@ export default function LeadDetailPage() {
   const [editing, setEditing] = useState(false);
   const [, startTransition] = useTransition();
 
-  usePageTitle(lead?.name ? `${lead.name} - Lead` : "Lead");
+  usePageTitle(lead?.firstName ? `${lead.firstName} ${lead.lastName} - Lead` : "Lead");
 
   const tabFromUrl = searchParams.get("tab") as TABS_NAME;
   const isValidTab = tabFromUrl && VALID_TABS.includes(tabFromUrl);
