@@ -2,41 +2,27 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { X } from "lucide-react";
 import { useState } from "react";
+import { TeamModalProps } from "@/utils/interfaces/companies";
+import { schemaTeams } from "@/lib/validations/teams";
+import z from "zod";
 
-const schema = z.object({
-  name: z
-    .string()
-    .min(2, "Mínimo 2 caracteres")
-    .max(100, "Máximo 100 caracteres"),
-});
-
-type FormData = z.infer<typeof schema>;
-
-interface Team {
-  id: number;
-  name: string;
-  companyId: number;
-}
-
-interface Props {
-  team: Team | null;
-  companyId: number;
-  onClose: () => void;
-  onSave: () => void;
-}
-
-export function TeamModal({ team, companyId, onClose, onSave }: Props) {
+export function TeamModal({
+  team,
+  companyId,
+  onClose,
+  onSave,
+}: TeamModalProps) {
   const [serverError, setServerError] = useState("");
 
+  type FormData = z.infer<typeof schemaTeams>;
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schemaTeams),
     defaultValues: { name: team?.name ?? "" },
   });
 

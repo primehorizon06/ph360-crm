@@ -2,21 +2,31 @@
 
 import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { Loading } from "@/components/ui/Loading";
+import { toast } from "sonner";
 
 export default function LoginPage() {
-  useEffect(() => {
-    document.title = "Iniciar Sesión | PH360 CRM";
-  }, []);
-
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    document.title = "Iniciar Sesión | PH360 CRM";
+  }, []);
+
+  useEffect(() => {
+    if (searchParams.get("expired") === "true") {
+      toast.error("Tu sesión ha expirado. Por favor inicia sesión nuevamente.");
+      // Limpiar la URL sin recargar la página
+      window.history.replaceState({}, "", "/auth/login");
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,8 +54,7 @@ export default function LoginPage() {
     }
   };
 
-  if (isLoading)
-    return <Loading fullScreen={false} message="Cargando leads..." />;
+  if (isLoading) return <Loading fullScreen={true} message="Cargando..." />;
 
   return (
     <main className="bg-background text-on-surface min-h-screen flex flex-col items-center justify-center selection:bg-tertiary/30r">
@@ -55,10 +64,8 @@ export default function LoginPage() {
             PH360 CRM
           </h1>
         </div>
-        {/* <!-- Login Card --> */}
         <div className="glass-card rounded-xl p-8 shadow-2xl border border-outline-variant/10">
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* <!-- Email Field --> */}
             <div className="space-y-1.5">
               <label
                 className="font-label text-[10px] font-semibold uppercase tracking-widest text-on-surface-variant px-1"
@@ -77,7 +84,6 @@ export default function LoginPage() {
                 />
               </div>
             </div>
-            {/* <!-- Password Field --> */}
             <div className="space-y-1.5">
               <div className="flex justify-between items-center px-1">
                 <label
@@ -108,7 +114,6 @@ export default function LoginPage() {
             {error && (
               <div className="text-red-500 text-lg text-center">{error}</div>
             )}
-            {/* <!-- Action Button --> */}
             <button
               className="w-full btn-satin py-4 rounded-lg font-headline font-bold text-on-primary tracking-tight text-lg flex items-center justify-center space-x-2 active:scale-[0.98] transition-transform shadow-lg shadow-primary-container/20 cursor-pointer pointer-events-auto disabled:opacity-50 disabled:pointer-events-none"
               type="submit"
@@ -118,7 +123,6 @@ export default function LoginPage() {
             </button>
           </form>
         </div>
-        {/* <!-- Footer Support Links (Mapped from JSON logic) --> */}
         <footer className="mt-12 flex flex-col items-center space-y-4">
           <p className="text-[10px] text-on-surface-variant/40 font-body">
             © 2026 Prime Horizon 360 INC. Todos los derechos reservados.

@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
+import { Loading } from "@/components/ui/Loading";
 import { DashboardData } from "@/utils/interfaces/dashboard";
 import { DashboardFilters } from "@/components/dashboard/drawAreaLine/drawHBar/drawDonut/DashboardFilters";
 import { AdminDashboard } from "@/components/dashboard/drawAreaLine/drawHBar/drawDonut/AdminDashboard";
@@ -49,17 +50,18 @@ export default function DashboardPage() {
     if (session) fetchData();
   }, [session, fetchData]);
 
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.replace("/auth/login");
+    }
+  }, [status, router]);
+
   if (status === "loading" || isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-zinc-400 text-lg animate-pulse">Cargando...</div>
-      </div>
-    );
+    return <Loading fullScreen={false} message="Cargando dashboard..." />;
   }
 
   if (!session) {
-    router.push("/auth/login");
-    return null;
+    return <Loading fullScreen={false} message="Redirigiendo..." />;
   }
 
   // Find selected company name for franquicia dashboard
@@ -134,10 +136,8 @@ export default function DashboardPage() {
 
       {/* ── Dashboard content según rol ── */}
       {isAdmin && companyId === "all" ? (
-        // Admin viendo todas las franquicias = Casa Matriz
         <AdminDashboard data={data} loading={loading} quincena={quincena} />
       ) : (
-        // Admin con franquicia seleccionada O cualquier otro rol = vista franquicia
         <FranchiseDashboard
           data={data}
           loading={loading}

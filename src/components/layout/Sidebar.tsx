@@ -28,6 +28,12 @@ const navItems: {
   { label: "Clientes", icon: Users, href: "/customers" },
   { label: "Usuarios", icon: UserCog, href: "/users", roles: ["ADMIN"] },
   {
+    label: "Metas",
+    icon: Users,
+    href: "/goals",
+    roles: ["ADMIN", "SUPERVISOR"],
+  },
+  {
     label: "Franquicias",
     icon: Building2,
     href: "/companies",

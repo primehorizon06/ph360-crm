@@ -2,7 +2,6 @@
 
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { CalendarDays, Trash2 } from "lucide-react";
 import {
@@ -80,7 +79,6 @@ export function PaymentPlanPicker({ value, onChange, error }: Props) {
       <InlineDatePicker
         onChange={handleDateClick}
         highlightDates={highlightedDates}
-        size="lg"
       />
 
       {/* Installment list */}

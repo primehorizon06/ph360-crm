@@ -30,7 +30,7 @@ export default function CustomerDetailPage() {
   const [editing, setEditing] = useState(false);
   const [, startTransition] = useTransition();
 
-  usePageTitle(lead?.name ? `${lead.name} - Cliente` : "Cliente");
+  usePageTitle(lead?.firstName ? `${lead.firstName} ${lead.lastName} - Cliente` : "Cliente");
 
   const tabFromUrl = searchParams.get("tab") as TABS_NAME;
   const isValidTab = tabFromUrl && VALID_TABS.includes(tabFromUrl);

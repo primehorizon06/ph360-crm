@@ -62,6 +62,7 @@ model Company {
   users User[]
   teams Team[]
   leads Lead[]
+  goals Goal[]
 }
 
 // ─── EQUIPO ──────────────────────────────────────────────────────────────────
@@ -75,6 +76,7 @@ model Team {
   company   Company  @relation(fields: [companyId], references: [id])
   users     User[]
   leads     Lead[]
+  goals     Goal[]
 }
 
 // ─── USUARIO ─────────────────────────────────────────────────────────────────
@@ -100,6 +102,8 @@ model User {
   remindersAssigned Reminder[]     @relation("ReminderAssignedTo")
   remindersCreated  Reminder[]     @relation("ReminderCreatedBy")
   notifications     Notification[]
+  goals             Goal[]         @relation("GoalUser")
+  goalsCreated      Goal[]         @relation("GoalCreatedBy")
 }
 
 // ─── PERMISOS ─────────────────────────────────────────────────────────────────
@@ -358,4 +362,30 @@ enum InstallmentStatus {
   PAID
   FAILED
   CANCELLED
+}
+
+model Goal {
+  id       Int     @id @default(autoincrement())
+  year     Int
+  month    Int
+  quincena Int // 1 o 2
+  amount   Decimal @db.Decimal(10, 2)
+
+  // Solo uno de estos tres estará definido
+  companyId Int? // meta de franquicia
+  teamId    Int? // meta de equipo
+  userId    Int? // meta de asesor
+
+  createdById Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company   Company? @relation(fields: [companyId], references: [id])
+  team      Team?    @relation(fields: [teamId], references: [id])
+  user      User?    @relation("GoalUser", fields: [userId], references: [id])
+  createdBy User     @relation("GoalCreatedBy", fields: [createdById], references: [id])
+
+  @@unique([year, month, quincena, companyId])
+  @@unique([year, month, quincena, teamId])
+  @@unique([year, month, quincena, userId])
 }

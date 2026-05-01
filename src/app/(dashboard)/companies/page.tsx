@@ -16,31 +16,16 @@ import { CompanyModal } from "@/components/companies/CompanyModal";
 import { TeamModal } from "@/components/companies/TeamModal";
 import { CustomSelect } from "@/components/ui/Select";
 import { PageHeader } from "@/components/ui/PageHeader";
-
-interface Team {
-  id: number;
-  name: string;
-  companyId: number;
-  _count: { users: number };
-}
-
-interface Company {
-  id: number;
-  name: string;
-  active: boolean;
-  createdAt: string;
-  _count: { teams: number; users: number };
-  teams?: Team[];
-}
+import { CompanyGoals, Team } from "@/utils/interfaces/companies";
 
 export default function CompaniesPage() {
   usePageTitle("Empresas y Equipos");
-  const [companies, setCompanies] = useState<Company[]>([]);
+  const [companies, setCompanies] = useState<CompanyGoals[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<number[]>([]);
   const [companyModal, setCompanyModal] = useState<{
     open: boolean;
-    company: Company | null;
+    company: CompanyGoals | null;
   }>({ open: false, company: null });
   const [teamModal, setTeamModal] = useState<{
     open: boolean;
@@ -69,7 +54,7 @@ export default function CompaniesPage() {
     setLoading(false);
   }, []);
 
-  async function toggleExpand(company: Company) {
+  async function toggleExpand(company: CompanyGoals) {
     if (expanded.includes(company.id)) {
       setExpanded((prev) => prev.filter((id) => id !== company.id));
       return;

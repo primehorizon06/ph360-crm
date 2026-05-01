@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { X } from "lucide-react";
 import { useState } from "react";
+import { CompanyGoals } from "@/utils/interfaces/companies";
 
 const schema = z.object({
   name: z
@@ -16,14 +17,8 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-interface Company {
-  id: number;
-  name: string;
-  active: boolean;
-}
-
 interface Props {
-  company: Company | null;
+  company: CompanyGoals | null;
   onClose: () => void;
   onSave: () => void;
 }

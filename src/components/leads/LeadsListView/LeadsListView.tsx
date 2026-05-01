@@ -132,7 +132,7 @@ export function LeadsListView({ type }: Props) {
 
       {/* Tabla desktop */}
       <div className="bg-[#13151c] rounded-xl border border-white/10 overflow-hidden">
-        <div className="hidden md:block">
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/10">
@@ -174,7 +174,7 @@ export function LeadsListView({ type }: Props) {
                   {isLead ? (
                     <td className="px-4 py-3">
                       <span
-                        className={`text-sm px-2 py-1 rounded-full font-medium ${STATUS_COLORS[lead.status]}`}
+                        className={`text-sm px-2 py-1 rounded-full font-medium whitespace-nowrap ${STATUS_COLORS[lead.status]}`}
                       >
                         {STATUS[lead.status]}
                       </span>
@@ -188,7 +188,7 @@ export function LeadsListView({ type }: Props) {
                             lead.products.map((p) => (
                               <span
                                 key={p.id}
-                                className={`text-sm px-2 py-0.5 rounded-full border font-medium ${PRODUCT_COLORS[p.product as ProductType]}`}
+                                className={`text-sm px-2 py-0.5 rounded-full border font-medium whitespace-nowrap ${PRODUCT_COLORS[p.product as ProductType]}`}
                               >
                                 {PRODUCT_LABELS[p.product as ProductType]}
                               </span>
@@ -202,7 +202,7 @@ export function LeadsListView({ type }: Props) {
                       <td className="px-4 py-3">
                         {lead.customerStatus ? (
                           <span
-                            className={`text-sm px-2 py-1 rounded-full font-medium ${CUSTOMER_STATUS_COLORS[lead.customerStatus]}`}
+                            className={`text-sm px-2 py-1 rounded-full font-medium whitespace-nowrap ${CUSTOMER_STATUS_COLORS[lead.customerStatus]}`}
                           >
                             {CUSTOMER_STATUS[lead.customerStatus]}
                           </span>

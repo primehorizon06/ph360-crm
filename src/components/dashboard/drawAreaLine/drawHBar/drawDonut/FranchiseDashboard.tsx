@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import {
-  fmt,
   delta,
   isUp,
   CUSTOMER_STATUS_LABELS,
@@ -16,6 +15,7 @@ import {
   SkeletonCard,
   SkeletonChart,
 } from "@/components/dashboard/ChartCard";
+import { fmt } from "@/utils/helpers/format";
 
 const META_QUINCENA = 5_000;
 

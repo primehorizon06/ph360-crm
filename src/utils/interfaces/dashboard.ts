@@ -91,12 +91,6 @@ export const INSTALLMENT_STATUS_COLORS: Record<string, string> = {
   CANCELLED: "#6b7280",
 };
 
-export function fmt(n: number) {
-  if (n >= 1_000_000) return "$" + (n / 1_000_000).toFixed(1) + "M";
-  if (n >= 1_000) return "$" + (n / 1_000).toFixed(1) + "K";
-  return "$" + n.toFixed(0);
-}
-
 export function delta(current: number, prev: number) {
   if (prev === 0) return current > 0 ? "+100%" : "—";
   const pct = Math.round(((current - prev) / prev) * 100);

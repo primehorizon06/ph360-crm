@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import {
-  fmt,
   delta,
   isUp,
   INSTALLMENT_STATUS_LABELS,
@@ -18,6 +17,7 @@ import {
   SkeletonCard,
   SkeletonChart,
 } from "@/components/dashboard/ChartCard";
+import { fmt } from "@/utils/helpers/format";
 
 export function AdminDashboard({
   data,

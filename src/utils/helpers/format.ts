@@ -1,6 +1,6 @@
 import { Installment } from "../interfaces/paymentPlanPicker";
 
-export function formatDate(iso: string): string {
+export function formatDate(iso: string | Date): string {
   const date = new Date(iso);
   const day = date.getDate().toString().padStart(2, "0");
   const month = date.toLocaleDateString("es-CO", { month: "long" });
@@ -33,4 +33,15 @@ export function formatPhone(value: string): string {
   if (digits.length > 3) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
   if (digits.length > 0) return `(${digits}`;
   return "";
+}
+
+export function fmt(n: number) {
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  })
+    .format(n)
+    .replace(/\s/g, "");
 }
