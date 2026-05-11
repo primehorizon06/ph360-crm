@@ -70,6 +70,29 @@ export function LeadsListView({ type }: Props) {
   const total = data?.total ?? 0;
   const totalPages = data?.totalPages ?? 0;
 
+  const headers = useMemo(
+    () => [
+      "Nombre",
+      "Teléfono",
+      ...(isAdmin ? ["Franquicia"] : []),
+      "Agente",
+      "Equipo",
+      ...(isLead ? ["Estado"] : ["Producto(s)", "Estado"]),
+      isLead ? "Fecha creación lead" : "Fecha creación cliente",
+    ],
+    [isAdmin, isLead],
+  );
+
+  const selectOptions = useMemo(
+    () => ["ALL", ...Object.keys(statusOptions)],
+    [statusOptions],
+  );
+
+  const selectLabels = useMemo(
+    () => ["Todos", ...Object.values(statusOptions)],
+    [statusOptions],
+  );
+
   // Registra callback de recarga cuando se crea un lead
   useEffect(() => {
     if (isLead) {
@@ -79,16 +102,6 @@ export function LeadsListView({ type }: Props) {
   }, [isLead, mutate, setOnLeadCreated]);
 
   if (isLoading && leads.length === 0) return <Loading />;
-
-  const headers = [
-    "Nombre",
-    "Teléfono",
-    ...(isAdmin ? ["Franquicia"] : []),
-    "Agente",
-    "Equipo",
-    ...(isLead ? ["Estado"] : ["Producto(s)", "Estado"]),
-    isLead ? "Fecha creación lead" : "Fecha creación cliente",
-  ];
 
   return (
     <div className="w-full  mx-auto px-4 sm:px-8 pt-8 pb-16 space-y-6">
@@ -125,17 +138,13 @@ export function LeadsListView({ type }: Props) {
         <div className="flex gap-2 flex-wrap">
           <CustomSelect
             name="filterStatus"
-            value={
-              filterStatus === "ALL"
-                ? "Todos"
-                : (statusOptions[filterStatus] ?? "Todos")
-            }
+            value={filterStatus === "ALL" ? "Todos" : (statusOptions[filterStatus] ?? "Todos")}
             onChange={(val) => {
               setFilterStatus(val);
               setPage(1);
             }}
-            options={["ALL", ...Object.keys(statusOptions)]}
-            labels={["Todos", ...Object.values(statusOptions)]}
+            options={selectOptions}
+            labels={selectLabels}
           />
         </div>
       </div>
