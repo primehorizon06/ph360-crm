@@ -144,7 +144,7 @@ export default function GoalsPage() {
                       : "bg-white/5 text-white/40 hover:bg-white/10"
                   }`}
                 >
-                  {q === 1 ? "1 – 15" : "16 – fin"}
+                  {q === 1 ? "1" : "2"}
                 </button>
               ))}
             </div>
@@ -171,7 +171,7 @@ export default function GoalsPage() {
         <span className="text-xs text-white/40">Período:</span>
         <span className="text-sm font-medium text-white">
           {MONTHS[month - 1]} {year} ·{" "}
-          {quincena === 1 ? "1 al 15" : "16 al fin de mes"}
+          {quincena === 1 ? "1er quincena" : "2da quincena"}
         </span>
       </div>
 

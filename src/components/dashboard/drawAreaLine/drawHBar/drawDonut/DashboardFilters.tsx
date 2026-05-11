@@ -76,7 +76,7 @@ export function DashboardFilters({
                   : "bg-white dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800"
               }`}
             >
-              {q === 1 ? "1 – 15" : "16 – fin"}
+              {q === 1 ? "1" : "2"}
             </button>
           ))}
         </div>
