@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -la /home/juan/projects/)",
+      "Read(///wsl.localhost/Ubuntu/home/juan/**)",
+      "Bash(grep -r \"next/image\" //wsl.localhost/Ubuntu/home/juan/projects/ph360-crm/src --include=\"*.ts\" --include=\"*.tsx\" | head -20)",
+      "Read(///wsl.localhost/Ubuntu/home/juan/projects/ph360-crm/**)",
+      "Bash(grep -r \"<img\\\\s\" //wsl.localhost/Ubuntu/home/juan/projects/ph360-crm/src --include=\"*.ts\" --include=\"*.tsx\" | wc -l)",
+      "Bash(find //wsl.localhost/Ubuntu/home/juan/projects/ph360-crm/src/app/api -name \"route.ts\" -type f | head -15)",
+      "Read(///wsl.localhost/Ubuntu/home/juan/projects/ph360-crm/src/app/**)",
+      "Bash(grep -r \"SELECT \\\\*\\\\|findMany\\\\|findUnique\" //wsl.localhost/Ubuntu/home/juan/projects/ph360-crm/src/app/api --include=\"*.ts\" | grep -c \"select:\")",
+      "Bash(grep -r \"React.lazy\\\\|Suspense\\\\|dynamic\" //wsl.localhost/Ubuntu/home/juan/projects/ph360-crm/src --include=\"*.tsx\" | head -10)",
+      "Bash(grep -r \"useSWR\\\\|useQuery\\\\|fetch\\(\" //wsl.localhost/Ubuntu/home/juan/projects/ph360-crm/src --include=\"*.tsx\" | wc -l)",
+      "Bash(grep -r \"React.memo\\\\|useCallback\\\\|useMemo\" //wsl.localhost/Ubuntu/home/juan/projects/ph360-crm/src --include=\"*.tsx\" | wc -l)",
+      "Bash(find //wsl.localhost/Ubuntu/home/juan/projects/ph360-crm/src/components -name \"*.tsx\" -type f | wc -l)",
+      "Read(///wsl.localhost/Ubuntu/home/juan/projects/ph360-crm/src/**)",
+      "Bash(grep -r \"\\\\\"use client\\\\\"\" //wsl.localhost/Ubuntu/home/juan/projects/ph360-crm/src --include=\"*.tsx\" | wc -l)",
+      "Bash(find //wsl.localhost/Ubuntu/home/juan/projects/ph360-crm/src/components/leads -name \"*.tsx\" -type f)",
+      "Read(///wsl.localhost/Ubuntu/home/juan/projects/ph360-crm/src/components/**)",
+      "Bash(grep -A 20 \"findMany\\\\|groupBy\" //wsl.localhost/Ubuntu/home/juan/projects/ph360-crm/src/app/api/dashboard/route.ts | head -60)",
+      "Read(///wsl.localhost/Ubuntu/home/juan/projects/ph360-crm/src/app/api/dashboard/**)",
+      "Bash(grep -r \"setInterval\\\\|setLoading\\\\|useState.*loading\" //wsl.localhost/Ubuntu/home/juan/projects/ph360-crm/src/hooks --include=\"*.ts\" | head -10)",
+      "Bash(wc -l //wsl.localhost/Ubuntu/home/juan/projects/ph360-crm/src/app/api/leads/\\\\[id\\\\]/route.ts //wsl.localhost/Ubuntu/home/juan/projects/ph360-crm/src/app/api/dashboard/route.ts)",
+      "Read(///wsl.localhost/Ubuntu/home/juan/projects/ph360-crm/src/app/api/leads/[id]/**)"
+    ]
+  }
+}

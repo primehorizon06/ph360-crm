@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
+import { Prisma } from "@prisma/client";
 
 function getQuincenaRange(year: number, month: number, quincena: 1 | 2) {
   if (quincena === 1) {
@@ -57,6 +58,31 @@ function buildRevenueWhere(companyId?: number, teamId?: number, agentId?: number
   };
 }
 
+// Resuelve el histórico de metas en 1 query en lugar de N (una por quincena)
+async function resolveGoalHistorico(
+  hist: { year: number; month: number; quincena: number; amount: Prisma.Decimal }[],
+  baseWhere: ReturnType<typeof buildRevenueWhere>,
+) {
+  if (!hist.length) return [];
+
+  const ranges = hist.map((g) => getQuincenaRange(g.year, g.month, g.quincena as 1 | 2));
+  const gte = new Date(Math.min(...ranges.map((r) => r.gte.getTime())));
+  const lte = new Date(Math.max(...ranges.map((r) => r.lte.getTime())));
+
+  const installments = await prisma.installment.findMany({
+    where: { ...baseWhere, paidAt: { gte, lte } },
+    select: { paidAt: true, amount: true },
+  });
+
+  return hist.map((g) => {
+    const r = getQuincenaRange(g.year, g.month, g.quincena as 1 | 2);
+    const revenue = installments
+      .filter((i) => i.paidAt !== null && i.paidAt >= r.gte && i.paidAt <= r.lte)
+      .reduce((sum, i) => sum + Number(i.amount), 0);
+    return { year: g.year, month: g.month, quincena: g.quincena, amount: Number(g.amount), revenue };
+  });
+}
+
 export const GET = withAuth(async (req, session) => {
   const { searchParams } = new URL(req.url);
   const year = parseInt(searchParams.get("year") ?? String(new Date().getFullYear()));
@@ -89,7 +115,6 @@ export const GET = withAuth(async (req, session) => {
     scopedTeamId = user.teamId;
     scopedAgentId = userId;
   }
-  console.log("Scope filters:", { scopedCompanyId, scopedTeamId, scopedAgentId });
 
   const leadFilter = {
     ...(scopedCompanyId ? { companyId: scopedCompanyId } : {}),
@@ -245,21 +270,27 @@ export const GET = withAuth(async (req, session) => {
     where: { ...rankingLeadFilter, type: "customer", convertedAt: dateRange },
     _count: { id: true },
   });
+
+  // Fix N+1: resuelve agentes faltantes en 1 query en lugar de 1 por agente
+  const missingAgentIds = convByAgent
+    .filter((c) => !agentMap[c.assignedToId])
+    .map((c) => c.assignedToId);
+
+  const missingAgents = missingAgentIds.length
+    ? await prisma.user.findMany({
+        where: { id: { in: missingAgentIds } },
+        select: { id: true, name: true },
+      })
+    : [];
+  const missingAgentIndex = Object.fromEntries(missingAgents.map((a) => [a.id, a]));
+
   for (const c of convByAgent) {
     if (agentMap[c.assignedToId]) {
       agentMap[c.assignedToId].conversiones = c._count.id;
     } else {
-      const agentInfo = await prisma.user.findUnique({
-        where: { id: c.assignedToId },
-        select: { id: true, name: true },
-      });
-      if (agentInfo)
-        agentMap[agentInfo.id] = {
-          id: agentInfo.id,
-          name: agentInfo.name,
-          recaudo: 0,
-          conversiones: c._count.id,
-        };
+      const info = missingAgentIndex[c.assignedToId];
+      if (info)
+        agentMap[info.id] = { id: info.id, name: info.name, recaudo: 0, conversiones: c._count.id };
     }
   }
 
@@ -303,27 +334,14 @@ export const GET = withAuth(async (req, session) => {
     });
     goalAmount = g ? Number(g.amount) : null;
 
-    // Historico últimas 6 quincenas
     const hist = await prisma.goal.findMany({
       where: { companyId: scopedCompanyId },
       orderBy: [{ year: "desc" }, { month: "desc" }, { quincena: "desc" }],
       take: 6,
     });
-    goalHistorico = await Promise.all(
-      hist.map(async (g) => {
-        const r = getQuincenaRange(g.year, g.month, g.quincena as 1 | 2);
-        const rev = await prisma.installment.aggregate({
-          where: { ...buildRevenueWhere(scopedCompanyId), paidAt: r },
-          _sum: { amount: true },
-        });
-        return {
-          year: g.year,
-          month: g.month,
-          quincena: g.quincena,
-          amount: Number(g.amount),
-          revenue: Number(rev._sum.amount ?? 0),
-        };
-      }),
+    goalHistorico = await resolveGoalHistorico(
+      hist,
+      buildRevenueWhere(scopedCompanyId),
     );
   } else if (user.role === UserRole.COACH && scopedTeamId) {
     const g = await prisma.goal.findFirst({
@@ -336,21 +354,9 @@ export const GET = withAuth(async (req, session) => {
       orderBy: [{ year: "desc" }, { month: "desc" }, { quincena: "desc" }],
       take: 6,
     });
-    goalHistorico = await Promise.all(
-      hist.map(async (g) => {
-        const r = getQuincenaRange(g.year, g.month, g.quincena as 1 | 2);
-        const rev = await prisma.installment.aggregate({
-          where: { ...buildRevenueWhere(undefined, scopedTeamId), paidAt: r },
-          _sum: { amount: true },
-        });
-        return {
-          year: g.year,
-          month: g.month,
-          quincena: g.quincena,
-          amount: Number(g.amount),
-          revenue: Number(rev._sum.amount ?? 0),
-        };
-      }),
+    goalHistorico = await resolveGoalHistorico(
+      hist,
+      buildRevenueWhere(undefined, scopedTeamId),
     );
   } else if (user.role === UserRole.AGENT && scopedAgentId) {
     const g = await prisma.goal.findFirst({
@@ -363,24 +369,9 @@ export const GET = withAuth(async (req, session) => {
       orderBy: [{ year: "desc" }, { month: "desc" }, { quincena: "desc" }],
       take: 6,
     });
-    goalHistorico = await Promise.all(
-      hist.map(async (g) => {
-        const r = getQuincenaRange(g.year, g.month, g.quincena as 1 | 2);
-        const rev = await prisma.installment.aggregate({
-          where: {
-            ...buildRevenueWhere(undefined, undefined, scopedAgentId),
-            paidAt: r,
-          },
-          _sum: { amount: true },
-        });
-        return {
-          year: g.year,
-          month: g.month,
-          quincena: g.quincena,
-          amount: Number(g.amount),
-          revenue: Number(rev._sum.amount ?? 0),
-        };
-      }),
+    goalHistorico = await resolveGoalHistorico(
+      hist,
+      buildRevenueWhere(undefined, undefined, scopedAgentId),
     );
   }
 
@@ -390,21 +381,38 @@ export const GET = withAuth(async (req, session) => {
     name: string;
     recaudo: number;
   }[] = [];
+
   if (user.role === UserRole.ADMIN && !scopedCompanyId) {
-    const franqRecaudos = await Promise.all(
-      companies.map(async (c) => {
-        const raw = await prisma.installment.aggregate({
-          where: { ...buildRevenueWhere(c.id), paidAt: dateRange },
-          _sum: { amount: true },
-        });
-        return {
-          companyId: c.id,
-          name: c.name,
-          recaudo: Number(raw._sum.amount ?? 0),
-        };
-      }),
+    // Fix N+1: 1 query con grouping en JS en lugar de 1 aggregate por empresa
+    const franqInst = await prisma.installment.findMany({
+      where: {
+        status: "PAID" as const,
+        paidAt: dateRange,
+        paymentPlan: { product: { lead: { type: "customer" as const } } },
+      },
+      select: {
+        amount: true,
+        paymentPlan: {
+          select: {
+            product: {
+              select: { lead: { select: { companyId: true } } },
+            },
+          },
+        },
+      },
+    });
+
+    const recaudoByCompany = Object.fromEntries(
+      companies.map((c) => [c.id, { companyId: c.id, name: c.name, recaudo: 0 }]),
     );
-    recaudoPorFranquicia = franqRecaudos.sort((a, b) => b.recaudo - a.recaudo);
+    for (const inst of franqInst) {
+      const cid = inst.paymentPlan?.product?.lead?.companyId;
+      if (cid !== undefined && recaudoByCompany[cid])
+        recaudoByCompany[cid].recaudo += Number(inst.amount);
+    }
+    recaudoPorFranquicia = Object.values(recaudoByCompany).sort(
+      (a, b) => b.recaudo - a.recaudo,
+    );
   }
 
   return NextResponse.json({

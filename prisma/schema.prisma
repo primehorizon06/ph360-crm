@@ -168,6 +168,13 @@ model Lead {
   team          Team           @relation(fields: [teamId], references: [id])
   assignedTo    User           @relation(fields: [assignedToId], references: [id])
   notifications Notification[]
+
+  @@index([type, companyId])
+  @@index([type, teamId])
+  @@index([type, assignedToId])
+  @@index([type, convertedAt])
+  @@index([createdAt])
+  @@index([status])
 }
 
 // ─── DOCUMENTO ADJUNTO ───────────────────────────────────────────────────────
@@ -308,6 +315,9 @@ model Installment {
   amount        Decimal           @db.Decimal(10, 2)
   status        InstallmentStatus @default(PENDING)
   paidAt        DateTime?
+
+  @@index([paidAt])
+  @@index([status])
 }
 
 enum ConversionStatus {

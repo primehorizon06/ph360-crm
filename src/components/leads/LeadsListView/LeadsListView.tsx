@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import useSWR from "swr";
 import { useSession } from "next-auth/react";
 import { Loading } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -18,6 +19,17 @@ import { CustomSelect } from "@/components/ui/Select";
 import { PRODUCT_COLORS, PRODUCT_LABELS } from "@/utils/constants/products";
 import { ProductType } from "@/utils/interfaces/products";
 import { UserRole } from "@/utils/constants/roles";
+import { fetcher } from "@/lib/fetcher";
+
+const LIMIT = 50;
+
+interface LeadsResponse {
+  data: Lead[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
 
 interface Props {
   type: "lead" | "customer";
@@ -26,9 +38,9 @@ interface Props {
 export function LeadsListView({ type }: Props) {
   const { data: session, status } = useSession();
   const { setLeadsModalOpen, setOnLeadCreated } = useSidebar();
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("ALL");
   const isAdmin = session?.user?.role === UserRole.ADMIN;
   const router = useRouter();
@@ -36,46 +48,37 @@ export function LeadsListView({ type }: Props) {
   const isLead = type === "lead";
   const label = isLead ? "Lead" : "Cliente";
   const basePath = isLead ? "/leads" : "/customers";
-
   const statusOptions = isLead ? STATUS : CUSTOMER_STATUS;
 
-  const loadLeads = useCallback(async () => {
-    setLoading(true);
-    const res = await fetch(`/api/leads?type=${type}`);
-    const data = await res.json();
-    setLeads(data);
-    setLoading(false);
-  }, [type]);
-
+  // Debounce search: el setState ocurre en el callback del timer, no directo en el efecto
   useEffect(() => {
-    if (status === "authenticated") loadLeads();
-  }, [status, loadLeads]);
+    const t = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
 
-  const filtered = leads.filter((lead) => {
-    const matchSearch =
-      `${lead.firstName} ${lead.lastName} ${lead.phone1} ${lead.email}`
-        .toLowerCase()
-        .includes(search.toLowerCase());
+  const swrKey = useMemo(() => {
+    if (status !== "authenticated") return null;
+    const params = new URLSearchParams({ type, page: String(page), limit: String(LIMIT) });
+    if (debouncedSearch) params.set("search", debouncedSearch);
+    if (filterStatus !== "ALL") params.set("status", filterStatus);
+    return `/api/leads?${params}`;
+  }, [status, type, page, debouncedSearch, filterStatus]);
 
-    if (isLead) {
-      const matchStatus =
-        filterStatus === "ALL" || lead.status === filterStatus;
-      return matchSearch && matchStatus;
-    } else {
-      const matchStatus =
-        filterStatus === "ALL" || lead.customerStatus === filterStatus;
-      return matchSearch && matchStatus;
-    }
-  });
+  const { data, isLoading, mutate } = useSWR<LeadsResponse>(swrKey, fetcher);
 
+  const leads = data?.data ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = data?.totalPages ?? 0;
+
+  // Registra callback de recarga cuando se crea un lead
   useEffect(() => {
     if (isLead) {
-      setOnLeadCreated(() => loadLeads);
+      setOnLeadCreated(() => () => { void mutate(); });
       return () => setOnLeadCreated(null);
     }
-  }, [loadLeads, setOnLeadCreated, isLead]);
+  }, [isLead, mutate, setOnLeadCreated]);
 
-  if (loading) return <Loading />;
+  if (isLoading && leads.length === 0) return <Loading />;
 
   const headers = [
     "Nombre",
@@ -91,7 +94,7 @@ export function LeadsListView({ type }: Props) {
     <div className="w-full  mx-auto px-4 sm:px-8 pt-8 pb-16 space-y-6">
       <PageHeader
         title={isLead ? "Leads" : "Clientes"}
-        description={`${filtered.length} de ${leads.length} ${label.toLowerCase()}s`}
+        description={`${total} ${label.toLowerCase()}${total !== 1 ? "s" : ""}`}
         action={
           isLead
             ? {
@@ -111,7 +114,10 @@ export function LeadsListView({ type }: Props) {
             type="text"
             placeholder={`Buscar por nombre, teléfono, email...`}
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
             className="bg-transparent text-lg text-white/70 placeholder:text-white/30 outline-none w-full"
           />
         </div>
@@ -124,7 +130,10 @@ export function LeadsListView({ type }: Props) {
                 ? "Todos"
                 : (statusOptions[filterStatus] ?? "Todos")
             }
-            onChange={(val) => setFilterStatus(val)}
+            onChange={(val) => {
+              setFilterStatus(val);
+              setPage(1);
+            }}
             options={["ALL", ...Object.keys(statusOptions)]}
             labels={["Todos", ...Object.values(statusOptions)]}
           />
@@ -148,7 +157,7 @@ export function LeadsListView({ type }: Props) {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {filtered.map((lead) => (
+              {leads.map((lead) => (
                 <tr
                   key={lead.id}
                   onClick={() => router.push(`${basePath}/${lead.id}`)}
@@ -182,7 +191,6 @@ export function LeadsListView({ type }: Props) {
                     </td>
                   ) : (
                     <>
-                      {/* Productos */}
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-1">
                           {lead.products && lead.products.length > 0 ? (
@@ -199,7 +207,6 @@ export function LeadsListView({ type }: Props) {
                           )}
                         </div>
                       </td>
-                      {/* Estado cliente */}
                       <td className="px-4 py-3">
                         {lead.customerStatus ? (
                           <span
@@ -229,7 +236,7 @@ export function LeadsListView({ type }: Props) {
 
         {/* Tarjetas móvil */}
         <div className="md:hidden divide-y divide-white/5">
-          {filtered.map((lead) => (
+          {leads.map((lead) => (
             <div
               key={lead.id}
               onClick={() => router.push(`${basePath}/${lead.id}`)}
@@ -277,9 +284,34 @@ export function LeadsListView({ type }: Props) {
           ))}
         </div>
 
-        {filtered.length === 0 && (
+        {leads.length === 0 && !isLoading && (
           <div className="text-center py-12 text-white/30 text-lg">
             No hay {label.toLowerCase()}s registrados
+          </div>
+        )}
+
+        {/* Paginación */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-white/10">
+            <span className="text-sm text-white/40">
+              {(page - 1) * LIMIT + 1}–{Math.min(page * LIMIT, total)} de {total}
+            </span>
+            <div className="flex gap-2">
+              <button
+                disabled={page === 1}
+                onClick={() => setPage((p) => p - 1)}
+                className="px-3 py-1 text-sm rounded border border-white/10 text-white/60 disabled:opacity-30 hover:bg-white/5 transition-colors"
+              >
+                Anterior
+              </button>
+              <button
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => p + 1)}
+                className="px-3 py-1 text-sm rounded border border-white/10 text-white/60 disabled:opacity-30 hover:bg-white/5 transition-colors"
+              >
+                Siguiente
+              </button>
+            </div>
           </div>
         )}
       </div>
