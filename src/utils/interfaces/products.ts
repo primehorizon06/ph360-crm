@@ -37,7 +37,7 @@ export interface Product {
   createdAt: string;
   paymentMethod: PaymentMethod & { id: number };
   paymentPlan?: {
-    installments: { number: number; date: string; amount: number }[];
+    installments: { id: number; number: number; date: string; amount: number, status: "PAID" | "FAILED" | "CANCELLED" }[];
   };
   status: "ACTIVE" | "SUSPENDED";
   approval: ProductApproval | null;

@@ -10,6 +10,9 @@ import {
   Building2,
   X,
   Loader2,
+  RotateCcw,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { Loading } from "@/components/ui/Loading";
 import { ProductFormData, productSchema } from "@/lib/validations/product";
@@ -30,8 +33,112 @@ import { Installment } from "@/utils/interfaces/paymentPlanPicker";
 import { PaymentPlanPicker } from "@/components/leads/PaymentPlanPicker/PaymentPlanPicker";
 import { formatAmount, formatDate } from "@/utils/helpers/format";
 import { ConfirmProductModal } from "@/components/leads/Confirmproductmodal/Confirmproductmodal";
+import { useSession } from "next-auth/react";
+
+// ─── Installment status helpers ───────────────────────────────────────────────
+
+const STATUS_STYLES: Record<string, string> = {
+  PAID: "bg-emerald-500/10 text-emerald-400",
+  FAILED: "bg-red-500/10 text-red-400",
+  CANCELLED: "bg-white/10 text-white/30",
+  PENDING: "bg-amber-500/10 text-amber-400",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  PAID: "Pagado",
+  FAILED: "Fallido",
+  CANCELLED: "Cancelado",
+  PENDING: "Pendiente",
+};
+
+// ─── InstallmentRow component ─────────────────────────────────────────────────
+
+interface InstallmentItem {
+  id: number;
+  number: number;
+  date: string;
+  amount: number;
+  status: string;
+  paidAt?: string | null;
+}
+
+function InstallmentRow({ inst, idx }: { inst: InstallmentItem; idx: number }) {
+  const [expanded, setExpanded] = useState(false);
+  const isPaid = inst.status === "PAID";
+
+  return (
+    <div>
+      {/* Fila principal */}
+      <button
+        type="button"
+        onClick={() => isPaid && setExpanded((p) => !p)}
+        className={`w-full flex items-center justify-between px-2 py-1.5 rounded-md transition-colors ${
+          idx % 2 === 0 ? "bg-white/5" : ""
+        } ${isPaid ? "cursor-pointer hover:bg-white/10" : "cursor-default"}`}
+      >
+        <div className="flex items-center gap-2">
+          <span className="w-5 h-5 rounded-full bg-white/5 flex items-center justify-center text-md text-white/50 shrink-0">
+            {inst.number}
+          </span>
+          <span className="text-white/30 text-[15px] font-mono shrink-0">
+            #{inst.id}
+          </span>
+          <span className="text-white text-sm">{formatDate(inst.date)}</span>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <span
+            className={`text-[15px] px-1.5 py-0.5 rounded-full font-medium ${STATUS_STYLES[inst.status] ?? STATUS_STYLES.PENDING}`}
+          >
+            {STATUS_LABELS[inst.status] ?? "Pendiente"}
+          </span>
+          <span className="text-white text-sm">
+            $ {formatAmount(Number(inst.amount))}
+          </span>
+          {isPaid &&
+            (expanded ? (
+              <ChevronUp size={12} className="text-white/30" />
+            ) : (
+              <ChevronDown size={12} className="text-white/30" />
+            ))}
+        </div>
+      </button>
+
+      {/* Detalle expandible — solo si está pagada */}
+      {isPaid && expanded && (
+        <div className="mx-2 mb-1.5 px-3 py-2.5 bg-emerald-500/5 border border-emerald-500/15 rounded-lg space-y-1.5">
+          <div className="flex items-center justify-between text-md">
+            <span className="text-white/30">ID cuota</span>
+            <span className="text-white/40 font-mono">#{inst.id}</span>
+          </div>
+          <div className="flex items-center justify-between text-md">
+            <span className="text-white/30">Fecha programada</span>
+            <span className="text-white/50">{formatDate(inst.date)}</span>
+          </div>
+          <div className="flex items-center justify-between text-md">
+            <span className="text-white/30">Fecha de pago</span>
+            <span className="text-emerald-400">
+              {inst.paidAt ? formatDate(inst.paidAt) : "—"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-md border-t border-emerald-500/10 pt-1.5 mt-1">
+            <span className="text-white/30 font-medium">Monto pagado</span>
+            <span className="text-emerald-400 font-semibold">
+              $ {formatAmount(Number(inst.amount))}
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 export function ProductsTab({ leadId, onProductCreated }: Props) {
+  const { data: session } = useSession();
+  const role = session?.user?.role;
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -39,6 +146,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
   const [installmentError, setInstallmentError] = useState("");
   const [saving, setSaving] = useState(false);
   const [pendingData, setPendingData] = useState<ProductFormData | null>(null);
+  const [resubmitting, setResubmitting] = useState<number | null>(null);
 
   const {
     register,
@@ -72,7 +180,6 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
     setShowForm(false);
   }
 
-  // Valida y abre el modal de confirmación
   const onSubmit = (data: ProductFormData) => {
     if (installments.length === 0) {
       setInstallmentError("Agrega al menos una cuota al plan de pagos");
@@ -89,7 +196,6 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
     setPendingData(data);
   };
 
-  // Ejecuta el guardado real tras confirmar
   const confirmSave = async () => {
     if (!pendingData) return;
     setSaving(true);
@@ -141,10 +247,20 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
     setPendingData(null);
     resetForm();
     loadProducts();
-    onProductCreated?.(); 
+    onProductCreated?.();
   };
 
-  // ── Render ──────────────────────────────────────────────────────────────────
+  async function handleResubmit(productId: number) {
+    setResubmitting(productId);
+    await fetch(`/api/leads/${leadId}/products/${productId}/approval`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "RESUBMIT" }),
+    });
+    setResubmitting(null);
+    loadProducts();
+    onProductCreated?.();
+  }
 
   return (
     <div className="space-y-4">
@@ -377,7 +493,6 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                 )}
               </div>
 
-              {/* Número de ruta */}
               <div className="space-y-1">
                 <label className="text-sm text-white/40">Número de ruta</label>
                 <input
@@ -395,7 +510,6 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                 )}
               </div>
 
-              {/* Tipo de cuenta */}
               <div className="space-y-1">
                 <label className="text-sm text-white/40">Tipo de cuenta</label>
                 <Controller
@@ -472,16 +586,22 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                 (acc, i) => acc + Number(i.amount),
                 0,
               ) ?? 0;
+            const paidCount =
+              lp.paymentPlan?.installments.filter((i) => i.status === "PAID")
+                .length ?? 0;
+            const isRejected = lp.approval?.status === "REJECTED";
 
             return (
               <div
                 key={lp.id}
-                className="bg-[#13151c] border border-white/10 rounded-xl p-4 flex flex-col gap-3"
+                className={`bg-[#13151c] border rounded-xl p-4 flex flex-col gap-3 ${
+                  isRejected ? "border-red-500/30" : "border-white/10"
+                }`}
               >
                 {/* Badge + total */}
                 <div className="flex items-start justify-between gap-2">
                   <span
-                    className={`inline-flex items-center gap-1.5 text-lg font-medium px-2.5 py-1 rounded-full border ${PRODUCT_COLORS[lp.product]}`}
+                    className={`inline-flex items-center gap-1.5 text-sm font-medium px-2.5 py-1 rounded-full border ${PRODUCT_COLORS[lp.product]}`}
                   >
                     <ShoppingBag size={11} />
                     {PRODUCT_LABELS[lp.product]}
@@ -506,36 +626,36 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                     <div className="min-w-0">
                       {lp.paymentMethod.type === "TARJETA" ? (
                         <>
-                          <p className="text-white/70 text-lg font-medium">
+                          <p className="text-white/70 text-sm font-medium">
                             Tarjeta{" "}
                             {lp.paymentMethod.cardType === "DEBITO"
                               ? "Débito"
                               : "Crédito"}{" "}
                             ···· {lp.paymentMethod.lastFour}
                           </p>
-                          <p className="text-white/70 text-lg truncate">
+                          <p className="text-white/50 text-md truncate">
                             Titular: {lp.paymentMethod.holderName}
                           </p>
-                          <p className="text-white/70 text-lg truncate">
+                          <p className="text-white/50 text-md truncate">
                             Banco: {lp.paymentMethod.bank}
                           </p>
                         </>
                       ) : (
                         <>
-                          <p className="text-white/70 text-lg font-medium truncate">
+                          <p className="text-white/70 text-sm font-medium truncate">
                             Cuenta: {lp.paymentMethod.accountNumber}
                           </p>
-                          <p className="text-white/70 text-lg truncate">
+                          <p className="text-white/50 text-md truncate">
                             Titular: {lp.paymentMethod.accountHolder}
                           </p>
-                          <p className="text-white/70 text-lg truncate">
+                          <p className="text-white/50 text-md truncate">
                             Banco: {lp.paymentMethod.accountBank}
                           </p>
-                          <p className="text-white/70 text-lg truncate">
-                            Número de ruta: {lp.paymentMethod.routingNumber}
+                          <p className="text-white/50 text-md truncate">
+                            Ruta: {lp.paymentMethod.routingNumber}
                           </p>
-                          <p className="text-white/70 text-lg truncate">
-                            Tipo de cuenta:{" "}
+                          <p className="text-white/50 text-md truncate">
+                            Tipo:{" "}
                             {lp.paymentMethod.accountType === "AHORROS"
                               ? "Ahorros"
                               : "Cheques"}
@@ -548,29 +668,54 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
 
                 {/* Cuotas */}
                 {lp.paymentPlan && lp.paymentPlan.installments.length > 0 && (
-                  <div className="border-t border-white/5 pt-2 space-y-1">
-                    <p className="text-white/20 text-[10px] uppercase tracking-widest mb-1.5">
-                      {lp.paymentPlan.installments.length} cuota
-                      {lp.paymentPlan.installments.length !== 1 ? "s" : ""}
-                    </p>
+                  <div className="border-t border-white/5 pt-2 space-y-0.5">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-white/20 text-[15px] uppercase tracking-widest">
+                        {lp.paymentPlan.installments.length} cuota
+                        {lp.paymentPlan.installments.length !== 1 ? "s" : ""}
+                      </p>
+                      {paidCount > 0 && (
+                        <p className="text-emerald-400 text-[15px]">
+                          {paidCount} pagada{paidCount !== 1 ? "s" : ""}
+                        </p>
+                      )}
+                    </div>
                     {lp.paymentPlan.installments.map((inst, idx) => (
-                      <div
-                        key={inst.number}
-                        className={`flex items-center justify-between px-2 py-1 rounded-md ${
-                          idx % 2 === 0 ? "bg-white/5" : ""
-                        }`}
-                      >
-                        <div className="flex items-center gap-1.5 text-white text-lg">
-                          <span className="w-4.5 h-4.5 rounded-full bg-white/5 flex items-center justify-center text-lg">
-                            {inst.number}
-                          </span>
-                          {formatDate(inst.date)}
-                        </div>
-                        <span className="text-white text-lg">
-                          $ {formatAmount(Number(inst.amount))}
-                        </span>
-                      </div>
+                      <InstallmentRow key={inst.id} inst={inst} idx={idx} />
                     ))}
+                  </div>
+                )}
+
+                {/* Rechazo + botón reenviar */}
+                {isRejected && (
+                  <div className="border-t border-red-500/20 pt-3 mt-1 space-y-2">
+                    <div>
+                      <p className="text-red-400 text-md font-medium uppercase tracking-wide">
+                        Rechazado
+                      </p>
+                      {lp.approval?.note && (
+                        <p className="text-white/40 text-md mt-1 leading-relaxed">
+                          {lp.approval.note}
+                        </p>
+                      )}
+                    </div>
+                    {(role === "AGENT" || role === "ADMIN") && (
+                      <button
+                        type="button"
+                        onClick={() => handleResubmit(lp.id)}
+                        disabled={resubmitting === lp.id}
+                        className="flex items-center justify-center gap-2 w-full py-2 rounded-lg border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {resubmitting === lp.id ? (
+                          <Loader2 size={13} className="animate-spin" />
+                        ) : (
+                          <RotateCcw size={13} />
+                        )}
+                        {resubmitting === lp.id
+                          ? "Reenviando..."
+                          : "Reenviar para aprobación"}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

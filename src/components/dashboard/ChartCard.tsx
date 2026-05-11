@@ -237,6 +237,118 @@ export function drawDonut(
   ctx.fillText(String(total), cx, cy);
 }
 
+export function drawDualLine(
+  canvas: HTMLCanvasElement,
+  labels: string[],
+  values1: number[], // recaudo real
+  values2: number[], // meta
+) {
+  const W = canvas.getBoundingClientRect().width || canvas.offsetWidth;
+  const H = 180;
+  const ctx = setupCanvas(canvas, W, H);
+
+  const dark = isDark();
+  const gridColor = dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)";
+  const textColor = dark ? "#666" : "#aaa";
+  const padL = 48,
+    padR = 12,
+    padT = 12,
+    padB = 28;
+  const W2 = W - padL - padR;
+  const H2 = H - padT - padB;
+  const max = Math.max(...values1, ...values2, 1);
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid
+  [0, 0.25, 0.5, 0.75, 1].forEach((t) => {
+    const y = padT + H2 * (1 - t);
+    ctx.strokeStyle = gridColor;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padL, y);
+    ctx.lineTo(W - padR, y);
+    ctx.stroke();
+    ctx.fillStyle = textColor;
+    ctx.font = "10px system-ui";
+    ctx.textAlign = "right";
+    const label =
+      max >= 1000
+        ? "$" + Math.round((max * t) / 1000) + "K"
+        : "$" + Math.round(max * t);
+    ctx.fillText(label, padL - 4, y + 3);
+  });
+
+  if (values1.length < 1) return;
+  if (values1.length === 1) {
+    // Dibujar solo puntos
+    const x = padL + W2 / 2;
+    [values1[0], values2[0]].forEach((v, i) => {
+      const y = padT + H2 * (1 - v / max);
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = i === 0 ? "#06b6d4" : "#fbbf24";
+      ctx.fill();
+    });
+    return;
+  }
+  
+  const xStep = W2 / (values1.length - 1);
+
+  function drawLine(vals: number[], color: string, dashed = false) {
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.lineJoin = "round";
+    if (dashed) ctx.setLineDash([6, 4]);
+    else ctx.setLineDash([]);
+    vals.forEach((v, i) => {
+      const x = padL + i * xStep;
+      const y = padT + H2 * (1 - v / max);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Dots
+    vals.forEach((v, i) => {
+      const x = padL + i * xStep;
+      const y = padT + H2 * (1 - v / max);
+      ctx.beginPath();
+      ctx.arc(x, y, 3, 0, 2 * Math.PI);
+      ctx.fillStyle = color;
+      ctx.fill();
+    });
+  }
+
+  // Fill under real revenue
+  ctx.beginPath();
+  values1.forEach((v, i) => {
+    const x = padL + i * xStep;
+    const y = padT + H2 * (1 - v / max);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.lineTo(padL + (values1.length - 1) * xStep, padT + H2);
+  ctx.lineTo(padL, padT + H2);
+  ctx.closePath();
+  const grad = ctx.createLinearGradient(0, padT, 0, padT + H2);
+  grad.addColorStop(0, "#06b6d450");
+  grad.addColorStop(1, "#06b6d400");
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  drawLine(values1, "#06b6d4"); // recaudo — cyan sólido
+  drawLine(values2, "#fbbf24", true); // meta — amber dashed
+
+  // X labels
+  ctx.fillStyle = textColor;
+  ctx.font = "10px system-ui";
+  ctx.textAlign = "center";
+  labels.forEach((label, i) => {
+    ctx.fillText(label, padL + i * xStep, H - 6);
+  });
+}
+
 export function SkeletonCard() {
   return (
     <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 animate-pulse">

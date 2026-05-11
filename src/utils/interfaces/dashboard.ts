@@ -40,6 +40,8 @@ export interface DashboardData {
     role: string;
     currentUserId: number;
   };
+  goalAmount: number | null;
+  goalHistorico: { year: number; month: number; quincena: number; amount: number; revenue: number }[];
 }
 
 export const MONTHS = [

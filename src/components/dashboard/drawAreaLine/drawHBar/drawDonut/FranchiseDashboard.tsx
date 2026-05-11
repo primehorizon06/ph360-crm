@@ -12,12 +12,26 @@ import {
   ChartCard,
   drawAreaLine,
   drawHBar,
+  drawDualLine,
   SkeletonCard,
   SkeletonChart,
 } from "@/components/dashboard/ChartCard";
 import { fmt } from "@/utils/helpers/format";
 
-const META_QUINCENA = 5_000;
+const MONTHS_SHORT = [
+  "Ene",
+  "Feb",
+  "Mar",
+  "Abr",
+  "May",
+  "Jun",
+  "Jul",
+  "Ago",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dic",
+];
 
 export function FranchiseDashboard({
   data,
@@ -27,6 +41,7 @@ export function FranchiseDashboard({
 }: FranchiseDashboardProps) {
   const recaudoDualRef = useRef<HTMLCanvasElement>(null);
   const carteraRef = useRef<HTMLCanvasElement>(null);
+  const goalHistoricoRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     if (!data) return;
@@ -43,6 +58,16 @@ export function FranchiseDashboard({
       );
       const values = data.customerStatus.map((s) => s.count);
       drawHBar(carteraRef.current, labels, values, "#8b5cf6");
+    }
+
+    if (goalHistoricoRef.current && data.goalHistorico.length > 0) {
+      const sorted = [...data.goalHistorico].reverse();
+      const labels = sorted.map(
+        (g) => `${MONTHS_SHORT[g.month - 1]} Q${g.quincena}`,
+      );
+      const revenueValues = sorted.map((g) => g.revenue);
+      const goalValues = sorted.map((g) => g.amount);
+      drawDualLine(goalHistoricoRef.current, labels, revenueValues, goalValues);
     }
   }, [data]);
 
@@ -66,6 +91,7 @@ export function FranchiseDashboard({
   if (!data) return null;
   const { kpis, agentRanking } = data;
 
+  const META_QUINCENA = data.goalAmount ?? 0;
   const metaPctRaw =
     META_QUINCENA > 0 ? Math.min((kpis.revenue / META_QUINCENA) * 100, 100) : 0;
   const metaPctDisplay =
@@ -74,10 +100,8 @@ export function FranchiseDashboard({
       : metaPctRaw < 1
         ? metaPctRaw.toFixed(1) + "%"
         : Math.round(metaPctRaw) + "%";
-
   const todayLeads =
     data.leadsPerDay.find((d) => d.day === new Date().getDate())?.count ?? 0;
-
   const currentUserId = data.meta.currentUserId;
 
   return (
@@ -113,45 +137,54 @@ export function FranchiseDashboard({
       </div>
 
       {/* ── Cumplimiento de meta ── */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <p className="text-lg font-semibold text-zinc-700 dark:text-zinc-200">
-              Cumplimiento de meta
-            </p>
-            <p className="text-md text-zinc-400">
-              {companyName ?? "Franquicia"} · meta {fmt(META_QUINCENA)}
-            </p>
+      {data.goalAmount !== null ? (
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <p className="text-lg font-semibold text-zinc-700 dark:text-zinc-200">
+                Cumplimiento de meta
+              </p>
+              <p className="text-md text-zinc-400">
+                {companyName ?? "Franquicia"} · meta {fmt(META_QUINCENA)}
+              </p>
+            </div>
+            <span
+              className={`text-2xl font-bold ${
+                metaPctRaw >= 100
+                  ? "text-emerald-500"
+                  : metaPctRaw >= 70
+                    ? "text-amber-500"
+                    : "text-red-400"
+              }`}
+            >
+              {metaPctDisplay}
+            </span>
           </div>
-          <span
-            className={`text-2xl font-bold ${
-              metaPctRaw >= 100
-                ? "text-emerald-500"
-                : metaPctRaw >= 70
-                  ? "text-amber-500"
-                  : "text-red-400"
-            }`}
-          >
-            {metaPctDisplay}
-          </span>
+          <div className="h-4 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-700 ${
+                metaPctRaw >= 100
+                  ? "bg-emerald-500"
+                  : metaPctRaw >= 70
+                    ? "bg-amber-500"
+                    : "bg-red-400"
+              }`}
+              style={{ width: metaPctRaw + "%" }}
+            />
+          </div>
+          <div className="flex justify-between mt-1.5 text-md text-zinc-400">
+            <span>{fmt(kpis.revenue)} recaudado</span>
+            <span>
+              {fmt(Math.max(META_QUINCENA - kpis.revenue, 0))} restante
+            </span>
+          </div>
         </div>
-        <div className="h-4 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all duration-700 ${
-              metaPctRaw >= 100
-                ? "bg-emerald-500"
-                : metaPctRaw >= 70
-                  ? "bg-amber-500"
-                  : "bg-red-400"
-            }`}
-            style={{ width: metaPctRaw + "%" }}
-          />
+      ) : (
+        <div className="bg-amber-950/20 border border-amber-800/40 rounded-xl px-4 py-3 text-sm text-amber-400">
+          Sin meta asignada para esta quincena. Contacta a tu supervisor para
+          asignar una meta.
         </div>
-        <div className="flex justify-between mt-1.5 text-md text-zinc-400">
-          <span>{fmt(kpis.revenue)} recaudado</span>
-          <span>{fmt(Math.max(META_QUINCENA - kpis.revenue, 0))} restante</span>
-        </div>
-      </div>
+      )}
 
       {/* ── Recaudo dual (gráfico + comparativa) ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -168,7 +201,6 @@ export function FranchiseDashboard({
           )}
         </ChartCard>
 
-        {/* Panel ventas hoy vs quincena */}
         <ChartCard title="Panel de ventas">
           <div className="space-y-4">
             <div className="bg-cyan-50 dark:bg-cyan-950/30 rounded-lg p-3 text-center">
@@ -201,9 +233,28 @@ export function FranchiseDashboard({
         </ChartCard>
       </div>
 
+      {/* ── Histórico de metas ── */}
+      {data.goalHistorico.length > 0 && (
+        <ChartCard
+          title="Histórico de metas"
+          subtitle="Recaudo real vs meta — últimas 6 quincenas"
+        >
+          <div className="flex gap-4 mb-3 text-xs text-zinc-400">
+            <span className="flex items-center gap-1.5">
+              <span className="w-4 h-0.5 bg-cyan-500 inline-block rounded" />
+              Recaudo real
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-4 h-0.5 bg-amber-400 inline-block rounded" />
+              Meta
+            </span>
+          </div>
+          <canvas ref={goalHistoricoRef} style={{ width: "100%" }} />
+        </ChartCard>
+      )}
+
       {/* ── Ranking asesores + Estado cartera ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Ranking de asesores por recaudo */}
         <ChartCard
           title="Ranking de asesores"
           subtitle="Por recaudo efectivo (PAID)"
@@ -229,11 +280,7 @@ export function FranchiseDashboard({
                       {i + 1}
                     </span>
                     <span
-                      className={`text-md w-24 truncate font-medium ${
-                        isMe
-                          ? "text-cyan-400"
-                          : "text-zinc-600 dark:text-zinc-300"
-                      }`}
+                      className={`text-md w-24 truncate font-medium ${isMe ? "text-cyan-400" : "text-zinc-600 dark:text-zinc-300"}`}
                     >
                       {a.name}
                       {isMe && (
@@ -244,18 +291,12 @@ export function FranchiseDashboard({
                     </span>
                     <div className="flex-1 h-3.5 bg-zinc-100 dark:bg-zinc-800 rounded overflow-hidden">
                       <div
-                        className={`h-full rounded transition-all ${
-                          isMe ? "bg-cyan-400" : "bg-cyan-500"
-                        }`}
+                        className={`h-full rounded transition-all ${isMe ? "bg-cyan-400" : "bg-cyan-500"}`}
                         style={{ width: pct + "%" }}
                       />
                     </div>
                     <span
-                      className={`text-md font-semibold w-16 text-right ${
-                        isMe
-                          ? "text-cyan-400"
-                          : "text-zinc-700 dark:text-zinc-200"
-                      }`}
+                      className={`text-md font-semibold w-16 text-right ${isMe ? "text-cyan-400" : "text-zinc-700 dark:text-zinc-200"}`}
                     >
                       {fmt(a.recaudo)}
                     </span>
@@ -273,7 +314,6 @@ export function FranchiseDashboard({
           )}
         </ChartCard>
 
-        {/* Estado de cartera */}
         <ChartCard
           title="Estado de cartera"
           subtitle="Clientes activos por estado"

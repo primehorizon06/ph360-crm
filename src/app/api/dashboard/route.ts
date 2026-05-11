@@ -88,6 +88,7 @@ export const GET = withAuth(async (req, session) => {
     scopedTeamId = user.teamId;
     scopedAgentId = userId;
   }
+  console.log("Scope filters:", { scopedCompanyId, scopedTeamId, scopedAgentId });
 
   const leadFilter = {
     ...(scopedCompanyId ? { companyId: scopedCompanyId } : {}),
@@ -282,7 +283,112 @@ export const GET = withAuth(async (req, session) => {
     if (leadDayMap[d] !== undefined) leadDayMap[d]++;
   }
 
-  let recaudoPorFranquicia: { companyId: number; name: string; recaudo: number }[] = [];
+  // ── Meta según rol ───────────────────────────────────────────────────────
+  let goalAmount: number | null = null;
+  let goalHistorico: {
+    year: number;
+    month: number;
+    quincena: number;
+    amount: number;
+    revenue: number;
+  }[] = [];
+
+  if (
+    user.role === "SUPERVISOR" ||
+    (user.role === "ADMIN" && scopedCompanyId)
+  ) {
+    const g = await prisma.goal.findFirst({
+      where: { year, month, quincena, companyId: scopedCompanyId },
+    });
+    goalAmount = g ? Number(g.amount) : null;
+
+    // Historico últimas 6 quincenas
+    const hist = await prisma.goal.findMany({
+      where: { companyId: scopedCompanyId },
+      orderBy: [{ year: "desc" }, { month: "desc" }, { quincena: "desc" }],
+      take: 6,
+    });
+    goalHistorico = await Promise.all(
+      hist.map(async (g) => {
+        const r = getQuincenaRange(g.year, g.month, g.quincena as 1 | 2);
+        const rev = await prisma.installment.aggregate({
+          where: { ...buildRevenueWhere(scopedCompanyId), paidAt: r },
+          _sum: { amount: true },
+        });
+        return {
+          year: g.year,
+          month: g.month,
+          quincena: g.quincena,
+          amount: Number(g.amount),
+          revenue: Number(rev._sum.amount ?? 0),
+        };
+      }),
+    );
+  } else if (user.role === "COACH" && scopedTeamId) {
+    const g = await prisma.goal.findFirst({
+      where: { year, month, quincena, teamId: scopedTeamId },
+    });
+    goalAmount = g ? Number(g.amount) : null;
+
+    const hist = await prisma.goal.findMany({
+      where: { teamId: scopedTeamId },
+      orderBy: [{ year: "desc" }, { month: "desc" }, { quincena: "desc" }],
+      take: 6,
+    });
+    goalHistorico = await Promise.all(
+      hist.map(async (g) => {
+        const r = getQuincenaRange(g.year, g.month, g.quincena as 1 | 2);
+        const rev = await prisma.installment.aggregate({
+          where: { ...buildRevenueWhere(undefined, scopedTeamId), paidAt: r },
+          _sum: { amount: true },
+        });
+        return {
+          year: g.year,
+          month: g.month,
+          quincena: g.quincena,
+          amount: Number(g.amount),
+          revenue: Number(rev._sum.amount ?? 0),
+        };
+      }),
+    );
+  } else if (user.role === "AGENT" && scopedAgentId) {
+    const g = await prisma.goal.findFirst({
+      where: { year, month, quincena, userId: scopedAgentId },
+    });
+    goalAmount = g ? Number(g.amount) : null;
+
+    const hist = await prisma.goal.findMany({
+      where: { userId: scopedAgentId },
+      orderBy: [{ year: "desc" }, { month: "desc" }, { quincena: "desc" }],
+      take: 6,
+    });
+    goalHistorico = await Promise.all(
+      hist.map(async (g) => {
+        const r = getQuincenaRange(g.year, g.month, g.quincena as 1 | 2);
+        const rev = await prisma.installment.aggregate({
+          where: {
+            ...buildRevenueWhere(undefined, undefined, scopedAgentId),
+            paidAt: r,
+          },
+          _sum: { amount: true },
+        });
+        return {
+          year: g.year,
+          month: g.month,
+          quincena: g.quincena,
+          amount: Number(g.amount),
+          revenue: Number(rev._sum.amount ?? 0),
+        };
+      }),
+    );
+  }
+
+  // ── Recaudo por franquicia (solo admin sin filtro) ────────────────────────
+  let recaudoPorFranquicia: {
+    companyId: number;
+    name: string;
+    recaudo: number;
+  }[] = [];
   if (user.role === "ADMIN" && !scopedCompanyId) {
     const franqRecaudos = await Promise.all(
       companies.map(async (c) => {
@@ -342,5 +448,7 @@ export const GET = withAuth(async (req, session) => {
     revenuePorDia: Object.entries(revMap).map(([d, a]) => ({ day: Number(d), amount: a })),
     leadsPerDay: Object.entries(leadDayMap).map(([d, c]) => ({ day: Number(d), count: c })),
     recaudoPorFranquicia,
+    goalAmount,
+    goalHistorico,
   });
 });
