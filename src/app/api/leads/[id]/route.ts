@@ -103,39 +103,34 @@ export const PATCH = withAuthParams<{ id: string }>(
     }
 
     if (body.phone1 && body.phone1 !== existing.phone1) {
-      const dup = await prisma.lead.findUnique({
-        where: { phone1: body.phone1 },
+      const dup = await prisma.lead.findFirst({
+        where: { id: { not: Number(id) }, OR: [{ phone1: body.phone1 }, { phone2: body.phone1 }] },
+        select: { phone1: true },
       });
-      if (dup) return conflict("El teléfono ya está registrado");
-
-      const dupAsPhone2 = await prisma.lead.findFirst({
-        where: { phone2: body.phone1, id: { not: Number(id) } },
-      });
-      if (dupAsPhone2)
+      if (dup)
         return conflict(
-          "El teléfono 1 ya está registrado como teléfono 2 en otro registro",
+          dup.phone1 === body.phone1
+            ? "El teléfono ya está registrado"
+            : "El teléfono 1 ya está registrado como teléfono 2 en otro cliente",
         );
     }
 
     if (body.phone2 && body.phone2 !== existing.phone2) {
-      const dupAsPhone1 = await prisma.lead.findFirst({
-        where: { phone1: body.phone2, id: { not: Number(id) } },
+      const dup = await prisma.lead.findFirst({
+        where: { id: { not: Number(id) }, OR: [{ phone1: body.phone2 }, { phone2: body.phone2 }] },
+        select: { phone1: true },
       });
-      if (dupAsPhone1)
+      if (dup)
         return conflict(
-          "El teléfono 2 ya está registrado como teléfono 1 en otro registro",
+          dup.phone1 === body.phone2
+            ? "El teléfono 2 ya está registrado como teléfono 1 en otro cliente"
+            : "El teléfono 2 ya está registrado en otro cliente",
         );
-
-      const dupAsPhone2 = await prisma.lead.findFirst({
-        where: { phone2: body.phone2, id: { not: Number(id) } },
-      });
-      if (dupAsPhone2)
-        return conflict("El teléfono 2 ya está registrado en otro registro");
     }
 
     if (body.ssn && body.ssn !== existing.ssn) {
       const dup = await prisma.lead.findUnique({ where: { ssn: body.ssn } });
-      if (dup) return conflict("La Seguro social ya está registrada");
+      if (dup) return conflict("El Seguro social ya está registrado");
     }
 
     const lead = await prisma.lead.update({
