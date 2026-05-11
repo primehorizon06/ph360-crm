@@ -18,6 +18,7 @@ import {
 } from "@/utils/constants/productChecklist";
 import { buildInitialChecked } from "@/utils/helpers/buildInitialChecked";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export function ProductChecklistItem({
   leadId,
@@ -65,29 +66,33 @@ export function ProductChecklistItem({
     setSaving(false);
 
     if (!res.ok) {
-      alert("Error al aprobar el producto");
+      const data = await res.json().catch(() => ({}));
+      toast.error(data.error ?? "Error al aprobar el producto");
       return;
     }
 
     onApprovalChange();
 
-    // Solo redirigir si es el primer producto (pasa a cliente)
     if (isFirstProduct) {
       router.push(`/customers/${leadId}`);
     } else {
-      // Producto subsiguiente — no cambia de sección
       onApprovalChange();
     }
   }
 
   async function handleReject(note: string) {
     setSaving(true);
-    await fetch(`/api/leads/${leadId}/products/${product.id}/approval`, {
+    const res = await fetch(`/api/leads/${leadId}/products/${product.id}/approval`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "REJECT", note }),
     });
     setSaving(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      toast.error(data.error ?? "Error al rechazar el producto");
+      return;
+    }
     setShowRejectModal(false);
     onApprovalChange();
   }

@@ -1,16 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAuthSession, forbidden, badRequest } from "@/lib/api";
+import { withAuthParams, badRequest } from "@/lib/api";
 
-export async function GET(
-  _: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const session = await getAuthSession();
-  if (!session) return forbidden();
-
-  const { id } = await params;
-
+export const GET = withAuthParams<{ id: string }>(async (_req, _session, { id }) => {
   const products = await prisma.product.findMany({
     where: { leadId: Number(id) },
     include: {
@@ -24,29 +16,20 @@ export async function GET(
   });
 
   return NextResponse.json(products);
-}
+});
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const session = await getAuthSession();
-  if (!session) return forbidden();
-
-  const { id } = await params;
+export const POST = withAuthParams<{ id: string }>(async (req, session, { id }) => {
   const body = await req.json();
   const { product, paymentMethod } = body;
 
   if (!product || !paymentMethod?.type)
     return badRequest("Producto y método de pago son requeridos");
 
-  // Verificar si es el primer producto
   const existingCount = await prisma.product.count({
     where: { leadId: Number(id) },
   });
   const isFirstProduct = existingCount === 0;
 
-  // Crear el producto con su método de pago
   const leadProduct = await prisma.product.create({
     data: {
       leadId: Number(id),
@@ -69,7 +52,6 @@ export async function POST(
     include: { paymentMethod: true },
   });
 
-  // Crear la aprobación pendiente
   await prisma.productApproval.create({
     data: {
       productId: leadProduct.id,
@@ -79,7 +61,6 @@ export async function POST(
     },
   });
 
-  // Si es el primer producto → activar conversión pendiente
   if (isFirstProduct) {
     await prisma.lead.update({
       where: { id: Number(id) },
@@ -90,22 +71,14 @@ export async function POST(
     });
   }
 
-  // Buscar el coach del equipo del agente asignado al lead
   const lead = await prisma.lead.findUnique({
     where: { id: Number(id) },
-    select: {
-      firstName: true,
-      lastName: true,
-      teamId: true,
-    },
+    select: { firstName: true, lastName: true, teamId: true },
   });
 
   if (lead) {
     const coach = await prisma.user.findFirst({
-      where: {
-        teamId: lead.teamId,
-        role: "COACH",
-      },
+      where: { teamId: lead.teamId, role: "COACH" },
       select: { id: true },
     });
 
@@ -125,4 +98,4 @@ export async function POST(
   }
 
   return NextResponse.json(leadProduct, { status: 201 });
-}
+});

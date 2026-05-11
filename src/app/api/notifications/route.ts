@@ -1,11 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAuthSession, unauthorized, badRequest } from "@/lib/api";
+import { withAuth, badRequest } from "@/lib/api";
 
-export async function GET() {
-  const session = await getAuthSession();
-  if (!session?.user?.id) return unauthorized();
-
+export const GET = withAuth(async (_req, session) => {
   const notifications = await prisma.notification.findMany({
     where: {
       userId: Number(session.user.id),
@@ -39,15 +36,11 @@ export async function GET() {
   }));
 
   return NextResponse.json(transformed);
-}
+});
 
-export async function PATCH(req: NextRequest) {
-  const session = await getAuthSession();
-  if (!session?.user?.id) return unauthorized();
-
+export const PATCH = withAuth(async (req, session) => {
   const { id, readAll } = await req.json();
 
-  // Marcar todas como leídas
   if (readAll) {
     await prisma.notification.updateMany({
       where: { userId: Number(session.user.id), read: false },
@@ -56,7 +49,6 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  // Marcar una como leída
   if (!id) return badRequest("ID requerido");
 
   const updated = await prisma.notification.update({
@@ -65,4 +57,4 @@ export async function PATCH(req: NextRequest) {
   });
 
   return NextResponse.json(updated);
-}
+});

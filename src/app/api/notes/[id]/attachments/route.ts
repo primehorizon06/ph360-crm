@@ -1,28 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
-import { getAuthSession, forbidden, badRequest } from "@/lib/api";
+import { withAuthParams, badRequest } from "@/lib/api";
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
-  const session = await getAuthSession();
-  if (!session) return forbidden();
-
+export const POST = withAuthParams<{ id: string }>(async (req, _session, { id }) => {
   const formData = await req.formData();
   const files = formData.getAll("files") as File[];
 
   if (!files.length) return badRequest("No se enviaron archivos");
 
-  const allowedTypes = [
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-    "application/pdf",
-  ];
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
   const attachments = [];
 
   for (const file of files) {
@@ -52,4 +40,4 @@ export async function POST(
   }
 
   return NextResponse.json(attachments, { status: 201 });
-}
+});

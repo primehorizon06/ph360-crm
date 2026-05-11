@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession, Session } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 export const unauthorized = () =>
@@ -22,4 +22,38 @@ export const serverError = (msg = "Error interno del servidor") =>
 
 export async function getAuthSession() {
   return getServerSession(authOptions);
+}
+
+export function withAuth(
+  handler: (req: NextRequest, session: Session) => Promise<NextResponse>
+) {
+  return async (req: NextRequest): Promise<NextResponse> => {
+    try {
+      const session = await getAuthSession();
+      if (!session) return unauthorized();
+      return await handler(req, session);
+    } catch (error) {
+      console.error(error);
+      return serverError();
+    }
+  };
+}
+
+export function withAuthParams<P extends Record<string, string>>(
+  handler: (req: NextRequest, session: Session, params: P) => Promise<NextResponse>
+) {
+  return async (
+    req: NextRequest,
+    { params }: { params: Promise<P> }
+  ): Promise<NextResponse> => {
+    try {
+      const session = await getAuthSession();
+      if (!session) return unauthorized();
+      const resolvedParams = await params;
+      return await handler(req, session, resolvedParams);
+    } catch (error) {
+      console.error(error);
+      return serverError();
+    }
+  };
 }

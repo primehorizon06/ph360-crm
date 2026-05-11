@@ -1,15 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAuthSession, forbidden, badRequest } from "@/lib/api";
+import { withAuthParams, badRequest } from "@/lib/api";
 
-export async function GET(
-  _: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
-  const session = await getAuthSession();
-  if (!session) return forbidden();
-
+export const GET = withAuthParams<{ id: string }>(async (_req, _session, { id }) => {
   const notes = await prisma.note.findMany({
     where: { leadId: Number(id) },
     select: {
@@ -32,16 +25,9 @@ export async function GET(
   });
 
   return NextResponse.json(notes);
-}
+});
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
-  const session = await getAuthSession();
-  if (!session) return forbidden();
-
+export const POST = withAuthParams<{ id: string }>(async (req, session, { id }) => {
   const { title, content } = await req.json();
   if (!title || !content) return badRequest("Título y contenido son requeridos");
 
@@ -62,4 +48,4 @@ export async function POST(
   });
 
   return NextResponse.json(note, { status: 201 });
-}
+});

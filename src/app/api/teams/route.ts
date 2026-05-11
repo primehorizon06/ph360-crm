@@ -1,11 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAuthSession, forbidden, badRequest } from "@/lib/api";
+import { withAuth, forbidden, badRequest } from "@/lib/api";
 
-export async function GET(req: NextRequest) {
-  const session = await getAuthSession();
-  if (!session) return forbidden();
-
+export const GET = withAuth(async (req) => {
   const { searchParams } = new URL(req.url);
   const companyId = searchParams.get("companyId");
 
@@ -21,11 +18,10 @@ export async function GET(req: NextRequest) {
   });
 
   return NextResponse.json(teams);
-}
+});
 
-export async function POST(req: NextRequest) {
-  const session = await getAuthSession();
-  if (!session || session.user.role !== "ADMIN") return forbidden();
+export const POST = withAuth(async (req, session) => {
+  if (session.user.role !== "ADMIN") return forbidden();
 
   const { name, companyId } = await req.json();
   if (!name || !companyId) return badRequest("Nombre y franquicia son requeridos");
@@ -36,4 +32,4 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json(team, { status: 201 });
-}
+});

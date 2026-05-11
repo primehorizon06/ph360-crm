@@ -1,11 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAuthSession, forbidden, badRequest, conflict } from "@/lib/api";
+import { withAuth, forbidden, badRequest, conflict } from "@/lib/api";
 
-export async function GET(req: NextRequest) {
-  const session = await getAuthSession();
-  if (!session) return forbidden();
-
+export const GET = withAuth(async (req, session) => {
   const user = session.user;
   const role = user.role;
   const type =
@@ -62,12 +59,9 @@ export async function GET(req: NextRequest) {
   });
 
   return NextResponse.json(leads);
-}
+});
 
-export async function POST(req: NextRequest) {
-  const session = await getAuthSession();
-  if (!session) return forbidden();
-
+export const POST = withAuth(async (req, session) => {
   const user = session.user;
   const body = await req.json();
   const {
@@ -88,7 +82,6 @@ export async function POST(req: NextRequest) {
   if (!firstName || !phone1 || !user.companyId || !user.id)
     return badRequest("Campos requeridos faltantes");
 
-  // Validar duplicados globales
   const existingPhone = await prisma.lead.findUnique({ where: { phone1 } });
   if (existingPhone) return conflict("El teléfono ya está registrado");
 
@@ -118,4 +111,4 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json(lead, { status: 201 });
-}
+});

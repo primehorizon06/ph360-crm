@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAuthSession, unauthorized, forbidden, badRequest } from "@/lib/api";
+import { withAuth, forbidden, badRequest } from "@/lib/api";
 
 type SessionUser = {
   id: string;
@@ -8,25 +8,16 @@ type SessionUser = {
   companyId?: number;
 };
 
-// ── GET: listar metas con histórico ──────────────────────────────────────────
-export async function GET(req: NextRequest) {
-  const session = await getAuthSession();
-  if (!session?.user) return unauthorized();
-
+export const GET = withAuth(async (req, session) => {
   const user = session.user as unknown as SessionUser;
   const { searchParams } = new URL(req.url);
 
-  const year = parseInt(
-    searchParams.get("year") ?? String(new Date().getFullYear()),
-  );
-  const month = parseInt(
-    searchParams.get("month") ?? String(new Date().getMonth() + 1),
-  );
+  const year = parseInt(searchParams.get("year") ?? String(new Date().getFullYear()));
+  const month = parseInt(searchParams.get("month") ?? String(new Date().getMonth() + 1));
   const quincena = parseInt(searchParams.get("quincena") ?? "1");
   const companyId = searchParams.get("companyId");
   const teamId = searchParams.get("teamId");
 
-  // Scope by role
   const scopedCompanyId =
     user.role === "ADMIN"
       ? companyId
@@ -59,7 +50,6 @@ export async function GET(req: NextRequest) {
     orderBy: { createdAt: "desc" },
   });
 
-  // Also return companies and teams for the UI selectors
   const companies =
     user.role === "ADMIN"
       ? await prisma.company.findMany({
@@ -84,52 +74,37 @@ export async function GET(req: NextRequest) {
   });
 
   return NextResponse.json({ goals, companies, teams });
-}
+});
 
-// ── POST: crear o actualizar meta (upsert) ────────────────────────────────────
-export async function POST(req: NextRequest) {
-  const session = await getAuthSession();
-  if (!session?.user) return unauthorized();
-
+export const POST = withAuth(async (req, session) => {
   const user = session.user as unknown as SessionUser;
   if (!["ADMIN", "SUPERVISOR"].includes(user.role)) return forbidden();
 
   const body = await req.json();
   const { year, month, quincena, amount, companyId, teamId, userId } = body;
 
-  // Exactly one scope must be defined
   const scopeCount = [companyId, teamId, userId].filter(Boolean).length;
   if (scopeCount !== 1)
-    return badRequest(
-      "Debe definir exactamente un scope: companyId, teamId o userId",
-    );
+    return badRequest("Debe definir exactamente un scope: companyId, teamId o userId");
   if (!amount || amount <= 0) return badRequest("El monto debe ser mayor a 0");
 
   const createdById = parseInt(user.id ?? "0");
 
-  // ── Validaciones de distribución ──────────────────────────────────────────
-
   if (companyId) {
-    // SUPERVISOR solo puede editar su propia franquicia
     if (user.role === "SUPERVISOR" && user.companyId !== parseInt(companyId))
       return forbidden();
   }
 
   if (teamId) {
-    // Verificar que el team pertenece a la franquicia del supervisor
-    const team = await prisma.team.findUnique({
-      where: { id: parseInt(teamId) },
-    });
+    const team = await prisma.team.findUnique({ where: { id: parseInt(teamId) } });
     if (!team) return badRequest("Equipo no encontrado");
     if (user.role === "SUPERVISOR" && team.companyId !== user.companyId)
       return forbidden();
 
-    // Validar: meta equipo <= meta franquicia - sum(otras metas equipos)
     const companyGoal = await prisma.goal.findFirst({
       where: { year, month, quincena, companyId: team.companyId },
     });
-    if (!companyGoal)
-      return badRequest("Primero debe definir la meta de la franquicia");
+    if (!companyGoal) return badRequest("Primero debe definir la meta de la franquicia");
 
     const otherTeamGoals = await prisma.goal.findMany({
       where: {
@@ -140,26 +115,16 @@ export async function POST(req: NextRequest) {
         teamId: { not: parseInt(teamId) },
       },
     });
-    const otherTeamsSum = otherTeamGoals.reduce(
-      (s, g) => s + Number(g.amount),
-      0,
-    );
+    const otherTeamsSum = otherTeamGoals.reduce((s, g) => s + Number(g.amount), 0);
     const available = Number(companyGoal.amount) - otherTeamsSum;
 
-    if (amount > available) {
-      return badRequest(
-        `El monto excede lo disponible. Disponible: $${available.toFixed(2)}`,
-      );
-    }
+    if (amount > available)
+      return badRequest(`El monto excede lo disponible. Disponible: $${available.toFixed(2)}`);
   }
 
   if (userId) {
-    // Validar: meta asesor <= meta equipo - sum(otras metas asesores del equipo)
-    const agent = await prisma.user.findUnique({
-      where: { id: parseInt(userId) },
-    });
-    if (!agent || !agent.teamId)
-      return badRequest("Asesor no encontrado o sin equipo");
+    const agent = await prisma.user.findUnique({ where: { id: parseInt(userId) } });
+    if (!agent || !agent.teamId) return badRequest("Asesor no encontrado o sin equipo");
 
     const teamGoal = await prisma.goal.findFirst({
       where: { year, month, quincena, teamId: agent.teamId },
@@ -175,20 +140,15 @@ export async function POST(req: NextRequest) {
         userId: { not: parseInt(userId) },
       },
     });
-    const otherAgentsSum = otherAgentGoals.reduce(
-      (s, g) => s + Number(g.amount),
-      0,
-    );
+    const otherAgentsSum = otherAgentGoals.reduce((s, g) => s + Number(g.amount), 0);
     const available = Number(teamGoal.amount) - otherAgentsSum;
 
-    if (amount > available) {
+    if (amount > available)
       return badRequest(
         `El monto excede lo disponible para este equipo. Disponible: $${available.toFixed(2)}`,
       );
-    }
   }
 
-  // ── Upsert ────────────────────────────────────────────────────────────────
   const whereClause = companyId
     ? {
         year_month_quincena_companyId: {
@@ -232,13 +192,9 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json({ goal });
-}
+});
 
-// ── DELETE: eliminar meta ─────────────────────────────────────────────────────
-export async function DELETE(req: NextRequest) {
-  const session = await getAuthSession();
-  if (!session?.user) return unauthorized();
-
+export const DELETE = withAuth(async (req, session) => {
   const user = session.user as unknown as SessionUser;
   if (!["ADMIN", "SUPERVISOR"].includes(user.role)) return forbidden();
 
@@ -248,7 +204,6 @@ export async function DELETE(req: NextRequest) {
   const goal = await prisma.goal.findUnique({ where: { id } });
   if (!goal) return badRequest("Meta no encontrada");
 
-  // Supervisors can only delete goals of their company
   if (user.role === "SUPERVISOR") {
     const isOwn =
       goal.companyId === user.companyId ||
@@ -263,7 +218,6 @@ export async function DELETE(req: NextRequest) {
     if (!isOwn) return forbidden();
   }
 
-  // Cascade check: if deleting a company goal, warn if team goals exist
   if (goal.companyId) {
     const teamGoals = await prisma.goal.count({
       where: {
@@ -273,11 +227,10 @@ export async function DELETE(req: NextRequest) {
         team: { companyId: goal.companyId },
       },
     });
-    if (teamGoals > 0) {
+    if (teamGoals > 0)
       return badRequest(
         "No se puede eliminar la meta de franquicia mientras existan metas de equipos para este período",
       );
-    }
   }
 
   if (goal.teamId) {
@@ -289,13 +242,12 @@ export async function DELETE(req: NextRequest) {
         user: { teamId: goal.teamId },
       },
     });
-    if (agentGoals > 0) {
+    if (agentGoals > 0)
       return badRequest(
         "No se puede eliminar la meta de equipo mientras existan metas de asesores para este período",
       );
-    }
   }
 
   await prisma.goal.delete({ where: { id } });
   return NextResponse.json({ ok: true });
-}
+});

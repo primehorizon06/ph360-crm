@@ -1,14 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { Role } from "@prisma/client";
-import { getAuthSession, forbidden, badRequest, conflict } from "@/lib/api";
+import { withAuth, forbidden, badRequest, conflict } from "@/lib/api";
 
-// GET — Listar usuarios (solo ADMIN)
-export async function GET(req: NextRequest) {
-  const session = await getAuthSession();
-  if (!session) return forbidden();
-
+export const GET = withAuth(async (req, session) => {
   const { searchParams } = new URL(req.url);
   const teamId = searchParams.get("teamId");
   const roleFilter = searchParams.get("role");
@@ -40,12 +36,10 @@ export async function GET(req: NextRequest) {
   });
 
   return NextResponse.json(users);
-}
+});
 
-// POST — Crear usuario (solo ADMIN)
-export async function POST(req: NextRequest) {
-  const session = await getAuthSession();
-  if (!session || session.user.role !== "ADMIN") return forbidden();
+export const POST = withAuth(async (req, session) => {
+  if (session.user.role !== "ADMIN") return forbidden();
 
   const body = await req.json();
   const { username, name, email, password, role, companyId } = body;
@@ -81,4 +75,4 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json(user, { status: 201 });
-}
+});

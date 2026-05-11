@@ -1,17 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAuthSession, forbidden } from "@/lib/api";
+import { withAuthParams, forbidden } from "@/lib/api";
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
-  const session = await getAuthSession();
-  if (!session || session.user.role !== "ADMIN") return forbidden();
+export const PATCH = withAuthParams<{ id: string }>(async (req, session, { id }) => {
+  if (session.user.role !== "ADMIN") return forbidden();
 
   const { name, active } = await req.json();
-
   const company = await prisma.company.update({
     where: { id: Number(id) },
     data: { name, active },
@@ -19,16 +13,11 @@ export async function PATCH(
   });
 
   return NextResponse.json(company);
-}
+});
 
-export async function DELETE(
-  _: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
-  const session = await getAuthSession();
-  if (!session || session.user.role !== "ADMIN") return forbidden();
+export const DELETE = withAuthParams<{ id: string }>(async (_req, session, { id }) => {
+  if (session.user.role !== "ADMIN") return forbidden();
 
   await prisma.company.delete({ where: { id: Number(id) } });
   return NextResponse.json({ success: true });
-}
+});

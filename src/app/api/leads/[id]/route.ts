@@ -1,15 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAuthSession, forbidden, notFound, conflict } from "@/lib/api";
+import { withAuthParams, forbidden, notFound, conflict } from "@/lib/api";
 
-export async function GET(
-  _: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
-  const session = await getAuthSession();
-  if (!session) return forbidden();
-
+export const GET = withAuthParams<{ id: string }>(async (_req, _session, { id }) => {
   const lead = await prisma.lead.findUnique({
     where: { id: Number(id) },
     include: {
@@ -25,40 +18,27 @@ export async function GET(
   });
 
   if (!lead) return notFound("Lead no encontrado");
-
   return NextResponse.json(lead);
-}
+});
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
-  const session = await getAuthSession();
-  if (!session) return forbidden();
-
+export const PATCH = withAuthParams<{ id: string }>(async (req, session, { id }) => {
   const user = session.user;
   const role = user.role;
   const body = await req.json();
 
-  // Obtener lead actual
   const existing = await prisma.lead.findUnique({ where: { id: Number(id) } });
   if (!existing) return notFound("Lead no encontrado");
 
-  // Validar permisos por rol
   if (role === "SUPERVISOR" || role === "COACH") {
     if (existing.companyId !== Number(user.companyId)) return forbidden();
   }
-
   if (role === "AGENT") {
     if (existing.assignedToId !== Number(user.id)) return forbidden();
   }
 
-  // Campos editables por rol
   let data: Record<string, unknown> = {};
 
   if (role === "ADMIN") {
-    // Admin puede editar todo incluyendo franquicia y agente
     data = {
       firstName: body.firstName,
       lastName: body.lastName || null,
@@ -75,12 +55,9 @@ export async function PATCH(
       status: body.status,
       companyId: body.companyId ? Number(body.companyId) : existing.companyId,
       teamId: body.teamId ? Number(body.teamId) : existing.teamId,
-      assignedToId: body.assignedToId
-        ? Number(body.assignedToId)
-        : existing.assignedToId,
+      assignedToId: body.assignedToId ? Number(body.assignedToId) : existing.assignedToId,
     };
   } else if (role === "SUPERVISOR" || role === "COACH") {
-    // Solo puede cambiar el agente asignado dentro de su franquicia
     data = {
       firstName: body.firstName,
       lastName: body.lastName || null,
@@ -94,13 +71,10 @@ export async function PATCH(
       birthDate: body.birthDate ? new Date(body.birthDate) : null,
       contactTime: body.contactTime || null,
       status: body.status,
-      assignedToId: body.assignedToId
-        ? Number(body.assignedToId)
-        : existing.assignedToId,
+      assignedToId: body.assignedToId ? Number(body.assignedToId) : existing.assignedToId,
       customerStatus: body.customerStatus || existing.customerStatus,
     };
   } else {
-    // Agent solo edita datos básicos
     data = {
       firstName: body.firstName,
       lastName: body.lastName || null,
@@ -118,14 +92,10 @@ export async function PATCH(
     };
   }
 
-  // Validar duplicados si cambia phone1 o ssn
   if (body.phone1 && body.phone1 !== existing.phone1) {
-    const dup = await prisma.lead.findUnique({
-      where: { phone1: body.phone1 },
-    });
+    const dup = await prisma.lead.findUnique({ where: { phone1: body.phone1 } });
     if (dup) return conflict("El teléfono ya está registrado");
 
-    // phone1 nuevo no puede existir como phone2 en otro registro
     const dupAsPhone2 = await prisma.lead.findFirst({
       where: { phone2: body.phone1, id: { not: Number(id) } },
     });
@@ -133,7 +103,6 @@ export async function PATCH(
       return conflict("El teléfono 1 ya está registrado como teléfono 2 en otro registro");
   }
 
-  // Validar phone2
   if (body.phone2 && body.phone2 !== existing.phone2) {
     const dupAsPhone1 = await prisma.lead.findFirst({
       where: { phone1: body.phone2, id: { not: Number(id) } },
@@ -162,4 +131,4 @@ export async function PATCH(
   });
 
   return NextResponse.json(lead);
-}
+});

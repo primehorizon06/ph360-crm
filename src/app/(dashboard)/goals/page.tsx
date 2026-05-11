@@ -12,6 +12,7 @@ import { GoalTree } from "@/components/goals/GoalTree";
 import { GoalFormModal } from "@/components/goals/GoalFormModal";
 import { Plus } from "lucide-react";
 import { GoalsData } from "@/utils/interfaces/goals";
+import { toast } from "sonner";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -65,7 +66,7 @@ export default function GoalsPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        alert(json.error);
+        toast.error(json.error);
         return;
       }
       fetchData();

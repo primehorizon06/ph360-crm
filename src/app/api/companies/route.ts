@@ -1,13 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAuthSession, forbidden, badRequest, conflict } from "@/lib/api";
+import { withAuth, forbidden, badRequest, conflict } from "@/lib/api";
 
-export async function GET(req: NextRequest) {
-  const session = await getAuthSession();
-  if (!session) return forbidden();
-
+export const GET = withAuth(async (req) => {
   const { searchParams } = new URL(req.url);
-  const simple = searchParams.get("simple"); // ?simple=true para el modal de usuarios
+  const simple = searchParams.get("simple");
 
   const companies = await prisma.company.findMany({
     select: simple
@@ -23,11 +20,10 @@ export async function GET(req: NextRequest) {
   });
 
   return NextResponse.json(companies);
-}
+});
 
-export async function POST(req: NextRequest) {
-  const session = await getAuthSession();
-  if (!session || session.user.role !== "ADMIN") return forbidden();
+export const POST = withAuth(async (req, session) => {
+  if (session.user.role !== "ADMIN") return forbidden();
 
   const { name } = await req.json();
   if (!name) return badRequest("El nombre es requerido");
@@ -41,4 +37,4 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json(company, { status: 201 });
-}
+});

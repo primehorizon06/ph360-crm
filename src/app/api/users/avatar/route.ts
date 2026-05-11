@@ -1,13 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
-import { getAuthSession, forbidden, badRequest } from "@/lib/api";
+import { withAuth, badRequest } from "@/lib/api";
 
-export async function POST(req: NextRequest) {
-  const session = await getAuthSession();
-  if (!session) return forbidden();
-
+export const POST = withAuth(async (req) => {
   const formData = await req.formData();
   const file = formData.get("file") as File;
   const userId = formData.get("userId") as string;
@@ -32,4 +29,4 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json({ url: avatarUrl });
-}
+});

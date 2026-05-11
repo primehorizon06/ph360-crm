@@ -1,15 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAuthSession, forbidden, badRequest } from "@/lib/api";
+import { withAuthParams, badRequest } from "@/lib/api";
 
-export async function GET(
-  _: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
-  const session = await getAuthSession();
-  if (!session) return forbidden();
-
+export const GET = withAuthParams<{ id: string }>(async (_req, _session, { id }) => {
   const reminders = await prisma.reminder.findMany({
     where: { leadId: Number(id) },
     select: {
@@ -25,18 +18,11 @@ export async function GET(
     },
     orderBy: { scheduledAt: "asc" },
   });
-  
+
   return NextResponse.json(reminders);
-}
+});
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
-  const session = await getAuthSession();
-  if (!session) return forbidden();
-
+export const POST = withAuthParams<{ id: string }>(async (req, session, { id }) => {
   const { scheduledAt, reason, assignedToId } = await req.json();
   if (!scheduledAt || !reason || !assignedToId)
     return badRequest("Todos los campos son requeridos");
@@ -60,4 +46,4 @@ export async function POST(
   });
 
   return NextResponse.json(reminder, { status: 201 });
-}
+});

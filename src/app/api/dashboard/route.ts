@@ -1,7 +1,6 @@
-// src/app/api/dashboard/route.ts
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAuthSession, unauthorized } from "@/lib/api";
+import { withAuth } from "@/lib/api";
 
 function getQuincenaRange(year: number, month: number, quincena: 1 | 2) {
   if (quincena === 1) {
@@ -41,11 +40,7 @@ function getTodayRange() {
   };
 }
 
-function buildRevenueWhere(
-  companyId?: number,
-  teamId?: number,
-  agentId?: number,
-) {
+function buildRevenueWhere(companyId?: number, teamId?: number, agentId?: number) {
   return {
     status: "PAID" as const,
     paymentPlan: {
@@ -61,17 +56,10 @@ function buildRevenueWhere(
   };
 }
 
-export async function GET(req: NextRequest) {
-  const session = await getAuthSession();
-  if (!session?.user) return unauthorized();
-
+export const GET = withAuth(async (req, session) => {
   const { searchParams } = new URL(req.url);
-  const year = parseInt(
-    searchParams.get("year") ?? String(new Date().getFullYear()),
-  );
-  const month = parseInt(
-    searchParams.get("month") ?? String(new Date().getMonth() + 1),
-  );
+  const year = parseInt(searchParams.get("year") ?? String(new Date().getFullYear()));
+  const month = parseInt(searchParams.get("month") ?? String(new Date().getMonth() + 1));
   const quincena = parseInt(searchParams.get("quincena") ?? "1") as 1 | 2;
   const companyIdParam = searchParams.get("companyId");
 
@@ -83,7 +71,6 @@ export async function GET(req: NextRequest) {
   };
   const userId = parseInt(user.id);
 
-  // ── Scope filters by role ─────────────────────────────────────────────────
   let scopedCompanyId: number | undefined;
   let scopedTeamId: number | undefined;
   let scopedAgentId: number | undefined;
@@ -102,7 +89,6 @@ export async function GET(req: NextRequest) {
     scopedAgentId = userId;
   }
 
-  // Lead where filters
   const leadFilter = {
     ...(scopedCompanyId ? { companyId: scopedCompanyId } : {}),
     ...(scopedTeamId ? { teamId: scopedTeamId } : {}),
@@ -114,16 +100,8 @@ export async function GET(req: NextRequest) {
   const prevDateRange = getPrevQuincenaRange(year, month, quincena);
   const todayRange = getTodayRange();
 
-  const revenueWhere = buildRevenueWhere(
-    scopedCompanyId,
-    scopedTeamId,
-    scopedAgentId,
-  );
-  const prevRevenueWhere = buildRevenueWhere(
-    scopedCompanyId,
-    scopedTeamId,
-    scopedAgentId,
-  );
+  const revenueWhere = buildRevenueWhere(scopedCompanyId, scopedTeamId, scopedAgentId);
+  const prevRevenueWhere = buildRevenueWhere(scopedCompanyId, scopedTeamId, scopedAgentId);
 
   const [
     newLeads,
@@ -145,9 +123,7 @@ export async function GET(req: NextRequest) {
     companies,
   ] = await Promise.all([
     prisma.lead.count({ where: { ...companyFilter, createdAt: dateRange } }),
-    prisma.lead.count({
-      where: { ...companyFilter, createdAt: prevDateRange },
-    }),
+    prisma.lead.count({ where: { ...companyFilter, createdAt: prevDateRange } }),
     prisma.lead.count({
       where: { ...companyFilter, type: "customer", convertedAt: dateRange },
     }),
@@ -218,24 +194,15 @@ export async function GET(req: NextRequest) {
       : Promise.resolve([] as { id: number; name: string }[]),
   ]);
 
-  // ── Ranking de asesores ───────────────────────────────────────────────────
-  // COACH: todos los agentes de su equipo
-  // AGENT: todos los agentes del equipo (para ver su posición)
-  // ADMIN/SUPERVISOR: todos los agentes del scope
   const rankingLeadFilter =
     user.role === "AGENT" || user.role === "COACH"
       ? {
-          // Para ranking siempre scope del equipo completo
           ...(scopedCompanyId ? { companyId: scopedCompanyId } : {}),
           ...(scopedTeamId ? { teamId: scopedTeamId } : {}),
         }
       : leadFilter;
 
-  const rankingRevenueWhere = buildRevenueWhere(
-    scopedCompanyId,
-    scopedTeamId,
-    undefined, // nunca filtrar por agente en el ranking — se quiere ver a todos
-  );
+  const rankingRevenueWhere = buildRevenueWhere(scopedCompanyId, scopedTeamId, undefined);
 
   const instByAgent = await prisma.installment.findMany({
     where: { ...rankingRevenueWhere, paidAt: dateRange },
@@ -267,12 +234,7 @@ export async function GET(req: NextRequest) {
     if (!lead) continue;
     const id = lead.assignedToId;
     if (!agentMap[id])
-      agentMap[id] = {
-        id,
-        name: lead.assignedTo.name,
-        recaudo: 0,
-        conversiones: 0,
-      };
+      agentMap[id] = { id, name: lead.assignedTo.name, recaudo: 0, conversiones: 0 };
     agentMap[id].recaudo += Number(inst.amount);
   }
 
@@ -282,10 +244,9 @@ export async function GET(req: NextRequest) {
     _count: { id: true },
   });
   for (const c of convByAgent) {
-    if (agentMap[c.assignedToId])
+    if (agentMap[c.assignedToId]) {
       agentMap[c.assignedToId].conversiones = c._count.id;
-    else {
-      // Agente con conversiones pero sin recaudo — incluirlo igual
+    } else {
       const agentInfo = await prisma.user.findUnique({
         where: { id: c.assignedToId },
         select: { id: true, name: true },
@@ -300,11 +261,8 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const agentRanking = Object.values(agentMap).sort(
-    (a, b) => b.recaudo - a.recaudo,
-  );
+  const agentRanking = Object.values(agentMap).sort((a, b) => b.recaudo - a.recaudo);
 
-  // ── Revenue por día ───────────────────────────────────────────────────────
   const startDay = quincena === 1 ? 1 : 16;
   const endDay = quincena === 1 ? 15 : new Date(year, month, 0).getDate();
   const revMap: Record<number, number> = {};
@@ -324,12 +282,7 @@ export async function GET(req: NextRequest) {
     if (leadDayMap[d] !== undefined) leadDayMap[d]++;
   }
 
-  // ── Recaudo por franquicia (solo admin sin filtro) ────────────────────────
-  let recaudoPorFranquicia: {
-    companyId: number;
-    name: string;
-    recaudo: number;
-  }[] = [];
+  let recaudoPorFranquicia: { companyId: number; name: string; recaudo: number }[] = [];
   if (user.role === "ADMIN" && !scopedCompanyId) {
     const franqRecaudos = await Promise.all(
       companies.map(async (c) => {
@@ -386,14 +339,8 @@ export async function GET(req: NextRequest) {
       count: r._count.product,
     })),
     agentRanking,
-    revenuePorDia: Object.entries(revMap).map(([d, a]) => ({
-      day: Number(d),
-      amount: a,
-    })),
-    leadsPerDay: Object.entries(leadDayMap).map(([d, c]) => ({
-      day: Number(d),
-      count: c,
-    })),
+    revenuePorDia: Object.entries(revMap).map(([d, a]) => ({ day: Number(d), amount: a })),
+    leadsPerDay: Object.entries(leadDayMap).map(([d, c]) => ({ day: Number(d), count: c })),
     recaudoPorFranquicia,
   });
-}
+});

@@ -1,16 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAuthSession, forbidden } from "@/lib/api";
+import { withAuthParams } from "@/lib/api";
 
-export async function GET(
-  _: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const session = await getAuthSession();
-  if (!session) return forbidden();
-
-  const { id } = await params;
-
+export const GET = withAuthParams<{ id: string }>(async (_req, _session, { id }) => {
   const attachments = await prisma.noteAttachment.findMany({
     where: {
       note: {
@@ -38,11 +30,10 @@ export async function GET(
     orderBy: { createdAt: "desc" },
   });
 
-  // Aplanar el autor para que el frontend lo consuma igual que antes
   const flat = attachments.map(({ note, ...att }) => ({
     ...att,
     author: note.author,
   }));
 
   return NextResponse.json(flat);
-}
+});

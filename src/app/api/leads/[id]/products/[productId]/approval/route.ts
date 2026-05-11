@@ -1,115 +1,107 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAuthSession, forbidden, badRequest, notFound } from "@/lib/api";
+import { withAuthParams, forbidden, badRequest, notFound } from "@/lib/api";
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string; productId: string }> },
-) {
-  const session = await getAuthSession();
-  if (!session) return forbidden();
+export const PATCH = withAuthParams<{ id: string; productId: string }>(
+  async (req, session, { id, productId }) => {
+    const { action, note } = await req.json();
 
-  const { id, productId } = await params;
-  const { action, note } = await req.json();
+    if (!action || !["APPROVE", "REJECT", "RESUBMIT"].includes(action))
+      return badRequest("Acción inválida");
 
-  if (!action || !["APPROVE", "REJECT", "RESUBMIT"].includes(action))
-    return badRequest("Acción inválida");
+    // ── RESUBMIT — solo agente o admin ───────────────────────────────────────
+    if (action === "RESUBMIT") {
+      if (session.user.role !== "AGENT" && session.user.role !== "ADMIN")
+        return forbidden();
 
-  // ── RESUBMIT — solo agente o admin ───────────────────────────────────────
-  if (action === "RESUBMIT") {
-    if (session.user.role !== "AGENT" && session.user.role !== "ADMIN")
-      return forbidden();
-
-    await prisma.productApproval.update({
-      where: { productId: Number(productId) },
-      data: { status: "PENDING", note: null },
-    });
-
-    await prisma.product.update({
-      where: { id: Number(productId) },
-      data: { status: "ACTIVE" },
-    });
-
-    // Notificar al coach
-    const lead = await prisma.lead.findUnique({
-      where: { id: Number(id) },
-      select: { firstName: true, lastName: true, teamId: true },
-    });
-
-    if (lead) {
-      const coach = await prisma.user.findFirst({
-        where: { teamId: lead.teamId, role: "COACH" },
-        select: { id: true },
+      await prisma.productApproval.update({
+        where: { productId: Number(productId) },
+        data: { status: "PENDING", note: null },
       });
 
-      if (coach) {
-        const leadName = `${lead.firstName} ${lead.lastName ?? ""}`.trim();
-        await prisma.notification.create({
-          data: {
-            userId: coach.id,
-            type: "PRODUCT_APPROVAL_PENDING",
-            title: "Producto reenviado para aprobación",
-            body: `${leadName} ha corregido y reenviado un producto para tu revisión.`,
-            leadId: Number(id),
-            productId: Number(productId),
-          },
+      await prisma.product.update({
+        where: { id: Number(productId) },
+        data: { status: "ACTIVE" },
+      });
+
+      const lead = await prisma.lead.findUnique({
+        where: { id: Number(id) },
+        select: { firstName: true, lastName: true, teamId: true },
+      });
+
+      if (lead) {
+        const coach = await prisma.user.findFirst({
+          where: { teamId: lead.teamId, role: "COACH" },
+          select: { id: true },
         });
+
+        if (coach) {
+          const leadName = `${lead.firstName} ${lead.lastName ?? ""}`.trim();
+          await prisma.notification.create({
+            data: {
+              userId: coach.id,
+              type: "PRODUCT_APPROVAL_PENDING",
+              title: "Producto reenviado para aprobación",
+              body: `${leadName} ha corregido y reenviado un producto para tu revisión.`,
+              leadId: Number(id),
+              productId: Number(productId),
+            },
+          });
+        }
       }
+
+      return NextResponse.json({ ok: true });
     }
 
-    return NextResponse.json({ ok: true });
-  }
+    // ── APPROVE / REJECT — solo coach, supervisor o admin ────────────────────
+    if (!["COACH", "SUPERVISOR", "ADMIN"].includes(session.user.role))
+      return forbidden();
 
-  // ── APPROVE / REJECT — solo coach o supervisor ────────────────────────────
-  if (session.user.role !== "COACH" && session.user.role !== "SUPERVISOR")
-    return badRequest("Solo el coach o supervisor puede aprobar");
+    if (action === "REJECT" && !note?.trim())
+      return badRequest("El motivo de rechazo es requerido");
 
-  if (action === "REJECT" && !note?.trim())
-    return badRequest("El motivo de rechazo es requerido");
+    const approval = await prisma.productApproval.findUnique({
+      where: { productId: Number(productId) },
+    });
 
-  const approval = await prisma.productApproval.findUnique({
-    where: { productId: Number(productId) },
-  });
+    if (!approval) return notFound("Aprobación no encontrada");
 
-  if (!approval) return notFound("Aprobación no encontrada");
-
-  // Actualizar la aprobación
-  const updated = await prisma.productApproval.update({
-    where: { productId: Number(productId) },
-    data: {
-      status: action === "APPROVE" ? "APPROVED" : "REJECTED",
-      note: action === "REJECT" ? note : null,
-    },
-  });
-
-  if (action === "APPROVE" && approval.isFirstProduct) {
-    await prisma.lead.update({
-      where: { id: Number(id) },
+    const updated = await prisma.productApproval.update({
+      where: { productId: Number(productId) },
       data: {
-        type: "customer",
-        conversionStatus: "APPROVED",
-        convertedAt: new Date(),
+        status: action === "APPROVE" ? "APPROVED" : "REJECTED",
+        note: action === "REJECT" ? note : null,
       },
     });
-  }
 
-  if (action === "REJECT" && approval.isFirstProduct) {
-    await prisma.lead.update({
-      where: { id: Number(id) },
-      data: {
-        conversionStatus: "REJECTED",
-        conversionNote: note,
-      },
-    });
-  }
+    if (action === "APPROVE" && approval.isFirstProduct) {
+      await prisma.lead.update({
+        where: { id: Number(id) },
+        data: {
+          type: "customer",
+          conversionStatus: "APPROVED",
+          convertedAt: new Date(),
+        },
+      });
+    }
 
-  // Suspender el producto al rechazar
-  if (action === "REJECT") {
-    await prisma.product.update({
-      where: { id: Number(productId) },
-      data: { status: "SUSPENDED" },
-    });
-  }
+    if (action === "REJECT" && approval.isFirstProduct) {
+      await prisma.lead.update({
+        where: { id: Number(id) },
+        data: {
+          conversionStatus: "REJECTED",
+          conversionNote: note,
+        },
+      });
+    }
 
-  return NextResponse.json(updated);
-}
+    if (action === "REJECT") {
+      await prisma.product.update({
+        where: { id: Number(productId) },
+        data: { status: "SUSPENDED" },
+      });
+    }
+
+    return NextResponse.json(updated);
+  },
+);

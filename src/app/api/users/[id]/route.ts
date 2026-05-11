@@ -1,16 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { getAuthSession, forbidden, conflict } from "@/lib/api";
+import { withAuthParams, forbidden, conflict } from "@/lib/api";
 
-// PATCH — Editar usuario
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
-  const session = await getAuthSession();
-  if (!session || session.user.role !== "ADMIN") return forbidden();
+export const PATCH = withAuthParams<{ id: string }>(async (req, session, { id }) => {
+  if (session.user.role !== "ADMIN") return forbidden();
 
   const body = await req.json();
   const { name, email, password, role, active, companyId, teamId } = body;
@@ -51,17 +45,11 @@ export async function PATCH(
   });
 
   return NextResponse.json(user);
-}
+});
 
-// DELETE — Eliminar usuario
-export async function DELETE(
-  _: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
-  const session = await getAuthSession();
-  if (!session || session.user.role !== "ADMIN") return forbidden();
+export const DELETE = withAuthParams<{ id: string }>(async (_req, session, { id }) => {
+  if (session.user.role !== "ADMIN") return forbidden();
 
   await prisma.user.delete({ where: { id: Number(id) } });
   return NextResponse.json({ success: true });
-}
+});

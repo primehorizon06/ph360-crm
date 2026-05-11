@@ -107,7 +107,7 @@ export default function LeadDetailPage() {
         onEdit={() => setEditing(true)}
       />
 
-      {role === "COACH" || role === "SUPERVISOR" ? (
+      {role === "COACH" || role === "SUPERVISOR" || role === "ADMIN" ? (
         <ProductChecklist
           leadId={lead.id}
           products={products}

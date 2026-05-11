@@ -42,7 +42,7 @@ export function LeadDetailHeader({ lead, role, onSuspend, onEdit }: Props) {
                 <span
                   className={`text-sm px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[lead?.status as keyof typeof STATUS_COLORS]}`}
                 >
-                  {STATUS_COLORS[lead.status as keyof typeof STATUS_COLORS]}
+                  {STATUS[lead.status as keyof typeof STATUS]}
                 </span>
               )}
             </div>
