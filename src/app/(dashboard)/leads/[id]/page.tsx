@@ -17,6 +17,7 @@ import { ProductsTab } from "../detail/tabs/ProductsTab";
 import { ProductChecklist } from "@/components/leads/ProductChecklist/ProductChecklist";
 import { VALID_TABS } from "@/utils/constants/leads";
 import { Product } from "@/utils/interfaces/products";
+import { toast } from "sonner";
 
 export default function LeadDetailPage() {
   const { id } = useParams();
@@ -73,16 +74,29 @@ export default function LeadDetailPage() {
     setLoading(false);
   }
 
-  async function handleSuspend() {
-    if (!confirm("¿Suspender este lead?")) return;
-    await fetch(`/api/leads/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "suspended" }),
+  function handleSuspend() {
+    toast("¿Suspender este lead?", {
+      action: {
+        label: "Suspender",
+        onClick: async () => {
+          const res = await fetch(`/api/leads/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "suspended" }),
+          });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            toast.error(data.error ?? "Error al suspender el lead");
+            return;
+          }
+          toast.success("Lead suspendido");
+          setLoading(true);
+          await loadLead();
+          setLoading(false);
+        },
+      },
+      cancel: { label: "Cancelar", onClick: () => {} },
     });
-    setLoading(true);
-    await loadLead();
-    setLoading(false);
   }
 
   const handleTabChange = (tab: TABS_NAME) => {

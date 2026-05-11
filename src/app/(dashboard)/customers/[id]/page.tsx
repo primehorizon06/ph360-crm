@@ -17,6 +17,7 @@ import { ProductsTab } from "@/app/(dashboard)/leads/detail/tabs/ProductsTab";
 import { ProductChecklist } from "@/components/leads/ProductChecklist/ProductChecklist";
 import { Product } from "@/utils/interfaces/products";
 import { VALID_TABS } from "@/utils/constants/leads";
+import { toast } from "sonner";
 
 export default function CustomerDetailPage() {
   const { id } = useParams();
@@ -30,7 +31,11 @@ export default function CustomerDetailPage() {
   const [editing, setEditing] = useState(false);
   const [, startTransition] = useTransition();
 
-  usePageTitle(lead?.firstName ? `${lead.firstName} ${lead.lastName} - Cliente` : "Cliente");
+  usePageTitle(
+    lead?.firstName
+      ? `${lead.firstName} ${lead.lastName} - Cliente`
+      : "Cliente",
+  );
 
   const tabFromUrl = searchParams.get("tab") as TABS_NAME;
   const isValidTab = tabFromUrl && VALID_TABS.includes(tabFromUrl);
@@ -62,21 +67,52 @@ export default function CustomerDetailPage() {
   }
 
   useEffect(() => {
-    Promise.all([loadLead(), loadProducts()]);
-  }, [id]);
+    void (async () => {
+      const [leadRes, productsRes] = await Promise.all([
+        fetch(`/api/leads/${id}`),
+        fetch(`/api/leads/${id}/products`),
+      ]);
+      if (!leadRes.ok) {
+        router.push("/leads");
+        return;
+      }
+      const [leadData, productsData] = await Promise.all([
+        leadRes.json(),
+        productsRes.ok ? productsRes.json() : Promise.resolve([]),
+      ]);
+      setLead(leadData);
+      setProducts(productsData);
+      setLoading(false);
+    })();
+  }, [id, router]);
 
   async function handleApprovalChange() {
     await Promise.all([loadLead(), loadProducts()]);
   }
 
-  async function handleSuspend() {
-    if (!confirm("¿Suspender este cliente?")) return;
-    await fetch(`/api/leads/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "suspended" }),
+  function handleSuspend() {
+    toast("¿Estas seguro de que quieres suspender este Cliente?", {
+      action: {
+        label: "Suspender",
+        onClick: async () => {
+          const res = await fetch(`/api/leads/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "suspended" }),
+          });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            toast.error(data.error ?? "Error al suspender el cliente");
+            return;
+          }
+          toast.success("Cliente suspendido");
+          setLoading(true);
+          await loadLead();
+          setLoading(false);
+        },
+      },
+      cancel: { label: "Cancelar", onClick: () => {} },
     });
-    loadLead();
   }
 
   const handleTabChange = (tab: TABS_NAME) => {
