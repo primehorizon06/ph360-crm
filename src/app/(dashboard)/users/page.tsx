@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import useSWR from "swr";
 import { useSession } from "next-auth/react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useRouter } from "next/navigation";
@@ -11,6 +12,7 @@ import { Plus, Search } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { CustomSelect } from "@/components/ui/Select";
 import { UserRole } from "@/utils/constants/roles";
+import { fetcher } from "@/lib/fetcher";
 
 export interface User {
   id: number;
@@ -31,48 +33,27 @@ export default function UsersPage() {
   usePageTitle("Usuarios");
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [search, setSearch] = useState("");
   const [filterCompany, setFilterCompany] = useState("");
   const [filterTeam, setFilterTeam] = useState("");
-  const [companies, setCompanies] = useState<{ id: number; name: string }[]>(
-    [],
+
+  const usersKey = status === "authenticated" ? "/api/users" : null;
+  const teamsKey = filterCompany
+    ? `/api/teams?companyId=${filterCompany}`
+    : null;
+
+  const { data: users = [], isLoading: loadingUsers, mutate: mutateUsers } =
+    useSWR<User[]>(usersKey, fetcher);
+  const { data: companies = [] } = useSWR<{ id: number; name: string }[]>(
+    "/api/companies?simple=true",
+    fetcher,
   );
-  const [teams, setTeams] = useState<{ id: number; name: string }[]>([]);
-
-  useEffect(() => {
-    const load = async () => {
-      const res = await fetch("/api/companies?simple=true");
-      setCompanies(await res.json());
-    };
-    load();
-  }, []);
-
-  useEffect(() => {
-    const loadTeams = async () => {
-      if (!filterCompany) {
-        setTeams([]);
-        setFilterTeam("");
-        return;
-      }
-      const res = await fetch(`/api/teams?companyId=${filterCompany}`);
-      setTeams(await res.json());
-    };
-    loadTeams();
-  }, [filterCompany]);
-
-  const filtered = users.filter((user) => {
-    const matchSearch = `${user.name} ${user.username}`
-      .toLowerCase()
-      .includes(search.toLowerCase());
-    const matchCompany =
-      !filterCompany || String(user.companyId) === filterCompany;
-    const matchTeam = !filterTeam || String(user.teamId) === filterTeam;
-    return matchSearch && matchCompany && matchTeam;
-  });
+  const { data: teams = [] } = useSWR<{ id: number; name: string }[]>(
+    teamsKey,
+    fetcher,
+  );
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/auth/login");
@@ -80,23 +61,24 @@ export default function UsersPage() {
       router.push("/");
   }, [status, session, router]);
 
-  const loadUsers = useCallback(async () => {
-    setLoading(true);
-    const res = await fetch("/api/users");
-    const data = await res.json();
-    setUsers(data);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    if (status !== "authenticated") return;
-    loadUsers();
-  }, [status, loadUsers]);
+  const filtered = useMemo(
+    () =>
+      users.filter((user) => {
+        const matchSearch = `${user.name} ${user.username}`
+          .toLowerCase()
+          .includes(search.toLowerCase());
+        const matchCompany =
+          !filterCompany || String(user.companyId) === filterCompany;
+        const matchTeam = !filterTeam || String(user.teamId) === filterTeam;
+        return matchSearch && matchCompany && matchTeam;
+      }),
+    [users, search, filterCompany, filterTeam],
+  );
 
   async function handleDelete(id: number) {
     if (!confirm("¿Eliminar este usuario?")) return;
     await fetch(`/api/users/${id}`, { method: "DELETE" });
-    loadUsers();
+    void mutateUsers();
   }
 
   function handleEdit(user: User) {
@@ -109,12 +91,12 @@ export default function UsersPage() {
     setModalOpen(true);
   }
 
-  async function handleSave() {
+  function handleSave() {
     setModalOpen(false);
-    loadUsers();
+    void mutateUsers();
   }
 
-  if (status === "loading" || loading) return <Loading />;
+  if (status === "loading" || loadingUsers) return <Loading />;
 
   return (
     <div className="space-y-6">

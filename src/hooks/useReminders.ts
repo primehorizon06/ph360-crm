@@ -1,42 +1,18 @@
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 import { Reminder } from "@/utils/interfaces/reminders";
-import { useEffect, useState } from "react";
 
 export function useReminders(leadId: number) {
-  const [reminders, setReminders] = useState<Reminder[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const loadReminders = async () => {
-    setLoading(true);
-    const res = await fetch(`/api/leads/${leadId}/reminders`);
-    if (!res.ok) {
-      console.error("Error API", await res.text());
-      setReminders([]);
-      return;
-    }
-
-    setReminders(await res.json());
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    loadReminders();
-  }, [leadId]);
-
-  const upcoming = reminders.filter(
-    (r) => new Date(r.scheduledAt) >= new Date(),
+  const { data, isLoading, mutate } = useSWR<Reminder[]>(
+    `/api/leads/${leadId}/reminders`,
+    fetcher,
   );
+
+  const reminders = data ?? [];
+  const upcoming = reminders.filter((r) => new Date(r.scheduledAt) >= new Date());
   const past = reminders
     .filter((r) => new Date(r.scheduledAt) < new Date())
-    .sort(
-      (a, b) =>
-        new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime(),
-    );
+    .sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime());
 
-  return {
-    reminders,
-    loading,
-    upcoming,
-    past,
-    reload: loadReminders,
-  };
+  return { reminders, loading: isLoading, upcoming, past, reload: mutate };
 }

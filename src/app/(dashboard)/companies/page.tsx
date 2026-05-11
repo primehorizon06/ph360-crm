@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useMemo, useState } from "react";
+import useSWR from "swr";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { Loading } from "@/components/ui/Loading";
 import {
@@ -17,11 +18,10 @@ import { TeamModal } from "@/components/companies/TeamModal";
 import { CustomSelect } from "@/components/ui/Select";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { CompanyGoals, Team } from "@/utils/interfaces/companies";
+import { fetcher } from "@/lib/fetcher";
 
 export default function CompaniesPage() {
   usePageTitle("Empresas y Equipos");
-  const [companies, setCompanies] = useState<CompanyGoals[]>([]);
-  const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<number[]>([]);
   const [companyModal, setCompanyModal] = useState<{
     open: boolean;
@@ -37,34 +37,21 @@ export default function CompaniesPage() {
     "all" | "active" | "inactive"
   >("all");
 
-  useEffect(() => {
-    const loadCompanies = async () => {
-      setLoading(true);
-      const res = await fetch("/api/companies");
-      setCompanies(await res.json());
-      setLoading(false);
-    };
-    loadCompanies();
-  }, []);
-
-  const loadCompanies = useCallback(async () => {
-    setLoading(true);
-    const res = await fetch("/api/companies");
-    setCompanies(await res.json());
-    setLoading(false);
-  }, []);
+  const { data: companies = [], isLoading, mutate } = useSWR<CompanyGoals[]>(
+    "/api/companies",
+    fetcher,
+  );
 
   async function toggleExpand(company: CompanyGoals) {
     if (expanded.includes(company.id)) {
       setExpanded((prev) => prev.filter((id) => id !== company.id));
       return;
     }
-
-    // Cargar equipos de la empresa
     const res = await fetch(`/api/teams?companyId=${company.id}`);
     const teams = await res.json();
-    setCompanies((prev) =>
-      prev.map((c) => (c.id === company.id ? { ...c, teams } : c)),
+    void mutate(
+      companies.map((c) => (c.id === company.id ? { ...c, teams } : c)),
+      { revalidate: false },
     );
     setExpanded((prev) => [...prev, company.id]);
   }
@@ -73,7 +60,7 @@ export default function CompaniesPage() {
     if (!confirm("¿Eliminar esta franquicia? Se eliminarán todos sus equipos."))
       return;
     await fetch(`/api/companies/${id}`, { method: "DELETE" });
-    loadCompanies();
+    void mutate();
   }
 
   async function handleDeleteTeam(id: number, companyId: number) {
@@ -81,26 +68,30 @@ export default function CompaniesPage() {
     await fetch(`/api/teams/${id}`, { method: "DELETE" });
     const res = await fetch(`/api/teams?companyId=${companyId}`);
     const teams = await res.json();
-    setCompanies((prev) =>
-      prev.map((c) => (c.id === companyId ? { ...c, teams } : c)),
+    void mutate(
+      companies.map((c) => (c.id === companyId ? { ...c, teams } : c)),
+      { revalidate: false },
     );
   }
 
-  // Filtrar companies
-  const filtered = companies.filter((company) => {
-    const matchSearch = company.name
-      .toLowerCase()
-      .includes(search.toLowerCase());
-    const matchActive =
-      filterActive === "all"
-        ? true
-        : filterActive === "active"
-          ? company.active
-          : !company.active;
-    return matchSearch && matchActive;
-  });
+  const filtered = useMemo(
+    () =>
+      companies.filter((company) => {
+        const matchSearch = company.name
+          .toLowerCase()
+          .includes(search.toLowerCase());
+        const matchActive =
+          filterActive === "all"
+            ? true
+            : filterActive === "active"
+              ? company.active
+              : !company.active;
+        return matchSearch && matchActive;
+      }),
+    [companies, search, filterActive],
+  );
 
-  if (loading) return <Loading />;
+  if (isLoading) return <Loading />;
 
   return (
     <div className="space-y-6">
@@ -272,7 +263,7 @@ export default function CompaniesPage() {
           onClose={() => setCompanyModal({ open: false, company: null })}
           onSave={() => {
             setCompanyModal({ open: false, company: null });
-            loadCompanies();
+            void mutate();
           }}
         />
       )}
@@ -286,16 +277,16 @@ export default function CompaniesPage() {
             setTeamModal({ open: false, team: null, companyId: null })
           }
           onSave={async () => {
+            const companyId = teamModal.companyId;
             setTeamModal({ open: false, team: null, companyId: null });
-            if (teamModal.companyId) {
-              const res = await fetch(
-                `/api/teams?companyId=${teamModal.companyId}`,
-              );
+            if (companyId) {
+              const res = await fetch(`/api/teams?companyId=${companyId}`);
               const teams = await res.json();
-              setCompanies((prev) =>
-                prev.map((c) =>
-                  c.id === teamModal.companyId ? { ...c, teams } : c,
+              void mutate(
+                companies.map((c) =>
+                  c.id === companyId ? { ...c, teams } : c,
                 ),
+                { revalidate: false },
               );
             }
           }}

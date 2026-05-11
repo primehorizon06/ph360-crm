@@ -1,9 +1,10 @@
 "use client";
 
+import { useMemo, useState } from "react";
+import useSWR from "swr";
 import { useSession } from "next-auth/react";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
 import { MONTHS } from "@/utils/interfaces/dashboard";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -12,24 +13,20 @@ import { GoalTree } from "@/components/goals/GoalTree";
 import { GoalFormModal } from "@/components/goals/GoalFormModal";
 import { Plus } from "lucide-react";
 import { GoalsData } from "@/utils/interfaces/goals";
+import { fetcher } from "@/lib/fetcher";
 import { toast } from "sonner";
 import { UserRole } from "@/utils/constants/roles";
 import { Loading } from "@/components/ui/Loading";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 export default function GoalsPage() {
   const { data: session, status } = useSession();
-  const { user, isLoading } = usePermissions();
+  const { user, isLoading: permLoading } = usePermissions();
   const router = useRouter();
 
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
   const [quincena, setQuincena] = useState<1 | 2>(now.getDate() <= 15 ? 1 : 2);
-
-  const [data, setData] = useState<GoalsData | null>(null);
-  const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [deleting, setDeleting] = useState<number | null>(null);
 
@@ -37,25 +34,12 @@ export default function GoalsPage() {
   const isSupervisor = user?.role === UserRole.SUPERVISOR;
   const canEdit = isAdmin || isSupervisor;
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({
-        year: String(year),
-        month: String(month),
-        quincena: String(quincena),
-      });
-      const res = await fetch(`/api/goals?${params}`);
-      const json = await res.json();
-      setData(json);
-    } finally {
-      setLoading(false);
-    }
-  }, [year, month, quincena]);
+  const swrKey = useMemo(() => {
+    if (status !== "authenticated") return null;
+    return `/api/goals?${new URLSearchParams({ year: String(year), month: String(month), quincena: String(quincena) })}`;
+  }, [status, year, month, quincena]);
 
-  useEffect(() => {
-    if (session) fetchData();
-  }, [session, fetchData]);
+  const { data, isLoading, mutate } = useSWR<GoalsData>(swrKey, fetcher);
 
   async function handleDelete(id: number) {
     if (!confirm("¿Eliminar esta meta?")) return;
@@ -67,30 +51,19 @@ export default function GoalsPage() {
         body: JSON.stringify({ id }),
       });
       const json = await res.json();
-      if (!res.ok) {
-        toast.error(json.error);
-        return;
-      }
-      fetchData();
+      if (!res.ok) { toast.error(json.error); return; }
+      void mutate();
     } finally {
       setDeleting(null);
     }
   }
 
-  if (status === "loading" || isLoading) {
-    return (
-      <Loading fullScreen={false} message="Cargando metas quincenales..." />
-    );
+  if (status === "loading" || permLoading) {
+    return <Loading fullScreen={false} message="Cargando metas quincenales..." />;
   }
 
-  if (!session) {
-    router.push("/auth/login");
-    return null;
-  }
-  if (!canEdit) {
-    router.push("/");
-    return null;
-  }
+  if (!session) { router.push("/auth/login"); return null; }
+  if (!canEdit) { router.push("/"); return null; }
 
   const selectedDate = new Date(year, month - 1, 1);
   const selectCls =
@@ -108,7 +81,6 @@ export default function GoalsPage() {
         </div>
 
         <div className="flex flex-wrap items-end gap-2">
-          {/* Month/Year picker */}
           <div className="flex flex-col gap-1">
             <label className="text-[10px] uppercase tracking-wider text-white/40 font-medium">
               Período
@@ -128,7 +100,6 @@ export default function GoalsPage() {
             />
           </div>
 
-          {/* Quincena */}
           <div className="flex flex-col gap-1">
             <label className="text-[10px] uppercase tracking-wider text-white/40 font-medium">
               Quincena
@@ -144,17 +115,14 @@ export default function GoalsPage() {
                       : "bg-white/5 text-white/40 hover:bg-white/10"
                   }`}
                 >
-                  {q === 1 ? "1" : "2"}
+                  {q}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* New goal button */}
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] uppercase tracking-wider text-transparent font-medium">
-              _
-            </label>
+            <label className="text-[10px] uppercase tracking-wider text-transparent font-medium">_</label>
             <button
               onClick={() => setModalOpen(true)}
               className="flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-white text-sm font-medium rounded-lg transition-colors"
@@ -166,17 +134,14 @@ export default function GoalsPage() {
         </div>
       </div>
 
-      {/* Period summary */}
       <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 flex items-center gap-2">
         <span className="text-xs text-white/40">Período:</span>
         <span className="text-sm font-medium text-white">
-          {MONTHS[month - 1]} {year} ·{" "}
-          {quincena === 1 ? "1er quincena" : "2da quincena"}
+          {MONTHS[month - 1]} {year} · {quincena === 1 ? "1er quincena" : "2da quincena"}
         </span>
       </div>
 
-      {/* Goals tree */}
-      {loading ? (
+      {isLoading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-24 bg-white/5 rounded-xl animate-pulse" />
@@ -184,7 +149,6 @@ export default function GoalsPage() {
         </div>
       ) : data ? (
         <>
-          {/* Admin sees full tree, supervisor sees only their company */}
           {isAdmin ? (
             <GoalTree
               goals={data.goals}
@@ -196,12 +160,7 @@ export default function GoalsPage() {
           ) : (
             <GoalTree
               goals={data.goals}
-              companies={[
-                {
-                  id: user?.companyId ?? 0,
-                  name: user?.companyName ?? "Mi franquicia",
-                },
-              ]}
+              companies={[{ id: user?.companyId ?? 0, name: user?.companyName ?? "Mi franquicia" }]}
               teams={data.teams}
               onDelete={handleDelete}
               canEdit={canEdit}
@@ -211,9 +170,7 @@ export default function GoalsPage() {
           {data.goals.length === 0 && (
             <div className="text-center py-16 text-white/30">
               <p className="text-lg font-medium">Sin metas para este período</p>
-              <p className="text-sm mt-1">
-                Crea la primera meta con el botón &ldquo;Nueva meta&ldquo;
-              </p>
+              <p className="text-sm mt-1">Crea la primera meta con el botón &ldquo;Nueva meta&ldquo;</p>
             </div>
           )}
         </>
@@ -221,11 +178,10 @@ export default function GoalsPage() {
         <p className="text-center text-white/30 py-16">Error cargando datos</p>
       )}
 
-      {/* Modal */}
       <GoalFormModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        onSave={fetchData}
+        onSave={() => { setModalOpen(false); void mutate(); }}
         companies={data?.companies ?? []}
         teams={data?.teams ?? []}
         goals={data?.goals ?? []}

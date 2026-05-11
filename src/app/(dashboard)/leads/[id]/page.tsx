@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import useSWR from "swr";
 import { useSession } from "next-auth/react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { Loading } from "@/components/ui/Loading";
@@ -17,6 +18,7 @@ import { ProductsTab } from "../detail/tabs/ProductsTab";
 import { ProductChecklist } from "@/components/leads/ProductChecklist/ProductChecklist";
 import { VALID_TABS } from "@/utils/constants/leads";
 import { Product } from "@/utils/interfaces/products";
+import { fetcher } from "@/lib/fetcher";
 import { toast } from "sonner";
 import { UserRole } from "@/utils/constants/roles";
 
@@ -26,53 +28,32 @@ export default function LeadDetailPage() {
   const searchParams = useSearchParams();
   const { data: session } = useSession();
   const role = session?.user?.role;
-  const [lead, setLead] = useState<Lead | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [, startTransition] = useTransition();
 
-  usePageTitle(lead?.firstName ? `${lead.firstName} ${lead.lastName} - Lead` : "Lead");
+  const { data: lead, isLoading, mutate: mutateLead, error: leadError } =
+    useSWR<Lead>(id ? `/api/leads/${id}` : null, fetcher);
+  const { data: products = [], mutate: mutateProducts } = useSWR<Product[]>(
+    id ? `/api/leads/${id}/products` : null,
+    fetcher,
+  );
+
+  usePageTitle(
+    lead?.firstName ? `${lead.firstName} ${lead.lastName} - Lead` : "Lead",
+  );
 
   const tabFromUrl = searchParams.get("tab") as TABS_NAME;
   const isValidTab = tabFromUrl && VALID_TABS.includes(tabFromUrl);
-
   const [activeTab, setActiveTab] = useState<TABS_NAME>(
     isValidTab ? tabFromUrl : "personal",
   );
 
-  async function loadLead() {
-    const res = await fetch(`/api/leads/${id}`);
-    if (!res.ok) { router.push("/leads"); return; }
-    setLead(await res.json());
-  }
-
-  async function loadProducts() {
-    const res = await fetch(`/api/leads/${id}/products`);
-    if (res.ok) setProducts(await res.json());
-  }
-
   useEffect(() => {
-    void (async () => {
-      const [leadRes, productsRes] = await Promise.all([
-        fetch(`/api/leads/${id}`),
-        fetch(`/api/leads/${id}/products`),
-      ]);
-      if (!leadRes.ok) { router.push("/leads"); return; }
-      const [leadData, productsData] = await Promise.all([
-        leadRes.json(),
-        productsRes.ok ? productsRes.json() : Promise.resolve([]),
-      ]);
-      setLead(leadData);
-      setProducts(productsData);
-      setLoading(false);
-    })();
-  }, [id, router]);
+    if (leadError) router.push("/leads");
+  }, [leadError, router]);
 
   async function handleApprovalChange() {
-    setLoading(true);
-    await Promise.all([loadLead(), loadProducts()]);
-    setLoading(false);
+    await Promise.all([mutateLead(), mutateProducts()]);
   }
 
   function handleSuspend() {
@@ -91,9 +72,7 @@ export default function LeadDetailPage() {
             return;
           }
           toast.success("Lead suspendido");
-          setLoading(true);
-          await loadLead();
-          setLoading(false);
+          void mutateLead();
         },
       },
       cancel: { label: "Cancelar", onClick: () => {} },
@@ -120,7 +99,7 @@ export default function LeadDetailPage() {
     return () => window.removeEventListener("popstate", handlePopState);
   }, [searchParams]);
 
-  if (loading) return <Loading />;
+  if (isLoading) return <Loading />;
   if (!lead) return null;
 
   return (
@@ -148,7 +127,10 @@ export default function LeadDetailPage() {
         {activeTab === "reminders" && <RemindersTab leadId={lead.id} />}
         {activeTab === "attachments" && <AttachmentsTab leadId={lead.id} />}
         {activeTab === "products" && (
-          <ProductsTab leadId={lead.id} onProductCreated={loadProducts} />
+          <ProductsTab
+            leadId={lead.id}
+            onProductCreated={() => void mutateProducts()}
+          />
         )}
       </div>
 
@@ -157,11 +139,9 @@ export default function LeadDetailPage() {
           key={lead.id}
           lead={lead}
           onClose={() => setEditing(false)}
-          onSave={async () => {
+          onSave={() => {
             setEditing(false);
-            setLoading(true);
-            await loadLead();
-            setLoading(false);
+            void mutateLead();
           }}
         />
       )}

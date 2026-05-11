@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 import { Plus, FileText } from "lucide-react";
 import { Note, PropsNotesTab } from "@/utils/interfaces/notes";
 import { NoteCard } from "@/components/notes/NoteCard";
@@ -8,20 +10,11 @@ import { NoteModal } from "@/components/notes/NoteModal";
 import { Loading } from "@/components/ui/Loading";
 
 export function NotesTab({ leadId }: PropsNotesTab) {
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-
-  async function loadNotes() {
-    setLoading(true);
-    const res = await fetch(`/api/leads/${leadId}/notes`);
-    setNotes(await res.json());
-    setLoading(false);
-  }
-
-  useEffect(() => {
-    loadNotes();
-  }, [leadId]);
+  const { data: notes = [], isLoading, mutate } = useSWR<Note[]>(
+    `/api/leads/${leadId}/notes`,
+    fetcher,
+  );
 
   return (
     <div className="space-y-4">
@@ -38,7 +31,7 @@ export function NotesTab({ leadId }: PropsNotesTab) {
         </button>
       </div>
 
-      {loading ? (
+      {isLoading ? (
         <div className="text-center py-8 text-white/30 text-lg">
           <Loading />
         </div>
@@ -61,7 +54,7 @@ export function NotesTab({ leadId }: PropsNotesTab) {
           onClose={() => setModalOpen(false)}
           onSave={() => {
             setModalOpen(false);
-            loadNotes();
+            void mutate();
           }}
         />
       )}
