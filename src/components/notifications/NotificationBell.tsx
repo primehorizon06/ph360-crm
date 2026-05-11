@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Bell, CheckCircle, ShoppingBag, X } from "lucide-react";
 import { useReminderNotifications } from "@/hooks/useReminderNotifications";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -14,6 +14,50 @@ export function NotificationBell() {
   const router = useRouter();
 
   const totalCount = pendingReminders.length + notifications.length;
+  const prevCounts = useRef({ notif: -1, reminder: -1 });
+
+  // Pedir permiso de notificaciones del OS una sola vez
+  useEffect(() => {
+    if (typeof Notification !== "undefined" && Notification.permission === "default") {
+      void Notification.requestPermission();
+    }
+  }, []);
+
+  useEffect(() => {
+    const es = new EventSource("/api/notifications/stream");
+
+    es.onmessage = (e: MessageEvent) => {
+      const { notifCount, reminderCount } = JSON.parse(e.data as string) as {
+        notifCount: number;
+        reminderCount: number;
+      };
+      const prev = prevCounts.current;
+
+      // Mostrar notificación del OS solo si el tab no está activo y el conteo subió
+      if (document.visibilityState !== "visible" && Notification.permission === "granted") {
+        if (notifCount > prev.notif && prev.notif >= 0) {
+          const n = new Notification("Nueva aprobación pendiente", {
+            body: `Tienes ${notifCount} aprobación${notifCount !== 1 ? "es" : ""} pendiente${notifCount !== 1 ? "s" : ""}`,
+            icon: "/favicon.ico",
+          });
+          n.onclick = () => window.focus();
+        }
+        if (reminderCount > prev.reminder && prev.reminder >= 0) {
+          const n = new Notification("Recordatorio pendiente", {
+            body: `Tienes ${reminderCount} recordatorio${reminderCount !== 1 ? "s" : ""} por atender`,
+            icon: "/favicon.ico",
+          });
+          n.onclick = () => window.focus();
+        }
+      }
+
+      prevCounts.current = { notif: notifCount, reminder: reminderCount };
+      void refreshNotifications();
+      void refreshReminders();
+    };
+
+    return () => es.close();
+  }, [refreshNotifications, refreshReminders]);
 
   // ── Reminders ──────────────────────────────────────────────────────────────
 

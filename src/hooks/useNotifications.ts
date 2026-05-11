@@ -22,8 +22,8 @@ export function useNotifications() {
     "/api/notifications",
     fetcher,
     {
-      refreshInterval: 30000,
-      revalidateOnFocus: true,
+      refreshInterval: 0,
+      revalidateOnFocus: false,
     },
   );
 

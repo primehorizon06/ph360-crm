@@ -29,8 +29,8 @@ export function useReminderNotifications() {
     `/api/reminders?${params.toString()}`,
     fetcher,
     {
-      refreshInterval: 30000, // Cada 30 segundos
-      revalidateOnFocus: true,
+      refreshInterval: 0,
+      revalidateOnFocus: false,
     },
   );
 
