@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuthParams, forbidden, notFound, conflict } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
+import { canAccessLead } from "@/lib/permissions";
 
 export const GET = withAuthParams<{ id: string }>(
   async (_req, _session, { id }) => {
@@ -35,12 +36,7 @@ export const PATCH = withAuthParams<{ id: string }>(
     });
     if (!existing) return notFound("Lead no encontrado");
 
-    if (role === UserRole.SUPERVISOR || role === UserRole.COACH) {
-      if (existing.companyId !== Number(user.companyId)) return forbidden();
-    }
-    if (role === UserRole.AGENT) {
-      if (existing.assignedToId !== Number(user.id)) return forbidden();
-    }
+    if (!canAccessLead(user, existing)) return forbidden();
 
     let data: Record<string, unknown> = {};
 

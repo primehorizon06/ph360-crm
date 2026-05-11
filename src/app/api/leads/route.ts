@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth, forbidden, badRequest, conflict } from "@/lib/api";
-import { UserRole } from "@/utils/constants/roles";
+import { buildScopeFilter } from "@/lib/permissions";
 import { CustomerStatus, LeadStatus, Prisma } from "@prisma/client";
 
 const LIMIT_DEFAULT = 50;
@@ -20,24 +20,10 @@ export const GET = withAuth(async (req, session) => {
 
   const user = session.user;
 
-  let where: Prisma.LeadWhereInput = { type };
+  const scopeFilter = buildScopeFilter(user);
+  if (!scopeFilter) return forbidden();
 
-  switch (user.role) {
-    case UserRole.ADMIN:
-      where = { type };
-      break;
-    case UserRole.SUPERVISOR:
-      where = { type, companyId: user.companyId };
-      break;
-    case UserRole.COACH:
-      where = { type, assignedTo: { teamId: user.teamId } };
-      break;
-    case UserRole.AGENT:
-      where = { type, assignedToId: Number(user.id) };
-      break;
-    default:
-      return forbidden();
-  }
+  let where: Prisma.LeadWhereInput = { type, ...scopeFilter };
 
   if (statusParam && statusParam !== "ALL") {
     where =

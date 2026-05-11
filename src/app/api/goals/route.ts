@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth, forbidden, badRequest } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
+import { getScopedCompanyId } from "@/lib/permissions";
 
 type SessionUser = {
   id: string;
@@ -23,12 +24,10 @@ export const GET = withAuth(async (req, session) => {
   const companyId = searchParams.get("companyId");
   const teamId = searchParams.get("teamId");
 
-  const scopedCompanyId =
-    user.role === UserRole.ADMIN
-      ? companyId
-        ? parseInt(companyId)
-        : undefined
-      : user.companyId;
+  const scopedCompanyId = getScopedCompanyId(
+    user,
+    companyId ? parseInt(companyId) : undefined,
+  );
 
   const goals = await prisma.goal.findMany({
     where: {
