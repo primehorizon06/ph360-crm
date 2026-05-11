@@ -9,6 +9,7 @@ import {
   STATUS_COLORS,
 } from "@/utils/constants/leads";
 import { CopyButton } from "@/components/ui/CopyButton";
+import { UserRole } from "@/utils/constants/roles";
 
 interface Props {
   lead: Lead;
@@ -75,7 +76,7 @@ export function LeadDetailHeader({ lead, role, onSuspend, onEdit }: Props) {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            {(role === "ADMIN" || role === "SUPERVISOR") && (
+            {(role === UserRole.ADMIN || role === UserRole.SUPERVISOR) && (
               <button
                 onClick={onSuspend}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg text-lg text-red-400/70 hover:text-red-400 hover:bg-red-500/10 border border-red-500/20 transition-colors"

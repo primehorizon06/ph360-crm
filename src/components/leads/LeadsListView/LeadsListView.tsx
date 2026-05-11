@@ -17,6 +17,7 @@ import {
 import { CustomSelect } from "@/components/ui/Select";
 import { PRODUCT_COLORS, PRODUCT_LABELS } from "@/utils/constants/products";
 import { ProductType } from "@/utils/interfaces/products";
+import { UserRole } from "@/utils/constants/roles";
 
 interface Props {
   type: "lead" | "customer";
@@ -29,7 +30,7 @@ export function LeadsListView({ type }: Props) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("ALL");
-  const isAdmin = session?.user?.role === "ADMIN";
+  const isAdmin = session?.user?.role === UserRole.ADMIN;
   const router = useRouter();
 
   const isLead = type === "lead";

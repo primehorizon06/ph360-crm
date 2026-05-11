@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth, forbidden, badRequest, conflict } from "@/lib/api";
+import { UserRole } from "@/utils/constants/roles";
 
 export const GET = withAuth(async (req, session) => {
   const user = session.user;
@@ -13,16 +14,16 @@ export const GET = withAuth(async (req, session) => {
   let where: Record<string, unknown> = { type };
 
   switch (role) {
-    case "ADMIN":
+    case UserRole.ADMIN:
       where = { type };
       break;
-    case "SUPERVISOR":
+    case UserRole.SUPERVISOR:
       where = { type, companyId: user.companyId };
       break;
-    case "COACH":
+    case UserRole.COACH:
       where = { type, assignedTo: { teamId: user.teamId } };
       break;
-    case "AGENT":
+    case UserRole.AGENT:
       where = { type, assignedToId: Number(user.id) };
       break;
     default:

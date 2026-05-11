@@ -1,3 +1,4 @@
+import { UserRole } from "@/utils/constants/roles";
 import { z } from "zod";
 
 const baseSchema = z
@@ -21,7 +22,12 @@ const baseSchema = z
       .optional()
       .or(z.literal("")),
     confirmPassword: z.string().optional().or(z.literal("")),
-    role: z.enum(["ADMIN", "SUPERVISOR", "COACH", "AGENT"]),
+    role: z.enum([
+      UserRole.ADMIN,
+      UserRole.SUPERVISOR,
+      UserRole.COACH,
+      UserRole.AGENT,
+    ]),
     companyId: z.string().min(1, "La franquicia es requerida"),
     teamId: z.string().optional().or(z.literal("")),
     active: z.boolean(),
@@ -35,7 +41,7 @@ const baseSchema = z
       });
     }
 
-    const requiresTeam = ["AGENT", "COACH"].includes(data.role);
+    const requiresTeam = [UserRole.AGENT, UserRole.COACH].includes(data.role);
 
     if (requiresTeam && !data.teamId) {
       ctx.addIssue({

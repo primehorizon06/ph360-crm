@@ -1,6 +1,7 @@
 import { useSession } from "next-auth/react";
 import { useCallback } from "react";
 import { PermissionScope } from "@prisma/client";
+import { UserRole } from "@/utils/constants/roles";
 
 interface Permission {
   canCreate: boolean;
@@ -98,15 +99,15 @@ export function usePermissions() {
       const user = session.user;
 
       switch (user.role) {
-        case "ADMIN":
+        case UserRole.ADMIN:
           return true;
-        case "SUPERVISOR":
+        case UserRole.SUPERVISOR:
           return user.companyId === lead.companyId;
-        case "COACH":
+        case UserRole.COACH:
           // Coach ve leads de su equipo
           // Necesitarías obtener el teamId del lead
           return true; // Implementar según tu lógica
-        case "AGENT":
+        case UserRole.AGENT:
           return user.id === lead.assignedToId.toString();
         default:
           return false;

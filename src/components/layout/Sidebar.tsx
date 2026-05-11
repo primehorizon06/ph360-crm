@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import { LeadModal } from "../leads/LeadModal";
+import { UserRole } from "@/utils/constants/roles";
 
 const navItems: {
   label: string;
@@ -26,18 +27,18 @@ const navItems: {
   { label: "Dashboard", icon: LayoutDashboard, href: "/" },
   { label: "Leads", icon: Users, href: "/leads" },
   { label: "Clientes", icon: Users, href: "/customers" },
-  { label: "Usuarios", icon: UserCog, href: "/users", roles: ["ADMIN"] },
+  { label: "Usuarios", icon: UserCog, href: "/users", roles: [UserRole.ADMIN] },
   {
     label: "Metas",
     icon: Users,
     href: "/goals",
-    roles: ["ADMIN", "SUPERVISOR"],
+    roles: [UserRole.ADMIN, UserRole.SUPERVISOR],
   },
   {
     label: "Franquicias",
     icon: Building2,
     href: "/companies",
-    roles: ["ADMIN"],
+    roles: [UserRole.ADMIN],
   },
 ];
 

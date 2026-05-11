@@ -13,6 +13,8 @@ import { GoalFormModal } from "@/components/goals/GoalFormModal";
 import { Plus } from "lucide-react";
 import { GoalsData } from "@/utils/interfaces/goals";
 import { toast } from "sonner";
+import { UserRole } from "@/utils/constants/roles";
+import { Loading } from "@/components/ui/Loading";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -31,8 +33,8 @@ export default function GoalsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [deleting, setDeleting] = useState<number | null>(null);
 
-  const isAdmin = user?.role === "ADMIN";
-  const isSupervisor = user?.role === "SUPERVISOR";
+  const isAdmin = user?.role === UserRole.ADMIN;
+  const isSupervisor = user?.role === UserRole.SUPERVISOR;
   const canEdit = isAdmin || isSupervisor;
 
   const fetchData = useCallback(async () => {
@@ -77,9 +79,7 @@ export default function GoalsPage() {
 
   if (status === "loading" || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-white/40 text-sm animate-pulse">
-        Cargando...
-      </div>
+      <Loading fullScreen={false} message="Cargando metas quincenales..." />
     );
   }
 

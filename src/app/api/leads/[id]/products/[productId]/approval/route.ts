@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuthParams, forbidden, badRequest, notFound } from "@/lib/api";
+import { UserRole } from "@/utils/constants/roles";
 
 export const PATCH = withAuthParams<{ id: string; productId: string }>(
   async (req, session, { id, productId }) => {
@@ -11,7 +12,10 @@ export const PATCH = withAuthParams<{ id: string; productId: string }>(
 
     // ── RESUBMIT — solo agente o admin ───────────────────────────────────────
     if (action === "RESUBMIT") {
-      if (session.user.role !== "AGENT" && session.user.role !== "ADMIN")
+      if (
+        session.user.role !== UserRole.AGENT &&
+        session.user.role !== UserRole.ADMIN
+      )
         return forbidden();
 
       await prisma.productApproval.update({
@@ -31,7 +35,7 @@ export const PATCH = withAuthParams<{ id: string; productId: string }>(
 
       if (lead) {
         const coach = await prisma.user.findFirst({
-          where: { teamId: lead.teamId, role: "COACH" },
+          where: { teamId: lead.teamId, role: UserRole.COACH },
           select: { id: true },
         });
 
@@ -54,7 +58,11 @@ export const PATCH = withAuthParams<{ id: string; productId: string }>(
     }
 
     // ── APPROVE / REJECT — solo coach, supervisor o admin ────────────────────
-    if (!["COACH", "SUPERVISOR", "ADMIN"].includes(session.user.role))
+    if (
+      ![UserRole.COACH, UserRole.SUPERVISOR, UserRole.ADMIN].includes(
+        session.user.role,
+      )
+    )
       return forbidden();
 
     if (action === "REJECT" && !note?.trim())

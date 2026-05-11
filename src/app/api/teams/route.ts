@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth, forbidden, badRequest } from "@/lib/api";
+import { UserRole } from "@/utils/constants/roles";
 
 export const GET = withAuth(async (req) => {
   const { searchParams } = new URL(req.url);
@@ -21,10 +22,11 @@ export const GET = withAuth(async (req) => {
 });
 
 export const POST = withAuth(async (req, session) => {
-  if (session.user.role !== "ADMIN") return forbidden();
+  if (session.user.role !== UserRole.ADMIN) return forbidden();
 
   const { name, companyId } = await req.json();
-  if (!name || !companyId) return badRequest("Nombre y franquicia son requeridos");
+  if (!name || !companyId)
+    return badRequest("Nombre y franquicia son requeridos");
 
   const team = await prisma.team.create({
     data: { name, companyId: Number(companyId) },

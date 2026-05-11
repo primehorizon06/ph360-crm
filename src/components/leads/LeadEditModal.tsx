@@ -10,11 +10,12 @@ import { CustomSelect } from "../ui/Select";
 import { Props } from "@/utils/interfaces/leadEditModal";
 import { CUSTOMER_STATUS, LEAD_FIELDS, STATUS } from "@/utils/constants/leads";
 import { formatPhone } from "@/utils/helpers/format";
+import { UserRole } from "@/utils/constants/roles";
 
 export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
   const { data: session } = useSession();
   const role = session?.user?.role;
-  const isAdmin = role === "ADMIN";
+  const isAdmin = role === UserRole.ADMIN;
   const isCustomer = type === "customer";
   const [serverError, setServerError] = useState("");
   const [companies, setCompanies] = useState<{ id: number; name: string }[]>(
@@ -126,7 +127,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
             <X size={18} />
           </button>
         </div>
-        <form onSubmit={handleSubmit(onSubmit, (errors) => console.log("Errores zod:", errors))}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="p-5 max-h-[70vh] overflow-y-auto space-y-4">
             {serverError && (
               <p className="text-red-400 text-lg bg-red-500/10 px-3 py-2 rounded-lg">
@@ -289,7 +290,9 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
               )}
 
               {/* Equipo */}
-              {(isAdmin || role === "SUPERVISOR" || role === "COACH") && (
+              {(isAdmin ||
+                role === UserRole.SUPERVISOR ||
+                role === UserRole.COACH) && (
                 <div>
                   <label className="text-sm text-white/40 mb-1 block">
                     Equipo
@@ -311,7 +314,9 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
               )}
 
               {/* Agente */}
-              {(isAdmin || role === "SUPERVISOR" || role === "COACH") && (
+              {(isAdmin ||
+                role === UserRole.SUPERVISOR ||
+                role === UserRole.COACH) && (
                 <div>
                   <label className="text-sm text-white/40 mb-1 block">
                     Agente asignado

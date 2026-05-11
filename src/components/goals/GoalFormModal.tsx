@@ -6,6 +6,7 @@ import { AvailableBadge } from "./AvailableBadge";
 import { Company } from "@/utils/interfaces/dashboard";
 import { Team } from "@/utils/interfaces/companies";
 import { Goal } from "@/utils/interfaces/goals";
+import { UserRole } from "@/utils/constants/roles";
 
 export function GoalFormModal({
   open,
@@ -41,8 +42,8 @@ export function GoalFormModal({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const isSupervisor = userRole === "SUPERVISOR";
-  const isAdmin = userRole === "ADMIN";
+  const isSupervisor = userRole === UserRole.SUPERVISOR;
+  const isAdmin = userRole === UserRole.ADMIN;
 
   // Filtered teams/agents based on selections
   const effectiveCompanyId = isSupervisor

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/api";
+import { UserRole } from "@/utils/constants/roles";
 
 function getQuincenaRange(year: number, month: number, quincena: 1 | 2) {
   if (quincena === 1) {
@@ -75,15 +76,15 @@ export const GET = withAuth(async (req, session) => {
   let scopedTeamId: number | undefined;
   let scopedAgentId: number | undefined;
 
-  if (user.role === "ADMIN") {
+  if (user.role === UserRole.ADMIN) {
     if (companyIdParam && companyIdParam !== "all")
       scopedCompanyId = parseInt(companyIdParam);
-  } else if (user.role === "SUPERVISOR") {
+  } else if (user.role === UserRole.SUPERVISOR) {
     scopedCompanyId = user.companyId;
-  } else if (user.role === "COACH") {
+  } else if (user.role === UserRole.COACH) {
     scopedCompanyId = user.companyId;
     scopedTeamId = user.teamId;
-  } else if (user.role === "AGENT") {
+  } else if (user.role === UserRole.AGENT) {
     scopedCompanyId = user.companyId;
     scopedTeamId = user.teamId;
     scopedAgentId = userId;
@@ -186,7 +187,7 @@ export const GET = withAuth(async (req, session) => {
       where: { ...companyFilter, createdAt: dateRange },
       select: { createdAt: true },
     }),
-    user.role === "ADMIN"
+    user.role === UserRole.ADMIN
       ? prisma.company.findMany({
           where: { active: true },
           select: { id: true, name: true },
@@ -196,7 +197,7 @@ export const GET = withAuth(async (req, session) => {
   ]);
 
   const rankingLeadFilter =
-    user.role === "AGENT" || user.role === "COACH"
+    user.role === UserRole.AGENT || user.role === UserRole.COACH
       ? {
           ...(scopedCompanyId ? { companyId: scopedCompanyId } : {}),
           ...(scopedTeamId ? { teamId: scopedTeamId } : {}),
@@ -294,8 +295,8 @@ export const GET = withAuth(async (req, session) => {
   }[] = [];
 
   if (
-    user.role === "SUPERVISOR" ||
-    (user.role === "ADMIN" && scopedCompanyId)
+    user.role === UserRole.SUPERVISOR ||
+    (user.role === UserRole.ADMIN && scopedCompanyId)
   ) {
     const g = await prisma.goal.findFirst({
       where: { year, month, quincena, companyId: scopedCompanyId },
@@ -324,7 +325,7 @@ export const GET = withAuth(async (req, session) => {
         };
       }),
     );
-  } else if (user.role === "COACH" && scopedTeamId) {
+  } else if (user.role === UserRole.COACH && scopedTeamId) {
     const g = await prisma.goal.findFirst({
       where: { year, month, quincena, teamId: scopedTeamId },
     });
@@ -351,7 +352,7 @@ export const GET = withAuth(async (req, session) => {
         };
       }),
     );
-  } else if (user.role === "AGENT" && scopedAgentId) {
+  } else if (user.role === UserRole.AGENT && scopedAgentId) {
     const g = await prisma.goal.findFirst({
       where: { year, month, quincena, userId: scopedAgentId },
     });
@@ -389,7 +390,7 @@ export const GET = withAuth(async (req, session) => {
     name: string;
     recaudo: number;
   }[] = [];
-  if (user.role === "ADMIN" && !scopedCompanyId) {
+  if (user.role === UserRole.ADMIN && !scopedCompanyId) {
     const franqRecaudos = await Promise.all(
       companies.map(async (c) => {
         const raw = await prisma.installment.aggregate({

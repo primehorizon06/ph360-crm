@@ -10,6 +10,7 @@ import { UserModal } from "@/components/users/UserModal";
 import { Plus, Search } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { CustomSelect } from "@/components/ui/Select";
+import { UserRole } from "@/utils/constants/roles";
 
 export interface User {
   id: number;
@@ -75,7 +76,7 @@ export default function UsersPage() {
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/auth/login");
-    if (status === "authenticated" && session.user.role !== "ADMIN")
+    if (status === "authenticated" && session.user.role !== UserRole.ADMIN)
       router.push("/");
   }, [status, session, router]);
 

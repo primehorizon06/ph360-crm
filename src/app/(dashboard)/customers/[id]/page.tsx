@@ -18,6 +18,7 @@ import { ProductChecklist } from "@/components/leads/ProductChecklist/ProductChe
 import { Product } from "@/utils/interfaces/products";
 import { VALID_TABS } from "@/utils/constants/leads";
 import { toast } from "sonner";
+import { UserRole } from "@/utils/constants/roles";
 
 export default function CustomerDetailPage() {
   const { id } = useParams();
@@ -147,8 +148,8 @@ export default function CustomerDetailPage() {
         onEdit={() => setEditing(true)}
       />
 
-      {role === "COACH" ||
-        (role === "SUPERVISOR" && (
+      {role === UserRole.COACH ||
+        (role === UserRole.SUPERVISOR && (
           <ProductChecklist
             leadId={lead.id}
             products={products}

@@ -9,6 +9,7 @@ import { DashboardData } from "@/utils/interfaces/dashboard";
 import { DashboardFilters } from "@/components/dashboard/drawAreaLine/drawHBar/drawDonut/DashboardFilters";
 import { AdminDashboard } from "@/components/dashboard/drawAreaLine/drawHBar/drawDonut/AdminDashboard";
 import { FranchiseDashboard } from "@/components/dashboard/drawAreaLine/drawHBar/drawDonut/FranchiseDashboard";
+import { UserRole } from "@/utils/constants/roles";
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -23,7 +24,7 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const isAdmin = user?.role === "ADMIN";
+  const isAdmin = user?.role === UserRole.ADMIN;
 
   const fetchData = useCallback(async () => {
     setLoading(true);

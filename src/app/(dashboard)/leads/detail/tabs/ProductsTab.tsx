@@ -34,6 +34,7 @@ import { PaymentPlanPicker } from "@/components/leads/PaymentPlanPicker/PaymentP
 import { formatAmount, formatDate } from "@/utils/helpers/format";
 import { ConfirmProductModal } from "@/components/leads/Confirmproductmodal/Confirmproductmodal";
 import { useSession } from "next-auth/react";
+import { UserRole } from "@/utils/constants/roles";
 
 // ─── Installment status helpers ───────────────────────────────────────────────
 
@@ -264,7 +265,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
+      
       <div className="flex items-center justify-between">
         <p className="text-white/40 text-lg">
           {products.length} producto{products.length !== 1 ? "s" : ""}
@@ -280,7 +281,6 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
         )}
       </div>
 
-      {/* Form */}
       {showForm && (
         <form
           onSubmit={handleSubmit(onSubmit)}
@@ -297,7 +297,6 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
             </button>
           </div>
 
-          {/* Producto */}
           <div className="space-y-1">
             <label className="text-lg text-white/40">Producto</label>
             <Controller
@@ -319,7 +318,6 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
             )}
           </div>
 
-          {/* Método de pago */}
           {product && (
             <div className="space-y-1">
               <label className="text-lg text-white/40">Método de pago</label>
@@ -355,7 +353,6 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
             </div>
           )}
 
-          {/* Campos Tarjeta */}
           {paymentType === "TARJETA" && (
             <div className="space-y-3">
               <div className="space-y-1">
@@ -440,7 +437,6 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
             </div>
           )}
 
-          {/* Campos Cuenta */}
           {paymentType === "CUENTA" && (
             <div className="space-y-3">
               <div className="space-y-1">
@@ -568,7 +564,6 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
         </form>
       )}
 
-      {/* List */}
       {loading ? (
         <div className="text-center py-8">
           <Loading />
@@ -598,7 +593,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                   isRejected ? "border-red-500/30" : "border-white/10"
                 }`}
               >
-                {/* Badge + total */}
+
                 <div className="flex items-start justify-between gap-2">
                   <span
                     className={`inline-flex items-center gap-1.5 text-sm font-medium px-2.5 py-1 rounded-full border ${PRODUCT_COLORS[lp.product]}`}
@@ -613,7 +608,6 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                   )}
                 </div>
 
-                {/* Método de pago */}
                 {lp.paymentMethod && (
                   <div className="flex items-center gap-4">
                     <div className="shrink-0 w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
@@ -666,7 +660,6 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                   </div>
                 )}
 
-                {/* Cuotas */}
                 {lp.paymentPlan && lp.paymentPlan.installments.length > 0 && (
                   <div className="border-t border-white/5 pt-2 space-y-0.5">
                     <div className="flex items-center justify-between mb-2">
@@ -686,7 +679,6 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                   </div>
                 )}
 
-                {/* Rechazo + botón reenviar */}
                 {isRejected && (
                   <div className="border-t border-red-500/20 pt-3 mt-1 space-y-2">
                     <div>
@@ -699,7 +691,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                         </p>
                       )}
                     </div>
-                    {(role === "AGENT" || role === "ADMIN") && (
+                    {(role === UserRole.COACH || role === UserRole.ADMIN) && (
                       <button
                         type="button"
                         onClick={() => handleResubmit(lp.id)}
@@ -724,7 +716,6 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
         </div>
       )}
 
-      {/* Modal de confirmación */}
       {pendingData && (
         <ConfirmProductModal
           data={pendingData}

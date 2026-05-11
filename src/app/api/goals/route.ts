@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth, forbidden, badRequest } from "@/lib/api";
+import { UserRole } from "@/utils/constants/roles";
 
 type SessionUser = {
   id: string;
-  role: string;
+  role: UserRole;
   companyId?: number;
 };
 
@@ -12,14 +13,18 @@ export const GET = withAuth(async (req, session) => {
   const user = session.user as unknown as SessionUser;
   const { searchParams } = new URL(req.url);
 
-  const year = parseInt(searchParams.get("year") ?? String(new Date().getFullYear()));
-  const month = parseInt(searchParams.get("month") ?? String(new Date().getMonth() + 1));
+  const year = parseInt(
+    searchParams.get("year") ?? String(new Date().getFullYear()),
+  );
+  const month = parseInt(
+    searchParams.get("month") ?? String(new Date().getMonth() + 1),
+  );
   const quincena = parseInt(searchParams.get("quincena") ?? "1");
   const companyId = searchParams.get("companyId");
   const teamId = searchParams.get("teamId");
 
   const scopedCompanyId =
-    user.role === "ADMIN"
+    user.role === UserRole.ADMIN
       ? companyId
         ? parseInt(companyId)
         : undefined
@@ -51,7 +56,7 @@ export const GET = withAuth(async (req, session) => {
   });
 
   const companies =
-    user.role === "ADMIN"
+    user.role === UserRole.ADMIN
       ? await prisma.company.findMany({
           where: { active: true },
           select: { id: true, name: true },
@@ -66,7 +71,7 @@ export const GET = withAuth(async (req, session) => {
       name: true,
       companyId: true,
       users: {
-        where: { role: "AGENT", active: true },
+        where: { role: UserRole.AGENT, active: true },
         select: { id: true, name: true },
       },
     },
@@ -78,33 +83,42 @@ export const GET = withAuth(async (req, session) => {
 
 export const POST = withAuth(async (req, session) => {
   const user = session.user as unknown as SessionUser;
-  if (!["ADMIN", "SUPERVISOR"].includes(user.role)) return forbidden();
+  if (![UserRole.ADMIN, UserRole.SUPERVISOR].includes(user.role))
+    return forbidden();
 
   const body = await req.json();
   const { year, month, quincena, amount, companyId, teamId, userId } = body;
 
   const scopeCount = [companyId, teamId, userId].filter(Boolean).length;
   if (scopeCount !== 1)
-    return badRequest("Debe definir exactamente un scope: companyId, teamId o userId");
+    return badRequest(
+      "Debe definir exactamente un scope: companyId, teamId o userId",
+    );
   if (!amount || amount <= 0) return badRequest("El monto debe ser mayor a 0");
 
   const createdById = parseInt(user.id ?? "0");
 
   if (companyId) {
-    if (user.role === "SUPERVISOR" && user.companyId !== parseInt(companyId))
+    if (
+      user.role === UserRole.SUPERVISOR &&
+      user.companyId !== parseInt(companyId)
+    )
       return forbidden();
   }
 
   if (teamId) {
-    const team = await prisma.team.findUnique({ where: { id: parseInt(teamId) } });
+    const team = await prisma.team.findUnique({
+      where: { id: parseInt(teamId) },
+    });
     if (!team) return badRequest("Equipo no encontrado");
-    if (user.role === "SUPERVISOR" && team.companyId !== user.companyId)
+    if (user.role === UserRole.SUPERVISOR && team.companyId !== user.companyId)
       return forbidden();
 
     const companyGoal = await prisma.goal.findFirst({
       where: { year, month, quincena, companyId: team.companyId },
     });
-    if (!companyGoal) return badRequest("Primero debe definir la meta de la franquicia");
+    if (!companyGoal)
+      return badRequest("Primero debe definir la meta de la franquicia");
 
     const otherTeamGoals = await prisma.goal.findMany({
       where: {
@@ -115,16 +129,24 @@ export const POST = withAuth(async (req, session) => {
         teamId: { not: parseInt(teamId) },
       },
     });
-    const otherTeamsSum = otherTeamGoals.reduce((s, g) => s + Number(g.amount), 0);
+    const otherTeamsSum = otherTeamGoals.reduce(
+      (s, g) => s + Number(g.amount),
+      0,
+    );
     const available = Number(companyGoal.amount) - otherTeamsSum;
 
     if (amount > available)
-      return badRequest(`El monto excede lo disponible. Disponible: $${available.toFixed(2)}`);
+      return badRequest(
+        `El monto excede lo disponible. Disponible: $${available.toFixed(2)}`,
+      );
   }
 
   if (userId) {
-    const agent = await prisma.user.findUnique({ where: { id: parseInt(userId) } });
-    if (!agent || !agent.teamId) return badRequest("Asesor no encontrado o sin equipo");
+    const agent = await prisma.user.findUnique({
+      where: { id: parseInt(userId) },
+    });
+    if (!agent || !agent.teamId)
+      return badRequest("Asesor no encontrado o sin equipo");
 
     const teamGoal = await prisma.goal.findFirst({
       where: { year, month, quincena, teamId: agent.teamId },
@@ -140,7 +162,10 @@ export const POST = withAuth(async (req, session) => {
         userId: { not: parseInt(userId) },
       },
     });
-    const otherAgentsSum = otherAgentGoals.reduce((s, g) => s + Number(g.amount), 0);
+    const otherAgentsSum = otherAgentGoals.reduce(
+      (s, g) => s + Number(g.amount),
+      0,
+    );
     const available = Number(teamGoal.amount) - otherAgentsSum;
 
     if (amount > available)
@@ -196,7 +221,8 @@ export const POST = withAuth(async (req, session) => {
 
 export const DELETE = withAuth(async (req, session) => {
   const user = session.user as unknown as SessionUser;
-  if (!["ADMIN", "SUPERVISOR"].includes(user.role)) return forbidden();
+  if (![UserRole.ADMIN, UserRole.SUPERVISOR].includes(user.role))
+    return forbidden();
 
   const { id } = await req.json();
   if (!id) return badRequest("ID requerido");
@@ -204,7 +230,7 @@ export const DELETE = withAuth(async (req, session) => {
   const goal = await prisma.goal.findUnique({ where: { id } });
   if (!goal) return badRequest("Meta no encontrada");
 
-  if (user.role === "SUPERVISOR") {
+  if (user.role === UserRole.SUPERVISOR) {
     const isOwn =
       goal.companyId === user.companyId ||
       (goal.teamId &&

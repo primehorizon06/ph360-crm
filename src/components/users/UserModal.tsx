@@ -12,14 +12,13 @@ import {
 import { X, Camera } from "lucide-react";
 import { Avatar } from "../ui/Avatar";
 import { CustomSelect } from "../ui/Select";
+import { roles, UserRole } from "@/utils/constants/roles";
 
 interface Props {
   user: User | null;
   onClose: () => void;
   onSave: () => void;
 }
-
-const roles = ["ADMIN", "SUPERVISOR", "COACH", "AGENT"];
 
 export function UserModal({ user, onClose, onSave }: Props) {
   const [companies, setCompanies] = useState<{ id: number; name: string }[]>(
@@ -42,7 +41,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
       email: user?.email ?? "",
       password: "",
       confirmPassword: "",
-      role: (user?.role as UserFormData["role"]) ?? "AGENT",
+      role: (user?.role as UserFormData["role"]) ?? UserRole.AGENT,
       companyId: user?.companyId ? String(user.companyId) : "",
       teamId: user?.teamId ? String(user.teamId) : "",
       active: user?.active ?? true,
@@ -53,7 +52,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
   const role = watch("role");
 
   useEffect(() => {
-    if (!["AGENT", "COACH"].includes(role)) {
+    if (![UserRole.AGENT, UserRole.COACH].includes(role)) {
       setValue("teamId", "");
     }
   }, [role]);

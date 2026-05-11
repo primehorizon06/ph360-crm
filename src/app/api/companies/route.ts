@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth, forbidden, badRequest, conflict } from "@/lib/api";
+import { UserRole } from "@/utils/constants/roles";
 
 export const GET = withAuth(async (req) => {
   const { searchParams } = new URL(req.url);
@@ -23,7 +24,7 @@ export const GET = withAuth(async (req) => {
 });
 
 export const POST = withAuth(async (req, session) => {
-  if (session.user.role !== "ADMIN") return forbidden();
+  if (session.user.role !== UserRole.ADMIN) return forbidden();
 
   const { name } = await req.json();
   if (!name) return badRequest("El nombre es requerido");
