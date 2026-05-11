@@ -93,7 +93,7 @@ export function usePermissions() {
   );
 
   const canViewLead = useCallback(
-    (lead: { companyId: number; assignedToId: number }) => {
+    (lead: { companyId: number; teamId: number; assignedToId: number }) => {
       if (!session?.user) return false;
 
       const user = session.user;
@@ -104,9 +104,7 @@ export function usePermissions() {
         case UserRole.SUPERVISOR:
           return user.companyId === lead.companyId;
         case UserRole.COACH:
-          // Coach ve leads de su equipo
-          // Necesitarías obtener el teamId del lead
-          return true; // Implementar según tu lógica
+          return user.teamId === lead.teamId;
         case UserRole.AGENT:
           return user.id === lead.assignedToId.toString();
         default:
