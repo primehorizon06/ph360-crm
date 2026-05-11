@@ -40,14 +40,9 @@ export default function LeadDetailPage() {
   );
 
   async function loadLead() {
-    setLoading(true);
     const res = await fetch(`/api/leads/${id}`);
-    if (!res.ok) {
-      router.push("/leads");
-      return;
-    }
+    if (!res.ok) { router.push("/leads"); return; }
     setLead(await res.json());
-    setLoading(false);
   }
 
   async function loadProducts() {
@@ -55,14 +50,27 @@ export default function LeadDetailPage() {
     if (res.ok) setProducts(await res.json());
   }
 
-  // Carga inicial — lead y productos en paralelo
   useEffect(() => {
-    Promise.all([loadLead(), loadProducts()]);
-  }, [id]);
+    void (async () => {
+      const [leadRes, productsRes] = await Promise.all([
+        fetch(`/api/leads/${id}`),
+        fetch(`/api/leads/${id}/products`),
+      ]);
+      if (!leadRes.ok) { router.push("/leads"); return; }
+      const [leadData, productsData] = await Promise.all([
+        leadRes.json(),
+        productsRes.ok ? productsRes.json() : Promise.resolve([]),
+      ]);
+      setLead(leadData);
+      setProducts(productsData);
+      setLoading(false);
+    })();
+  }, [id, router]);
 
-  // Cuando el coach aprueba/rechaza → recargar ambos
   async function handleApprovalChange() {
+    setLoading(true);
     await Promise.all([loadLead(), loadProducts()]);
+    setLoading(false);
   }
 
   async function handleSuspend() {
@@ -72,7 +80,9 @@ export default function LeadDetailPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: "suspended" }),
     });
-    loadLead();
+    setLoading(true);
+    await loadLead();
+    setLoading(false);
   }
 
   const handleTabChange = (tab: TABS_NAME) => {
@@ -132,9 +142,11 @@ export default function LeadDetailPage() {
           key={lead.id}
           lead={lead}
           onClose={() => setEditing(false)}
-          onSave={() => {
+          onSave={async () => {
             setEditing(false);
-            loadLead();
+            setLoading(true);
+            await loadLead();
+            setLoading(false);
           }}
         />
       )}
