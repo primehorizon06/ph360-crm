@@ -1,11 +1,14 @@
-export type ProductType =
-  | "ALERTA_ANUAL"
-  | "ALERTA_TRIMESTRAL"
-  | "REPARACION_CREDITO"
-  | "FORTALECIMIENTO_FINANCIERO";
+import type {
+  AccountType,
+  ApprovalStatus,
+  CardType,
+  InstallmentStatus,
+  PaymentMethodType,
+  ProductStatus,
+  ProductType,
+} from "@prisma/client";
 
-export type PaymentMethodType = "TARJETA" | "CUENTA";
-export type CardType = "DEBITO" | "CREDITO";
+export type { CardType, PaymentMethodType, ProductType };
 
 export interface PaymentMethod {
   type: PaymentMethodType;
@@ -17,14 +20,14 @@ export interface PaymentMethod {
   accountHolder?: string;
   accountBank?: string;
   routingNumber?: string;
-  accountType?: "AHORROS" | "CHEQUES";
+  accountType?: AccountType;
 }
 
 export interface ProductApproval {
   id: number;
   productId: number;
   leadId: number;
-  status: "PENDING" | "APPROVED" | "REJECTED";
+  status: ApprovalStatus;
   isFirstProduct: boolean;
   note?: string | null;
   createdAt: string;
@@ -37,9 +40,9 @@ export interface Product {
   createdAt: string;
   paymentMethod: PaymentMethod & { id: number };
   paymentPlan?: {
-    installments: { id: number; number: number; date: string; amount: number, status: "PAID" | "FAILED" | "CANCELLED" }[];
+    installments: { id: number; number: number; date: string; amount: number; status: InstallmentStatus }[];
   };
-  status: "ACTIVE" | "SUSPENDED";
+  status: ProductStatus;
   approval: ProductApproval | null;
 }
 

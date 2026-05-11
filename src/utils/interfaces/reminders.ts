@@ -1,3 +1,5 @@
+import type { Role } from "@prisma/client";
+
 export interface Reminder {
   id: number;
   scheduledAt: string;
@@ -5,7 +7,7 @@ export interface Reminder {
   status: string;
   leadId: number;
   lead: { firstName: string; lastName: string; phone1: string };
-  assignedTo: { id: number; name: string; role: string };
+  assignedTo: { id: number; name: string; role: Role };
   createdBy: { id: number; name: string };
   createdAt: string;
 }
@@ -13,7 +15,7 @@ export interface Reminder {
 export interface Agent {
   id: number;
   name: string;
-  role: string;
+  role: Role;
 }
 
 export interface Props {
