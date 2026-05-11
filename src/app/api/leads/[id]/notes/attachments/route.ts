@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getAuthSession, forbidden } from "@/lib/api";
 
 export async function GET(
   _: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session)
-    return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
+  const session = await getAuthSession();
+  if (!session) return forbidden();
 
   const { id } = await params;
 

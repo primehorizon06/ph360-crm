@@ -1,17 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { Role } from "@prisma/client";
+import { getAuthSession, forbidden, badRequest, conflict } from "@/lib/api";
 
 // GET — Listar usuarios (solo ADMIN)
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-
-  if (!session) {
-    return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
-  }
+  const session = await getAuthSession();
+  if (!session) return forbidden();
 
   const { searchParams } = new URL(req.url);
   const teamId = searchParams.get("teamId");
@@ -19,9 +15,7 @@ export async function GET(req: NextRequest) {
 
   // Solo ADMIN puede ver todos los usuarios
   // Otros roles solo pueden consultar agentes para asignar leads
-  if (session.user.role !== "ADMIN" && !teamId) {
-    return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
-  }
+  if (session.user.role !== "ADMIN" && !teamId) return forbidden();
 
   const users = await prisma.user.findMany({
     where: {
@@ -50,29 +44,16 @@ export async function GET(req: NextRequest) {
 
 // POST — Crear usuario (solo ADMIN)
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-
-  if (!session || session.user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
-  }
+  const session = await getAuthSession();
+  if (!session || session.user.role !== "ADMIN") return forbidden();
 
   const body = await req.json();
   const { username, name, email, password, role, companyId } = body;
 
-  if (!username || !name || !password || !role) {
-    return NextResponse.json(
-      { error: "Campos requeridos faltantes" },
-      { status: 400 },
-    );
-  }
+  if (!username || !name || !password || !role) return badRequest("Campos requeridos faltantes");
 
   const existing = await prisma.user.findUnique({ where: { username } });
-  if (existing) {
-    return NextResponse.json(
-      { error: "El usuario ya existe" },
-      { status: 409 },
-    );
-  }
+  if (existing) return conflict("El usuario ya existe");
 
   const hashed = await bcrypt.hash(password, 10);
   const teamId = body.teamId ? Number(body.teamId) : null;

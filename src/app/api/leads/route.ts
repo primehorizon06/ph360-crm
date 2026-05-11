@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getAuthSession, forbidden, badRequest, conflict } from "@/lib/api";
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session)
-    return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
+  const session = await getAuthSession();
+  if (!session) return forbidden();
 
   const user = session.user;
   const role = user.role;
@@ -31,7 +29,7 @@ export async function GET(req: NextRequest) {
       where = { type, assignedToId: Number(user.id) };
       break;
     default:
-      return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
+      return forbidden();
   }
 
   const leads = await prisma.lead.findMany({
@@ -67,9 +65,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session)
-    return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
+  const session = await getAuthSession();
+  if (!session) return forbidden();
 
   const user = session.user;
   const body = await req.json();
@@ -88,28 +85,16 @@ export async function POST(req: NextRequest) {
     contactTime,
   } = body;
 
-  if (!firstName || !phone1 || !user.companyId || !user.id) {
-    return NextResponse.json(
-      { error: "Campos requeridos faltantes" },
-      { status: 400 },
-    );
-  }
+  if (!firstName || !phone1 || !user.companyId || !user.id)
+    return badRequest("Campos requeridos faltantes");
 
   // Validar duplicados globales
   const existingPhone = await prisma.lead.findUnique({ where: { phone1 } });
-  if (existingPhone)
-    return NextResponse.json(
-      { error: "El teléfono ya está registrado" },
-      { status: 409 },
-    );
+  if (existingPhone) return conflict("El teléfono ya está registrado");
 
   if (ssn) {
     const existingSsn = await prisma.lead.findUnique({ where: { ssn } });
-    if (existingSsn)
-      return NextResponse.json(
-        { error: "La Seguro social ya está registrada" },
-        { status: 409 },
-      );
+    if (existingSsn) return conflict("La Seguro social ya está registrada");
   }
 
   const lead = await prisma.lead.create({

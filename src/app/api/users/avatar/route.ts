@@ -1,23 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import { getAuthSession, forbidden, badRequest } from "@/lib/api";
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
+  const session = await getAuthSession();
+  if (!session) return forbidden();
 
   const formData = await req.formData();
   const file = formData.get("file") as File;
   const userId = formData.get("userId") as string;
 
-  if (!file) return NextResponse.json({ error: "No se envió archivo" }, { status: 400 });
-
-  if (!file.type.startsWith("image/")) {
-    return NextResponse.json({ error: "Solo se permiten imágenes" }, { status: 400 });
-  }
+  if (!file) return badRequest("No se envió archivo");
+  if (!file.type.startsWith("image/")) return badRequest("Solo se permiten imágenes");
 
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);

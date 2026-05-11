@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getAuthSession, unauthorized, badRequest } from "@/lib/api";
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id)
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const session = await getAuthSession();
+  if (!session?.user?.id) return unauthorized();
 
   const notifications = await prisma.notification.findMany({
     where: {
@@ -44,9 +42,8 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id)
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const session = await getAuthSession();
+  if (!session?.user?.id) return unauthorized();
 
   const { id, readAll } = await req.json();
 
@@ -60,7 +57,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   // Marcar una como leída
-  if (!id) return NextResponse.json({ error: "ID requerido" }, { status: 400 });
+  if (!id) return badRequest("ID requerido");
 
   const updated = await prisma.notification.update({
     where: { id: Number(id) },

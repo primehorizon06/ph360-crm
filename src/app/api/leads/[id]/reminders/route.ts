@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getAuthSession, forbidden, badRequest } from "@/lib/api";
 
 export async function GET(
   _: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const session = await getServerSession(authOptions);
-  if (!session)
-    return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
+  const session = await getAuthSession();
+  if (!session) return forbidden();
 
   const reminders = await prisma.reminder.findMany({
     where: { leadId: Number(id) },
@@ -36,18 +34,12 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const session = await getServerSession(authOptions);
-  if (!session)
-    return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
+  const session = await getAuthSession();
+  if (!session) return forbidden();
 
   const { scheduledAt, reason, assignedToId } = await req.json();
-
-  if (!scheduledAt || !reason || !assignedToId) {
-    return NextResponse.json(
-      { error: "Todos los campos son requeridos" },
-      { status: 400 },
-    );
-  }
+  if (!scheduledAt || !reason || !assignedToId)
+    return badRequest("Todos los campos son requeridos");
 
   const reminder = await prisma.reminder.create({
     data: {

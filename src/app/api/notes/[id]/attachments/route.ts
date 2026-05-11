@@ -1,27 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import { getAuthSession, forbidden, badRequest } from "@/lib/api";
 
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const session = await getServerSession(authOptions);
-  if (!session)
-    return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
+  const session = await getAuthSession();
+  if (!session) return forbidden();
 
   const formData = await req.formData();
   const files = formData.getAll("files") as File[];
 
-  if (!files.length)
-    return NextResponse.json(
-      { error: "No se enviaron archivos" },
-      { status: 400 },
-    );
+  if (!files.length) return badRequest("No se enviaron archivos");
 
   const allowedTypes = [
     "image/jpeg",
@@ -32,12 +26,8 @@ export async function POST(
   const attachments = [];
 
   for (const file of files) {
-    if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json(
-        { error: `Tipo no permitido: ${file.name}` },
-        { status: 400 },
-      );
-    }
+    if (!allowedTypes.includes(file.type))
+      return badRequest(`Tipo no permitido: ${file.name}`);
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);

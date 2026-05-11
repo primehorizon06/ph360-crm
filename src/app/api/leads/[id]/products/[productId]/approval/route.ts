@@ -1,26 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getAuthSession, forbidden, badRequest, notFound } from "@/lib/api";
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; productId: string }> },
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session)
-    return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
+  const session = await getAuthSession();
+  if (!session) return forbidden();
 
   const { id, productId } = await params;
   const { action, note } = await req.json();
 
   if (!action || !["APPROVE", "REJECT", "RESUBMIT"].includes(action))
-    return NextResponse.json({ error: "Acción inválida" }, { status: 400 });
+    return badRequest("Acción inválida");
 
   // ── RESUBMIT — solo agente o admin ───────────────────────────────────────
   if (action === "RESUBMIT") {
     if (session.user.role !== "AGENT" && session.user.role !== "ADMIN")
-      return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
+      return forbidden();
 
     await prisma.productApproval.update({
       where: { productId: Number(productId) },
@@ -64,26 +62,16 @@ export async function PATCH(
 
   // ── APPROVE / REJECT — solo coach o supervisor ────────────────────────────
   if (session.user.role !== "COACH" && session.user.role !== "SUPERVISOR")
-    return NextResponse.json(
-      { error: "Solo el coach o supervisor puede aprobar" },
-      { status: 403 },
-    );
+    return badRequest("Solo el coach o supervisor puede aprobar");
 
   if (action === "REJECT" && !note?.trim())
-    return NextResponse.json(
-      { error: "El motivo de rechazo es requerido" },
-      { status: 400 },
-    );
+    return badRequest("El motivo de rechazo es requerido");
 
   const approval = await prisma.productApproval.findUnique({
     where: { productId: Number(productId) },
   });
 
-  if (!approval)
-    return NextResponse.json(
-      { error: "Aprobación no encontrada" },
-      { status: 404 },
-    );
+  if (!approval) return notFound("Aprobación no encontrada");
 
   // Actualizar la aprobación
   const updated = await prisma.productApproval.update({

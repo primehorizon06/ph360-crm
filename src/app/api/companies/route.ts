@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getAuthSession, forbidden, badRequest, conflict } from "@/lib/api";
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session)
-    return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
+  const session = await getAuthSession();
+  if (!session) return forbidden();
 
   const { searchParams } = new URL(req.url);
   const simple = searchParams.get("simple"); // ?simple=true para el modal de usuarios
@@ -28,24 +26,14 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
-  }
+  const session = await getAuthSession();
+  if (!session || session.user.role !== "ADMIN") return forbidden();
 
   const { name } = await req.json();
-  if (!name)
-    return NextResponse.json(
-      { error: "El nombre es requerido" },
-      { status: 400 },
-    );
+  if (!name) return badRequest("El nombre es requerido");
 
   const existing = await prisma.company.findFirst({ where: { name } });
-  if (existing)
-    return NextResponse.json(
-      { error: "La franquicia ya existe" },
-      { status: 409 },
-    );
+  if (existing) return conflict("La franquicia ya existe");
 
   const company = await prisma.company.create({
     data: { name },

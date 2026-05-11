@@ -1,8 +1,7 @@
 // src/app/api/dashboard/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getAuthSession, unauthorized } from "@/lib/api";
 
 function getQuincenaRange(year: number, month: number, quincena: 1 | 2) {
   if (quincena === 1) {
@@ -63,9 +62,8 @@ function buildRevenueWhere(
 }
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const session = await getAuthSession();
+  if (!session?.user) return unauthorized();
 
   const { searchParams } = new URL(req.url);
   const year = parseInt(

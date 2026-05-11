@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getAuthSession, unauthorized, forbidden, badRequest } from "@/lib/api";
 
 type SessionUser = {
   id: string;
@@ -9,19 +8,9 @@ type SessionUser = {
   companyId?: number;
 };
 
-function unauthorized() {
-  return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-}
-function forbidden() {
-  return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
-}
-function badRequest(msg: string) {
-  return NextResponse.json({ error: msg }, { status: 400 });
-}
-
 // ── GET: listar metas con histórico ──────────────────────────────────────────
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getAuthSession();
   if (!session?.user) return unauthorized();
 
   const user = session.user as unknown as SessionUser;
@@ -99,7 +88,7 @@ export async function GET(req: NextRequest) {
 
 // ── POST: crear o actualizar meta (upsert) ────────────────────────────────────
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getAuthSession();
   if (!session?.user) return unauthorized();
 
   const user = session.user as unknown as SessionUser;
@@ -247,7 +236,7 @@ export async function POST(req: NextRequest) {
 
 // ── DELETE: eliminar meta ─────────────────────────────────────────────────────
 export async function DELETE(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getAuthSession();
   if (!session?.user) return unauthorized();
 
   const user = session.user as unknown as SessionUser;

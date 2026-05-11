@@ -1,25 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getAuthSession, forbidden, badRequest } from "@/lib/api";
 
 // PUT /api/leads/[id]/products/[productId]/payment-plan
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; productId: string }> },
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session)
-    return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
+  const session = await getAuthSession();
+  if (!session) return forbidden();
 
   const { productId } = await params;
   const { installments } = await req.json();
 
   if (!Array.isArray(installments) || installments.length === 0)
-    return NextResponse.json(
-      { error: "Se requiere al menos una cuota" },
-      { status: 400 },
-    );
+    return badRequest("Se requiere al menos una cuota");
 
   // Upsert PaymentPlan y reemplazar todas las cuotas
   const plan = await prisma.paymentPlan.upsert({
@@ -60,9 +55,8 @@ export async function GET(
   _: NextRequest,
   { params }: { params: Promise<{ id: string; productId: string }> },
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session)
-    return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
+  const session = await getAuthSession();
+  if (!session) return forbidden();
 
   const { productId } = await params;
 

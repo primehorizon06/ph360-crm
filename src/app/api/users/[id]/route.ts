@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { getAuthSession, forbidden, conflict } from "@/lib/api";
 
 // PATCH — Editar usuario
 export async function PATCH(
@@ -10,10 +9,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
-  }
+  const session = await getAuthSession();
+  if (!session || session.user.role !== "ADMIN") return forbidden();
 
   const body = await req.json();
   const { name, email, password, role, active, companyId, teamId } = body;
@@ -31,12 +28,7 @@ export async function PATCH(
     const existing = await prisma.user.findFirst({
       where: { email, NOT: { id: Number(id) } },
     });
-    if (existing) {
-      return NextResponse.json(
-        { error: "El email ya está en uso" },
-        { status: 409 },
-      );
-    }
+    if (existing) return conflict("El email ya está en uso");
   }
 
   if (password) {
@@ -67,10 +59,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
-  }
+  const session = await getAuthSession();
+  if (!session || session.user.role !== "ADMIN") return forbidden();
 
   await prisma.user.delete({ where: { id: Number(id) } });
   return NextResponse.json({ success: true });

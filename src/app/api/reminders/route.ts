@@ -1,17 +1,13 @@
 // app/api/reminders/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ReminderWhere, UpdateReminderData } from "@/utils/interfaces/reminders";
+import { getAuthSession, unauthorized, badRequest, notFound, serverError } from "@/lib/api";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
+    const session = await getAuthSession();
+    if (!session?.user?.id) return unauthorized();
 
     // Obtener parámetros de consulta
     const searchParams = req.nextUrl.searchParams;
@@ -89,30 +85,20 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(transformedReminders);
   } catch (error) {
     console.error("Error al obtener recordatorios:", error);
-    return NextResponse.json(
-      { error: "Error interno del servidor" },
-      { status: 500 },
-    );
+    return serverError();
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
+    const session = await getAuthSession();
+    if (!session?.user?.id) return unauthorized();
 
     const body = await req.json();
     const { scheduledAt, reason, assignedToId, leadId } = body;
 
-    if (!scheduledAt || !reason || !assignedToId || !leadId) {
-      return NextResponse.json(
-        { error: "Todos los campos son requeridos" },
-        { status: 400 },
-      );
-    }
+    if (!scheduledAt || !reason || !assignedToId || !leadId)
+      return badRequest("Todos los campos son requeridos");
 
     const reminder = await prisma.reminder.create({
       data: {
@@ -145,30 +131,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(reminder, { status: 201 });
   } catch (error) {
     console.error("Error al crear recordatorio:", error);
-    return NextResponse.json(
-      { error: "Error interno del servidor" },
-      { status: 500 },
-    );
+    return serverError();
   }
 }
 
 export async function PATCH(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
+    const session = await getAuthSession();
+    if (!session?.user?.id) return unauthorized();
 
     const body = await req.json();
     const { id, status, reason, scheduledAt, assignedToId } = body;
 
-    if (!id) {
-      return NextResponse.json(
-        { error: "ID del recordatorio es requerido" },
-        { status: 400 },
-      );
-    }
+    if (!id) return badRequest("ID del recordatorio es requerido");
 
     // Verificar que el recordatorio existe y pertenece al usuario
     const existingReminder = await prisma.reminder.findFirst({
@@ -178,12 +153,7 @@ export async function PATCH(req: NextRequest) {
       },
     });
 
-    if (!existingReminder) {
-      return NextResponse.json(
-        { error: "Recordatorio no encontrado" },
-        { status: 404 },
-      );
-    }
+    if (!existingReminder) return notFound("Recordatorio no encontrado");
 
     const updateData: UpdateReminderData = {};
     if (status) updateData.status = status;
@@ -202,30 +172,19 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json(updatedReminder);
   } catch (error) {
     console.error("Error al actualizar recordatorio:", error);
-    return NextResponse.json(
-      { error: "Error interno del servidor" },
-      { status: 500 },
-    );
+    return serverError();
   }
 }
 
 export async function DELETE(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
+    const session = await getAuthSession();
+    if (!session?.user?.id) return unauthorized();
 
     const searchParams = req.nextUrl.searchParams;
     const id = searchParams.get("id");
 
-    if (!id) {
-      return NextResponse.json(
-        { error: "ID del recordatorio es requerido" },
-        { status: 400 },
-      );
-    }
+    if (!id) return badRequest("ID del recordatorio es requerido");
 
     const existingReminder = await prisma.reminder.findFirst({
       where: {
@@ -234,12 +193,7 @@ export async function DELETE(req: NextRequest) {
       },
     });
 
-    if (!existingReminder) {
-      return NextResponse.json(
-        { error: "Recordatorio no encontrado" },
-        { status: 404 },
-      );
-    }
+    if (!existingReminder) return notFound("Recordatorio no encontrado");
 
     await prisma.reminder.delete({
       where: { id: Number(id) },
@@ -248,9 +202,6 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ message: "Recordatorio eliminado" });
   } catch (error) {
     console.error("Error al eliminar recordatorio:", error);
-    return NextResponse.json(
-      { error: "Error interno del servidor" },
-      { status: 500 },
-    );
+    return serverError();
   }
 }

@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getAuthSession, forbidden, badRequest } from "@/lib/api";
 
 export async function GET(
   _: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session)
-    return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
+  const session = await getAuthSession();
+  if (!session) return forbidden();
 
   const { id } = await params;
 
@@ -32,19 +30,15 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session)
-    return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
+  const session = await getAuthSession();
+  if (!session) return forbidden();
 
   const { id } = await params;
   const body = await req.json();
   const { product, paymentMethod } = body;
 
   if (!product || !paymentMethod?.type)
-    return NextResponse.json(
-      { error: "Producto y método de pago son requeridos" },
-      { status: 400 },
-    );
+    return badRequest("Producto y método de pago son requeridos");
 
   // Verificar si es el primer producto
   const existingCount = await prisma.product.count({

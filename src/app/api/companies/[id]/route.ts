@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getAuthSession, forbidden } from "@/lib/api";
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
-  }
+  const session = await getAuthSession();
+  if (!session || session.user.role !== "ADMIN") return forbidden();
 
   const { name, active } = await req.json();
 
@@ -29,10 +26,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
-  }
+  const session = await getAuthSession();
+  if (!session || session.user.role !== "ADMIN") return forbidden();
 
   await prisma.company.delete({ where: { id: Number(id) } });
   return NextResponse.json({ success: true });
