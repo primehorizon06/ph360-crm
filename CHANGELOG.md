@@ -6,6 +6,10 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **ia**(skills): añade skill `conventional-commit` para gestión de commits atómicos y changelog
+
 ### Changed
 
 - **refactor**(modales): migra fetching de datos a SWR en `UserModal` y `LeadEditModal`
