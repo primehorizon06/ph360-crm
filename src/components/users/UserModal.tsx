@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import useSWR from "swr";
 import { User } from "@/app/(dashboard)/users/page";
 import {
   userSchema,
@@ -13,6 +14,7 @@ import { X, Camera } from "lucide-react";
 import { Avatar } from "../ui/Avatar";
 import { CustomSelect } from "../ui/Select";
 import { roles, UserRole } from "@/utils/constants/roles";
+import { fetcher } from "@/lib/fetcher";
 
 interface Props {
   user: User | null;
@@ -21,10 +23,6 @@ interface Props {
 }
 
 export function UserModal({ user, onClose, onSave }: Props) {
-  const [companies, setCompanies] = useState<{ id: number; name: string }[]>(
-    [],
-  );
-  const [teams, setTeams] = useState<{ id: number; name: string }[]>([]);
   const [serverError, setServerError] = useState("");
 
   const {
@@ -52,31 +50,19 @@ export function UserModal({ user, onClose, onSave }: Props) {
   const role = watch("role");
 
   useEffect(() => {
-    if (![UserRole.AGENT, UserRole.COACH].includes(role)) {
+    if (role !== UserRole.AGENT && role !== UserRole.COACH) {
       setValue("teamId", "");
     }
-  }, [role]);
+  }, [role, setValue]);
 
-  // Cargar empresas
-  useEffect(() => {
-    const load = async () => {
-      const res = await fetch("/api/companies");
-      setCompanies(await res.json());
-    };
-    load();
-  }, []);
-
-  useEffect(() => {
-    const loadTeams = async () => {
-      if (!companyId) {
-        setTeams([]);
-        return;
-      }
-      const res = await fetch(`/api/teams?companyId=${companyId}`);
-      setTeams(await res.json());
-    };
-    loadTeams();
-  }, [companyId]);
+  const { data: companies = [] } = useSWR<{ id: number; name: string }[]>(
+    "/api/companies",
+    fetcher,
+  );
+  const { data: teams = [] } = useSWR<{ id: number; name: string }[]>(
+    companyId ? `/api/teams?companyId=${companyId}` : null,
+    fetcher,
+  );
 
   async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];

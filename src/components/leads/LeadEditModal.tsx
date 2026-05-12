@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import useSWR from "swr";
 import { leadSchema, LeadFormData } from "@/lib/validations/lead";
 import { X } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -11,6 +12,7 @@ import { Props } from "@/utils/interfaces/leadEditModal";
 import { CUSTOMER_STATUS, LEAD_FIELDS, STATUS } from "@/utils/constants/leads";
 import { formatPhone } from "@/utils/helpers/format";
 import { UserRole } from "@/utils/constants/roles";
+import { fetcher } from "@/lib/fetcher";
 
 export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
   const { data: session } = useSession();
@@ -18,11 +20,6 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
   const isAdmin = role === UserRole.ADMIN;
   const isCustomer = type === "customer";
   const [serverError, setServerError] = useState("");
-  const [companies, setCompanies] = useState<{ id: number; name: string }[]>(
-    [],
-  );
-  const [teams, setTeams] = useState<{ id: number; name: string }[]>([]);
-  const [agents, setAgents] = useState<{ id: number; name: string }[]>([]);
 
   const {
     register,
@@ -62,26 +59,18 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
   const [teamId, setTeamId] = useState(String(lead.teamId));
   const [assignedToId, setAssignedToId] = useState(String(lead.assignedTo.id));
 
-  useEffect(() => {
-    if (!isAdmin) return;
-    fetch("/api/companies?simple=true")
-      .then((r) => r.json())
-      .then(setCompanies);
-  }, [isAdmin]);
-
-  useEffect(() => {
-    if (!companyId) return;
-    fetch(`/api/teams?companyId=${companyId}`)
-      .then((r) => r.json())
-      .then(setTeams);
-  }, [companyId]);
-
-  useEffect(() => {
-    if (!teamId) return;
-    fetch(`/api/users?teamId=${teamId}&role=AGENT`)
-      .then((r) => r.json())
-      .then(setAgents);
-  }, [teamId]);
+  const { data: companies = [] } = useSWR<{ id: number; name: string }[]>(
+    isAdmin ? "/api/companies?simple=true" : null,
+    fetcher,
+  );
+  const { data: teams = [] } = useSWR<{ id: number; name: string }[]>(
+    companyId ? `/api/teams?companyId=${companyId}` : null,
+    fetcher,
+  );
+  const { data: agents = [] } = useSWR<{ id: number; name: string }[]>(
+    teamId ? `/api/users?teamId=${teamId}&role=AGENT` : null,
+    fetcher,
+  );
 
   function handleSsnChange(e: React.ChangeEvent<HTMLInputElement>) {
     const digits = e.target.value.replace(/\D/g, "").slice(0, 9);
@@ -245,7 +234,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
               {/* Estado */}
               <div>
                 <label className="text-sm text-white/40 mb-1 block">
-                  Estado
+                  Status
                 </label>
                 {isCustomer ? (
                   <CustomSelect
@@ -259,7 +248,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
                   <CustomSelect
                     name="status"
                     value={STATUS[status]}
-                    onChange={setStatus}
+                    onChange={(v) => setStatus(v as typeof status)}
                     options={Object.keys(STATUS)}
                     labels={Object.values(STATUS)}
                   />
