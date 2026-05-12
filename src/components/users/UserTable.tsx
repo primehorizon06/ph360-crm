@@ -28,7 +28,7 @@ export function UserTable({ users, onEdit, onDelete }: Props) {
                 "Rol",
                 "Empresa",
                 "Equipo",
-                "Estado",
+                "Status",
                 "Acciones",
               ].map((h) => (
                 <th

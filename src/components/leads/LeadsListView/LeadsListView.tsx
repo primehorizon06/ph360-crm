@@ -77,7 +77,7 @@ export function LeadsListView({ type }: Props) {
       ...(isAdmin ? ["Franquicia"] : []),
       "Agente",
       "Equipo",
-      ...(isLead ? ["Estado"] : ["Producto(s)", "Estado"]),
+      ...(isLead ? ["Status"] : ["Producto(s)", "Status"]),
       isLead ? "Fecha creación lead" : "Fecha creación cliente",
     ],
     [isAdmin, isLead],

@@ -171,7 +171,7 @@ export function LeadModal({ onClose, onSave }: Props) {
               render={({ field: { value, onChange } }) => (
                 <div>
                   <label className="text-sm text-white/40 mb-1 block">
-                    Estado
+                    Status
                   </label>
                   <CustomSelect
                     name="status"
