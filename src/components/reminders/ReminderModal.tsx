@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { z } from "zod";
+import useSWR from "swr";
 
 import { CustomSelect } from "@/components/ui/Select";
 import { Agent } from "@/utils/interfaces/reminders";
 import { DateTimePicker } from "@/components/ui/DateTimePicker";
+import { fetcher } from "@/lib/fetcher";
 
 const schema = z.object({
   scheduledAt: z.date().catch(new Date()),
@@ -27,14 +29,17 @@ interface ReminderModalProps {
 
 export function ReminderModal({ leadId, onClose, onSave }: ReminderModalProps) {
   const { data: session } = useSession();
-  const [agents, setAgents] = useState<Agent[]>([]);
   const [serverError, setServerError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const agentsKey = session?.user?.teamId
+    ? `/api/users?teamId=${session.user.teamId}`
+    : null;
+  const { data: agents = [] } = useSWR<Agent[]>(agentsKey, fetcher);
 
   const {
     handleSubmit,
     control,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -44,54 +49,29 @@ export function ReminderModal({ leadId, onClose, onSave }: ReminderModalProps) {
     },
   });
 
-  useEffect(() => {
-    if (!session?.user?.teamId) return;
-
-    const load = async () => {
-      try {
-        const res = await fetch(`/api/users?teamId=${session.user.teamId}`);
-        if (res.ok) {
-          const data = await res.json();
-          setAgents(data);
-        }
-      } catch (error) {
-        console.error("Error loading agents:", error);
-      }
-    };
-
-    load();
-  }, [session]);
-
   const onSubmit = async (data: ReminderFormData) => {
-    setIsSubmitting(true);
     setServerError("");
-    const selectedAgent = agents.find(
-      (agent) => agent.name === data.assignedToId,
-    );
+    const selectedAgent = agents.find((agent) => agent.name === data.assignedToId);
 
     if (!selectedAgent) {
       setServerError("Selecciona un responsable válido");
-      setIsSubmitting(false);
       return;
     }
-
-    const payload = {
-      leadId: leadId,
-      scheduledAt: data.scheduledAt.toISOString(),
-      reason: data.reason,
-      assignedToId: selectedAgent.id,
-    };
 
     const res = await fetch("/api/reminders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        leadId,
+        scheduledAt: data.scheduledAt.toISOString(),
+        reason: data.reason,
+        assignedToId: selectedAgent.id,
+      }),
     });
 
     if (!res.ok) {
       const error = await res.json();
-      setServerError(error.error || "Error al guardar");
-      setIsSubmitting(false);
+      setServerError(error.error ?? "Error al guardar");
       return;
     }
 

@@ -14,6 +14,6 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 - **ia**(skills): añade regla de manejo de errores (#6) al skill `conventional-commit`
 - **perf**(components): implementa code-splitting con `dynamic()` en `AdminDashboard`, `FranchiseDashboard`, `UserModal`, `GoalTree`, `GoalFormModal`, `CompanyModal`, `TeamModal`, `LeadEditModal`, `NoteModal` y `ReminderModal`
-- **refactor**(modales): migra fetching de datos a SWR en `UserModal` y `LeadEditModal`
+- **refactor**(modales): migra fetching de datos a SWR en `UserModal`, `LeadEditModal` y `ReminderModal`
 - **style**(ui): renombra etiqueta "Estado" a "Status" en modales y vistas de lista
 - **ia**(docs): añade `CLAUDE.md` con arquitectura del proyecto y permite rastrear `.claude/` en git
