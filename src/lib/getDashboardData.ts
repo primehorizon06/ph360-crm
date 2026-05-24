@@ -154,11 +154,6 @@ export async function getDashboardData(
     scopedTeamId,
     scopedAgentId,
   );
-  const prevRevenueWhere = buildRevenueWhere(
-    scopedCompanyId,
-    scopedTeamId,
-    scopedAgentId,
-  );
 
   const [
     newLeads,
@@ -195,7 +190,7 @@ export async function getDashboardData(
       _sum: { amount: true },
     }),
     prisma.installment.aggregate({
-      where: { ...prevRevenueWhere, paidAt: prevDateRange },
+      where: { ...revenueWhere, paidAt: prevDateRange },
       _sum: { amount: true },
     }),
     prisma.installment.aggregate({
@@ -378,10 +373,7 @@ export async function getDashboardData(
       orderBy: [{ year: "desc" }, { month: "desc" }, { quincena: "desc" }],
       take: 6,
     });
-    goalHistorico = await resolveGoalHistorico(
-      hist,
-      buildRevenueWhere(scopedCompanyId),
-    );
+    goalHistorico = await resolveGoalHistorico(hist, revenueWhere);
   } else if (user.role === UserRole.COACH && scopedTeamId) {
     const g = await prisma.goal.findFirst({
       where: { year, month, quincena, teamId: scopedTeamId },
