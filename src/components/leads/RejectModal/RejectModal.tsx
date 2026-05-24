@@ -1,7 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { X, Loader2 } from "lucide-react";
+
+const schema = z.object({
+  note: z.string().min(1, "El motivo de rechazo es requerido"),
+});
+type FormData = z.infer<typeof schema>;
 
 interface Props {
   onConfirm: (note: string) => void;
@@ -10,7 +17,13 @@ interface Props {
 }
 
 export function RejectModal({ onConfirm, onCancel, saving }: Props) {
-  const [note, setNote] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
+  });
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -22,6 +35,7 @@ export function RejectModal({ onConfirm, onCancel, saving }: Props) {
         <div className="flex items-center justify-between">
           <h3 className="text-white/80 font-medium">Motivo de rechazo</h3>
           <button
+            type="button"
             onClick={onCancel}
             className="text-white/20 hover:text-white/50 transition-colors"
           >
@@ -34,32 +48,35 @@ export function RejectModal({ onConfirm, onCancel, saving }: Props) {
           aprobación.
         </p>
 
-        <textarea
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          placeholder="Ej: Falta el reporte de crédito actualizado..."
-          rows={4}
-          className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all resize-none"
-        />
+        <form onSubmit={handleSubmit(({ note }) => onConfirm(note))}>
+          <textarea
+            {...register("note")}
+            placeholder="Ej: Falta el reporte de crédito actualizado..."
+            rows={4}
+            className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all resize-none"
+          />
+          {errors.note && (
+            <p className="text-red-400 text-sm mt-1">{errors.note.message}</p>
+          )}
 
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="flex-1 py-2 rounded-lg border border-white/10 text-white/40 hover:text-white/60 hover:bg-white/5 text-lg transition-colors"
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={() => onConfirm(note)}
-            disabled={saving || !note.trim()}
-            className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-red-500 hover:bg-red-400 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-lg transition-colors"
-          >
-            {saving && <Loader2 size={14} className="animate-spin" />}
-            {saving ? "Rechazando..." : "Confirmar rechazo"}
-          </button>
-        </div>
+          <div className="flex gap-3 mt-4">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="flex-1 py-2 rounded-lg border border-white/10 text-white/40 hover:text-white/60 hover:bg-white/5 text-lg transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-red-500 hover:bg-red-400 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-lg transition-colors"
+            >
+              {saving && <Loader2 size={14} className="animate-spin" />}
+              {saving ? "Rechazando..." : "Confirmar rechazo"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

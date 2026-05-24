@@ -144,7 +144,6 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [installments, setInstallments] = useState<Installment[]>([]);
-  const [installmentError, setInstallmentError] = useState("");
   const [saving, setSaving] = useState(false);
   const [pendingData, setPendingData] = useState<ProductFormData | null>(null);
   const [resubmitting, setResubmitting] = useState<number | null>(null);
@@ -155,6 +154,8 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
     watch,
     control,
     reset,
+    setError,
+    clearErrors,
     formState: { errors },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
@@ -177,23 +178,23 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
   function resetForm() {
     reset({ paymentType: "TARJETA" });
     setInstallments([]);
-    setInstallmentError("");
+    clearErrors("root");
     setShowForm(false);
   }
 
   const onSubmit = (data: ProductFormData) => {
     if (installments.length === 0) {
-      setInstallmentError("Agrega al menos una cuota al plan de pagos");
+      setError("root", { message: "Agrega al menos una cuota al plan de pagos" });
       return;
     }
     const hasEmptyAmounts = installments.some(
       (i) => !i.amount || parseFloat(i.amount) <= 0,
     );
     if (hasEmptyAmounts) {
-      setInstallmentError("Todas las cuotas deben tener un monto mayor a 0");
+      setError("root", { message: "Todas las cuotas deben tener un monto mayor a 0" });
       return;
     }
-    setInstallmentError("");
+    clearErrors("root");
     setPendingData(data);
   };
 
@@ -545,9 +546,9 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
               value={installments}
               onChange={(val: DataPicker[]) => {
                 setInstallments(val);
-                setInstallmentError("");
+                clearErrors("root");
               }}
-              error={installmentError}
+              error={errors.root?.message ?? ""}
             />
           )}
 
