@@ -1,11 +1,19 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import useSWR from "swr";
 import { DashboardData } from "@/utils/interfaces/dashboard";
 import { DashboardFilters } from "@/components/dashboard/drawAreaLine/drawHBar/drawDonut/DashboardFilters";
-import { AdminDashboard } from "@/components/dashboard/drawAreaLine/drawHBar/drawDonut/AdminDashboard";
-import { FranchiseDashboard } from "@/components/dashboard/drawAreaLine/drawHBar/drawDonut/FranchiseDashboard";
+
+const AdminDashboard = dynamic(
+  () => import("@/components/dashboard/drawAreaLine/drawHBar/drawDonut/AdminDashboard").then((m) => m.AdminDashboard),
+  { ssr: false },
+);
+const FranchiseDashboard = dynamic(
+  () => import("@/components/dashboard/drawAreaLine/drawHBar/drawDonut/FranchiseDashboard").then((m) => m.FranchiseDashboard),
+  { ssr: false },
+);
 import { UserRole } from "@/utils/constants/roles";
 import { fetcher } from "@/lib/fetcher";
 

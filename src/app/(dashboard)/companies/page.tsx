@@ -13,8 +13,16 @@ import {
   Users,
   Search,
 } from "lucide-react";
-import { CompanyModal } from "@/components/companies/CompanyModal";
-import { TeamModal } from "@/components/companies/TeamModal";
+import dynamic from "next/dynamic";
+
+const CompanyModal = dynamic(
+  () => import("@/components/companies/CompanyModal").then((m) => m.CompanyModal),
+  { ssr: false },
+);
+const TeamModal = dynamic(
+  () => import("@/components/companies/TeamModal").then((m) => m.TeamModal),
+  { ssr: false },
+);
 import { CustomSelect } from "@/components/ui/Select";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { CompanyGoals, Team } from "@/utils/interfaces/companies";

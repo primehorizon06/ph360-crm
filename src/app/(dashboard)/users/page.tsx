@@ -6,8 +6,13 @@ import { useSession } from "next-auth/react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useRouter } from "next/navigation";
 import { Loading } from "@/components/ui/Loading";
+import dynamic from "next/dynamic";
 import { UserTable } from "@/components/users/UserTable";
-import { UserModal } from "@/components/users/UserModal";
+
+const UserModal = dynamic(
+  () => import("@/components/users/UserModal").then((m) => m.UserModal),
+  { ssr: false },
+);
 import { Plus, Search } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { CustomSelect } from "@/components/ui/Select";

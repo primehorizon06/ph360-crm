@@ -2,11 +2,16 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import dynamic from "next/dynamic";
 import useSWR from "swr";
 import { useSession } from "next-auth/react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { Loading } from "@/components/ui/Loading";
-import { LeadEditModal } from "@/components/leads/LeadEditModal";
+
+const LeadEditModal = dynamic(
+  () => import("@/components/leads/LeadEditModal").then((m) => m.LeadEditModal),
+  { ssr: false },
+);
 import { Lead, TABS_NAME } from "@/utils/interfaces/leads";
 import { LeadDetailHeader } from "../detail/LeadDetailHeader";
 import { LeadDetailTabs } from "../detail/LeadDetailTabs";

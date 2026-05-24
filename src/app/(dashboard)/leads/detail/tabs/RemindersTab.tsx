@@ -2,8 +2,13 @@
 
 import { useState } from "react";
 import { Plus, Bell } from "lucide-react";
+import dynamic from "next/dynamic";
 import { ReminderCard } from "@/components/reminders/ReminderCard";
-import { ReminderModal } from "@/components/reminders/ReminderModal";
+
+const ReminderModal = dynamic(
+  () => import("@/components/reminders/ReminderModal").then((m) => m.ReminderModal),
+  { ssr: false },
+);
 import { useReminders } from "@/hooks/useReminders";
 import { Loading } from "@/components/ui/Loading";
 

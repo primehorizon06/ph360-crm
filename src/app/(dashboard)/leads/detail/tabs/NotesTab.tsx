@@ -5,8 +5,13 @@ import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
 import { Plus, FileText } from "lucide-react";
 import { Note, PropsNotesTab } from "@/utils/interfaces/notes";
+import dynamic from "next/dynamic";
 import { NoteCard } from "@/components/notes/NoteCard";
-import { NoteModal } from "@/components/notes/NoteModal";
+
+const NoteModal = dynamic(
+  () => import("@/components/notes/NoteModal").then((m) => m.NoteModal),
+  { ssr: false },
+);
 import { Loading } from "@/components/ui/Loading";
 
 export function NotesTab({ leadId }: PropsNotesTab) {

@@ -9,8 +9,16 @@ import { MONTHS } from "@/utils/interfaces/dashboard";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { es } from "date-fns/locale/es";
-import { GoalTree } from "@/components/goals/GoalTree";
-import { GoalFormModal } from "@/components/goals/GoalFormModal";
+import dynamic from "next/dynamic";
+
+const GoalTree = dynamic(
+  () => import("@/components/goals/GoalTree").then((m) => m.GoalTree),
+  { ssr: false },
+);
+const GoalFormModal = dynamic(
+  () => import("@/components/goals/GoalFormModal").then((m) => m.GoalFormModal),
+  { ssr: false },
+);
 import { Plus } from "lucide-react";
 import { GoalsData } from "@/utils/interfaces/goals";
 import { fetcher } from "@/lib/fetcher";
