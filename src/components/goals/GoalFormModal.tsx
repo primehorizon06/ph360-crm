@@ -1,6 +1,8 @@
 // ── Goal Form Modal ───────────────────────────────────────────────────────────
 
 import { useEffect, useState } from "react";
+
+import { toast } from "sonner";
 import { CustomSelect } from "../ui/Select";
 import { AvailableBadge } from "./AvailableBadge";
 import { Company } from "@/utils/interfaces/dashboard";
@@ -40,7 +42,6 @@ export function GoalFormModal({
   const [amount, setAmount] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   const isSupervisor = userRole === UserRole.SUPERVISOR;
   const isAdmin = userRole === UserRole.ADMIN;
@@ -113,7 +114,6 @@ export function GoalFormModal({
     if (!open) return;
     setAmount("");
     setError(null);
-    setSuccess(null);
     setTeamId("");
     setUserId("");
     setCompanyId("");
@@ -161,22 +161,20 @@ export function GoalFormModal({
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error);
+        toast.error(data.error);
         return;
       }
       onSave();
       // Advance to next scope automatically
       if (scope === "company") {
-        setSuccess(
-          "Meta de franquicia guardada. Ahora asigna la meta del equipo.",
-        );
+        toast.success("Meta de franquicia guardada. Ahora asigna la meta del equipo.");
         setScope("team");
         setAmount("");
         setError(null);
         setTeamId("");
         setUserId("");
       } else if (scope === "team") {
-        setSuccess("Meta de equipo guardada. Ahora asigna la meta del asesor.");
+        toast.success("Meta de equipo guardada. Ahora asigna la meta del asesor.");
         setScope("user");
         setAmount("");
         setError(null);
@@ -185,7 +183,7 @@ export function GoalFormModal({
         onClose();
       }
     } catch {
-      setError("Error al guardar");
+      toast.error("Error al guardar");
     } finally {
       setSaving(false);
     }
@@ -345,11 +343,6 @@ export function GoalFormModal({
         {error && (
           <p className="mt-3 text-sm text-red-400 bg-red-950/30 border border-red-800 rounded-lg px-3 py-2">
             {error}
-          </p>
-        )}
-        {success && (
-          <p className="mt-3 text-sm text-emerald-400 bg-emerald-950/30 border border-emerald-800 rounded-lg px-3 py-2">
-            ✓ {success}
           </p>
         )}
 

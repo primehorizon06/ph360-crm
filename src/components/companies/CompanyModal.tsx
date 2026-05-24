@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { X } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { CompanyGoals } from "@/utils/interfaces/companies";
 
 const schema = z.object({
@@ -24,7 +25,6 @@ interface Props {
 }
 
 export function CompanyModal({ company, onClose, onSave }: Props) {
-  const [serverError, setServerError] = useState("");
 
   const {
     register,
@@ -39,7 +39,6 @@ export function CompanyModal({ company, onClose, onSave }: Props) {
   });
 
   async function onSubmit(data: FormData) {
-    setServerError("");
     const method = company ? "PATCH" : "POST";
     const url = company ? `/api/companies/${company.id}` : "/api/companies";
 
@@ -51,7 +50,7 @@ export function CompanyModal({ company, onClose, onSave }: Props) {
 
     if (!res.ok) {
       const json = await res.json();
-      setServerError(json.error ?? "Error al guardar");
+      toast.error(json.error ?? "Error al guardar");
       return;
     }
     onSave();
@@ -73,12 +72,6 @@ export function CompanyModal({ company, onClose, onSave }: Props) {
         </div>
 
         <div className="p-5 space-y-4">
-          {serverError && (
-            <p className="text-red-400 text-lg bg-red-500/10 px-3 py-2 rounded-lg">
-              {serverError}
-            </p>
-          )}
-
           <div>
             <label className="text-sm text-white/40 mb-1 block">Nombre</label>
             <input

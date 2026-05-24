@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { X } from "lucide-react";
@@ -8,6 +7,7 @@ import { useSession } from "next-auth/react";
 import { z } from "zod";
 import useSWR from "swr";
 
+import { toast } from "sonner";
 import { CustomSelect } from "@/components/ui/Select";
 import { Agent } from "@/utils/interfaces/reminders";
 import { DateTimePicker } from "@/components/ui/DateTimePicker";
@@ -29,7 +29,6 @@ interface ReminderModalProps {
 
 export function ReminderModal({ leadId, onClose, onSave }: ReminderModalProps) {
   const { data: session } = useSession();
-  const [serverError, setServerError] = useState("");
 
   const agentsKey = session?.user?.teamId
     ? `/api/users?teamId=${session.user.teamId}`
@@ -50,11 +49,10 @@ export function ReminderModal({ leadId, onClose, onSave }: ReminderModalProps) {
   });
 
   const onSubmit = async (data: ReminderFormData) => {
-    setServerError("");
     const selectedAgent = agents.find((agent) => agent.name === data.assignedToId);
 
     if (!selectedAgent) {
-      setServerError("Selecciona un responsable válido");
+      toast.error("Selecciona un responsable válido");
       return;
     }
 
@@ -71,7 +69,7 @@ export function ReminderModal({ leadId, onClose, onSave }: ReminderModalProps) {
 
     if (!res.ok) {
       const error = await res.json();
-      setServerError(error.error ?? "Error al guardar");
+      toast.error(error.error ?? "Error al guardar");
       return;
     }
 
@@ -94,12 +92,6 @@ export function ReminderModal({ leadId, onClose, onSave }: ReminderModalProps) {
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
-            {serverError && (
-              <p className="text-red-400 text-lg bg-red-500/10 px-3 py-2 rounded-lg">
-                {serverError}
-              </p>
-            )}
-
             {/* DateTimePicker - Fecha y hora */}
             <Controller
               name="scheduledAt"

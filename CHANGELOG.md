@@ -16,6 +16,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ### Changed
 
+- **refactor**(modals): reemplaza estado `serverError` e inline banners por `toast.error` en todos los modales; las validaciones de campo mantienen su error inline
 - **refactor**(errors): `fetcher` propaga el mensaje de error del servidor; `SWRConfig` en `providers.tsx` muestra `toast.error` global en fallos de SWR
 - **refactor**(dashboard): elimina `prevRevenueWhere` duplicado en `getDashboardData` y reutiliza `revenueWhere` para el período anterior y el histórico de SUPERVISOR/ADMIN
 - **ia**(skills): añade regla de manejo de errores (#6) al skill `conventional-commit`

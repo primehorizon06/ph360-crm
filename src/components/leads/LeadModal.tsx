@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { leadSchema, LeadFormData } from "@/lib/validations/lead";
 import { X } from "lucide-react";
@@ -18,7 +18,6 @@ const statusOptions = Object.keys(STATUS);
 const statusLabels = Object.values(STATUS);
 
 export function LeadModal({ onClose, onSave }: Props) {
-  const [serverError, setServerError] = useState("");
 
   const {
     register,
@@ -47,7 +46,6 @@ export function LeadModal({ onClose, onSave }: Props) {
   }
 
   async function onSubmit(data: LeadFormData) {
-    setServerError("");
     const res = await fetch("/api/leads", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -55,7 +53,7 @@ export function LeadModal({ onClose, onSave }: Props) {
     });
     if (!res.ok) {
       const json = await res.json();
-      setServerError(json.error ?? "Error al guardar");
+      toast.error(json.error ?? "Error al guardar");
       return;
     }
     onSave();
@@ -75,12 +73,6 @@ export function LeadModal({ onClose, onSave }: Props) {
         </div>
 
         <div className="p-5 max-h-[70vh] overflow-y-auto">
-          {serverError && (
-            <p className="text-red-400 text-lg bg-red-500/10 px-3 py-2 rounded-lg mb-4">
-              {serverError}
-            </p>
-          )}
-
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-sm text-white/40 mb-1 block">

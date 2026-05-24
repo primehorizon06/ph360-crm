@@ -4,12 +4,12 @@ import { useRef, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { X, Paperclip, File, ImageIcon } from "lucide-react";
+import { toast } from "sonner";
 import { CustomSelect } from "@/components/ui/Select";
 import { NoteFormData, noteSchema, Props } from "@/utils/interfaces/notes";
 import { NOTE_TITLES } from "@/utils/constants/notes";
 
 export function NoteModal({ leadId, onClose, onSave }: Props) {
-  const [serverError, setServerError] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -38,8 +38,6 @@ export function NoteModal({ leadId, onClose, onSave }: Props) {
   }
 
   async function onSubmit(data: NoteFormData) {
-    setServerError("");
-
     const res = await fetch(`/api/leads/${leadId}/notes`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -48,7 +46,7 @@ export function NoteModal({ leadId, onClose, onSave }: Props) {
 
     if (!res.ok) {
       const json = await res.json().catch(() => ({}));
-      setServerError(json.error ?? "Error al guardar");
+      toast.error(json.error ?? "Error al guardar");
       return;
     }
 
@@ -80,12 +78,6 @@ export function NoteModal({ leadId, onClose, onSave }: Props) {
         </div>
 
         <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
-          {serverError && (
-            <p className="text-red-400 text-lg bg-red-500/10 px-3 py-2 rounded-lg">
-              {serverError}
-            </p>
-          )}
-
           <div>
             <label className="text-sm text-white/40 mb-1 block">
               Título <span className="text-red-400">*</span>

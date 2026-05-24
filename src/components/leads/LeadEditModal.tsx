@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import useSWR from "swr";
 import { leadSchema, LeadFormData } from "@/lib/validations/lead";
@@ -19,7 +20,6 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
   const role = session?.user?.role;
   const isAdmin = role === UserRole.ADMIN;
   const isCustomer = type === "customer";
-  const [serverError, setServerError] = useState("");
 
   const {
     register,
@@ -83,7 +83,6 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
   }
 
   async function onSubmit(data: LeadFormData) {
-    setServerError("");
     const body = isCustomer
       ? { ...data, customerStatus, companyId, teamId, assignedToId }
       : { ...data, status, companyId, teamId, assignedToId };
@@ -96,7 +95,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
 
     if (!res.ok) {
       const json = await res.json();
-      setServerError(json.error ?? "Error al guardar");
+      toast.error(json.error ?? "Error al guardar");
       return;
     }
     onSave();
@@ -118,12 +117,6 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
         </div>
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="p-5 max-h-[70vh] overflow-y-auto space-y-4">
-            {serverError && (
-              <p className="text-red-400 text-lg bg-red-500/10 px-3 py-2 rounded-lg">
-                {serverError}
-              </p>
-            )}
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* phone1 — editable solo para admin, readonly para el resto */}
               {isAdmin ? (

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import useSWR from "swr";
 import { User } from "@/app/(dashboard)/users/page";
@@ -23,7 +24,6 @@ interface Props {
 }
 
 export function UserModal({ user, onClose, onSave }: Props) {
-  const [serverError, setServerError] = useState("");
 
   const {
     register,
@@ -76,7 +76,6 @@ export function UserModal({ user, onClose, onSave }: Props) {
   }
 
   async function onSubmit(data: UserFormData) {
-    setServerError("");
 
     const method = user ? "PATCH" : "POST";
     const url = user ? `/api/users/${user.id}` : "/api/users";
@@ -95,7 +94,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
 
     if (!res.ok) {
       const json = await res.json();
-      setServerError(json.error ?? "Error al guardar");
+      toast.error(json.error ?? "Error al guardar");
       return;
     }
 
@@ -137,12 +136,6 @@ export function UserModal({ user, onClose, onSave }: Props) {
               />
             </label>
           </div>
-
-          {serverError && (
-            <p className="text-red-400 text-lg bg-red-500/10 px-3 py-2 rounded-lg">
-              {serverError}
-            </p>
-          )}
 
           {/* Campos de texto */}
           {[

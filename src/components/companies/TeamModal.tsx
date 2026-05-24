@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { X } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { TeamModalProps } from "@/utils/interfaces/companies";
 import { schemaTeams } from "@/lib/validations/teams";
 import z from "zod";
@@ -14,7 +15,6 @@ export function TeamModal({
   onClose,
   onSave,
 }: TeamModalProps) {
-  const [serverError, setServerError] = useState("");
 
   type FormData = z.infer<typeof schemaTeams>;
   const {
@@ -27,7 +27,6 @@ export function TeamModal({
   });
 
   async function onSubmit(data: FormData) {
-    setServerError("");
     const method = team ? "PATCH" : "POST";
     const url = team ? `/api/teams/${team.id}` : "/api/teams";
 
@@ -39,7 +38,7 @@ export function TeamModal({
 
     if (!res.ok) {
       const json = await res.json();
-      setServerError(json.error ?? "Error al guardar");
+      toast.error(json.error ?? "Error al guardar");
       return;
     }
     onSave();
@@ -61,12 +60,6 @@ export function TeamModal({
         </div>
 
         <div className="p-5 space-y-4">
-          {serverError && (
-            <p className="text-red-400 text-lg bg-red-500/10 px-3 py-2 rounded-lg">
-              {serverError}
-            </p>
-          )}
-
           <div>
             <label className="text-sm text-white/40 mb-1 block">
               Nombre del equipo
