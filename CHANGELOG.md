@@ -8,6 +8,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ### Added
 
+- **feat**(errors): añade error boundary `error.tsx` en segmento `(dashboard)` para fallos de server components con botón de reintento
 - **perf**(suspense): añade `loading.tsx` al segmento `(dashboard)` para UI de carga automática en navegación
 - **perf**(suspense): crea `LeadDetailClient` y `CustomerDetailClient` como componentes cliente separados, envueltos en `<Suspense>` desde server wrappers en `page.tsx`
 - **perf**(suspense): extrae `SearchParamsWatcher` en login y lo envuelve en `<Suspense>` para cumplir con el patrón requerido por Next.js 15+
@@ -15,6 +16,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ### Changed
 
+- **refactor**(errors): `fetcher` propaga el mensaje de error del servidor; `SWRConfig` en `providers.tsx` muestra `toast.error` global en fallos de SWR
 - **refactor**(dashboard): elimina `prevRevenueWhere` duplicado en `getDashboardData` y reutiliza `revenueWhere` para el período anterior y el histórico de SUPERVISOR/ADMIN
 - **ia**(skills): añade regla de manejo de errores (#6) al skill `conventional-commit`
 - **perf**(components): implementa code-splitting con `dynamic()` en `AdminDashboard`, `FranchiseDashboard`, `UserModal`, `GoalTree`, `GoalFormModal`, `CompanyModal`, `TeamModal`, `LeadEditModal`, `NoteModal` y `ReminderModal`

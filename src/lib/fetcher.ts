@@ -1,7 +1,8 @@
-export const fetcher = (url: string) =>
-  fetch(url).then((res) => {
-    if (!res.ok) {
-      throw new Error("Error en la petición");
-    }
-    return res.json();
-  });
+export const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw new Error(json.error ?? "Error en la petición");
+  }
+  return res.json();
+};
