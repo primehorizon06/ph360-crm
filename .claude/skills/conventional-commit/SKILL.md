@@ -33,3 +33,4 @@
 
 4. **Continuación:** Repite el ciclo del paso 3 hasta que el árbol de trabajo (working tree) esté limpio.
 5. **Resumen:** Entrégale al usuario un reporte final con los commits atómicos creados y confirma que el Changelog ha sido categorizado correctamente.
+6. **Manejo de Errores:** Si ocurre un error (conflicto, mensaje inválido, etc.), detente y notifica al usuario con instrucciones claras para resolverlo.
