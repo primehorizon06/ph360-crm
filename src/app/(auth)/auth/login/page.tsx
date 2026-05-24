@@ -1,15 +1,27 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { Loading } from "@/components/ui/Loading";
 import { toast } from "sonner";
 
+function SearchParamsWatcher() {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("expired") === "true") {
+      toast.error("Tu sesión ha expirado. Por favor inicia sesión nuevamente.");
+      window.history.replaceState({}, "", "/auth/login");
+    }
+  }, [searchParams]);
+
+  return null;
+}
+
 export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -19,14 +31,6 @@ export default function LoginPage() {
   useEffect(() => {
     document.title = "Iniciar Sesión | PH360 CRM";
   }, []);
-
-  useEffect(() => {
-    if (searchParams.get("expired") === "true") {
-      toast.error("Tu sesión ha expirado. Por favor inicia sesión nuevamente.");
-      // Limpiar la URL sin recargar la página
-      window.history.replaceState({}, "", "/auth/login");
-    }
-  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +62,9 @@ export default function LoginPage() {
 
   return (
     <main className="bg-background text-on-surface min-h-screen flex flex-col items-center justify-center selection:bg-tertiary/30r">
+      <Suspense>
+        <SearchParamsWatcher />
+      </Suspense>
       <div className="elative z-10 w-full max-w-[420px] px-6">
         <div className="text-center mb-10">
           <h1 className="font-headline font-extrabold text-3xl tracking-tighter text-on-surface mb-1">

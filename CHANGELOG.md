@@ -8,6 +8,9 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ### Added
 
+- **perf**(suspense): añade `loading.tsx` al segmento `(dashboard)` para UI de carga automática en navegación
+- **perf**(suspense): crea `LeadDetailClient` y `CustomerDetailClient` como componentes cliente separados, envueltos en `<Suspense>` desde server wrappers en `page.tsx`
+- **perf**(suspense): extrae `SearchParamsWatcher` en login y lo envuelve en `<Suspense>` para cumplir con el patrón requerido por Next.js 15+
 - **ia**(skills): añade skill `conventional-commit` para gestión de commits atómicos y changelog
 
 ### Changed

@@ -1,0 +1,155 @@
+"use client";
+
+import { useEffect, useState, useTransition } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import dynamic from "next/dynamic";
+import useSWR from "swr";
+import { useSession } from "next-auth/react";
+import { usePageTitle } from "@/hooks/usePageTitle";
+import { Loading } from "@/components/ui/Loading";
+
+const LeadEditModal = dynamic(
+  () => import("@/components/leads/LeadEditModal").then((m) => m.LeadEditModal),
+  { ssr: false },
+);
+import { Lead, TABS_NAME } from "@/utils/interfaces/leads";
+import { LeadDetailHeader } from "../detail/LeadDetailHeader";
+import { LeadDetailTabs } from "../detail/LeadDetailTabs";
+import { PersonalTab } from "../detail/tabs/PersonalTab";
+import { NotesTab } from "../detail/tabs/NotesTab";
+import { RemindersTab } from "../detail/tabs/RemindersTab";
+import { AttachmentsTab } from "../detail/tabs/AttachmentsTab";
+import { ProductsTab } from "../detail/tabs/ProductsTab";
+import { ProductChecklist } from "@/components/leads/ProductChecklist/ProductChecklist";
+import { VALID_TABS } from "@/utils/constants/leads";
+import { Product } from "@/utils/interfaces/products";
+import { fetcher } from "@/lib/fetcher";
+import { toast } from "sonner";
+import { UserRole } from "@/utils/constants/roles";
+
+export function LeadDetailClient() {
+  const { id } = useParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { data: session } = useSession();
+  const role = session?.user?.role;
+  const [editing, setEditing] = useState(false);
+  const [, startTransition] = useTransition();
+
+  const { data: lead, isLoading, mutate: mutateLead, error: leadError } =
+    useSWR<Lead>(id ? `/api/leads/${id}` : null, fetcher);
+  const { data: products = [], mutate: mutateProducts } = useSWR<Product[]>(
+    id ? `/api/leads/${id}/products` : null,
+    fetcher,
+  );
+
+  usePageTitle(
+    lead?.firstName ? `${lead.firstName} ${lead.lastName} - Lead` : "Lead",
+  );
+
+  const tabFromUrl = searchParams.get("tab") as TABS_NAME;
+  const isValidTab = tabFromUrl && VALID_TABS.includes(tabFromUrl);
+  const [activeTab, setActiveTab] = useState<TABS_NAME>(
+    isValidTab ? tabFromUrl : "personal",
+  );
+
+  useEffect(() => {
+    if (leadError) router.push("/leads");
+  }, [leadError, router]);
+
+  async function handleApprovalChange() {
+    await Promise.all([mutateLead(), mutateProducts()]);
+  }
+
+  function handleSuspend() {
+    toast("¿Suspender este lead?", {
+      action: {
+        label: "Suspender",
+        onClick: async () => {
+          const res = await fetch(`/api/leads/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "suspended" }),
+          });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            toast.error(data.error ?? "Error al suspender el lead");
+            return;
+          }
+          toast.success("Lead suspendido");
+          void mutateLead();
+        },
+      },
+      cancel: { label: "Cancelar", onClick: () => {} },
+    });
+  }
+
+  const handleTabChange = (tab: TABS_NAME) => {
+    setActiveTab(tab);
+    const params = new URLSearchParams(searchParams);
+    params.set("tab", tab);
+    startTransition(() => {
+      router.push(`/leads/${id}?${params.toString()}`, { scroll: false });
+    });
+  };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const newTab = searchParams.get("tab") as TABS_NAME;
+      if (newTab && VALID_TABS.includes(newTab)) {
+        setActiveTab(newTab);
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [searchParams]);
+
+  if (isLoading) return <Loading />;
+  if (!lead) return null;
+
+  return (
+    <div className="space-y-6">
+      <LeadDetailHeader
+        lead={lead}
+        role={role}
+        onSuspend={handleSuspend}
+        onEdit={() => setEditing(true)}
+      />
+
+      {role === UserRole.COACH || role === UserRole.SUPERVISOR || role === UserRole.ADMIN ? (
+        <ProductChecklist
+          leadId={lead.id}
+          products={products}
+          onApprovalChange={handleApprovalChange}
+        />
+      ) : null}
+
+      <LeadDetailTabs activeTab={activeTab} onChange={handleTabChange} />
+
+      <div className="max-h-[60vh] overflow-y-auto pr-2 pb-2">
+        {activeTab === "personal" && <PersonalTab lead={lead} />}
+        {activeTab === "notes" && <NotesTab leadId={lead.id} />}
+        {activeTab === "reminders" && <RemindersTab leadId={lead.id} />}
+        {activeTab === "attachments" && <AttachmentsTab leadId={lead.id} />}
+        {activeTab === "products" && (
+          <ProductsTab
+            leadId={lead.id}
+            onProductCreated={() => void mutateProducts()}
+          />
+        )}
+      </div>
+
+      {editing && (
+        <LeadEditModal
+          key={lead.id}
+          lead={lead}
+          onClose={() => setEditing(false)}
+          onSave={() => {
+            setEditing(false);
+            void mutateLead();
+          }}
+        />
+      )}
+    </div>
+  );
+}
