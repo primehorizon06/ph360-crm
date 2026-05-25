@@ -56,6 +56,7 @@ export function LeadModal({ onClose, onSave }: Props) {
       toast.error(json.error ?? "Error al guardar");
       return;
     }
+    toast.success("Lead creado exitosamente");
     onSave();
   }
 

@@ -12,6 +12,7 @@ import {
   ImageIcon,
   Loader2,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Loading } from "@/components/ui/Loading";
 import { AttachmentPreview } from "@/components/notes/AttachmentPreview";
 import {
@@ -105,6 +106,7 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
       return;
     }
 
+    toast.success(files.length === 1 ? "1 archivo subido" : `${files.length} archivos subidos`);
     setFiles([]);
     loadAttachments();
   }

@@ -61,6 +61,7 @@ export function NoteModal({ leadId, onClose, onSave }: Props) {
       });
     }
 
+    toast.success("Nota guardada");
     onSave();
   }
 

@@ -53,6 +53,7 @@ export function CompanyModal({ company, onClose, onSave }: Props) {
       toast.error(json.error ?? "Error al guardar");
       return;
     }
+    toast.success(company ? "Franquicia actualizada" : "Franquicia creada");
     onSave();
   }
 

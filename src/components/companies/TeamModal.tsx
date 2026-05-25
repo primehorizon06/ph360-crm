@@ -41,6 +41,7 @@ export function TeamModal({
       toast.error(json.error ?? "Error al guardar");
       return;
     }
+    toast.success(team ? "Equipo actualizado" : "Equipo creado");
     onSave();
   }
 

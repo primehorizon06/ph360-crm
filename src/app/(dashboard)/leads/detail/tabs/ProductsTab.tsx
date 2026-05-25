@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -247,6 +248,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
 
     setSaving(false);
     setPendingData(null);
+    toast.success("Producto asociado exitosamente");
     resetForm();
     loadProducts();
     onProductCreated?.();
@@ -260,6 +262,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
       body: JSON.stringify({ action: "RESUBMIT" }),
     });
     setResubmitting(null);
+    toast.success("Producto reenviado para aprobación");
     loadProducts();
     onProductCreated?.();
   }

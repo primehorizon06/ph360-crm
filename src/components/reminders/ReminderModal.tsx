@@ -73,6 +73,7 @@ export function ReminderModal({ leadId, onClose, onSave }: ReminderModalProps) {
       return;
     }
 
+    toast.success("Recordatorio creado");
     onSave();
     onClose();
   };

@@ -71,12 +71,11 @@ export function ProductChecklistItem({
       return;
     }
 
+    toast.success(isFirstProduct ? "Lead convertido a cliente" : "Producto aprobado");
     onApprovalChange();
 
     if (isFirstProduct) {
       router.push(`/customers/${leadId}`);
-    } else {
-      onApprovalChange();
     }
   }
 
@@ -93,6 +92,7 @@ export function ProductChecklistItem({
       toast.error(data.error ?? "Error al rechazar el producto");
       return;
     }
+    toast.success("Producto rechazado");
     setShowRejectModal(false);
     onApprovalChange();
   }

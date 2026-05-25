@@ -98,6 +98,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
       toast.error(json.error ?? "Error al guardar");
       return;
     }
+    toast.success(isCustomer ? "Cliente actualizado" : "Lead actualizado");
     onSave();
   }
 

@@ -60,6 +60,7 @@ export default function GoalsPage() {
       });
       const json = await res.json();
       if (!res.ok) { toast.error(json.error); return; }
+      toast.success("Meta eliminada");
       void mutate();
     } finally {
       setDeleting(null);

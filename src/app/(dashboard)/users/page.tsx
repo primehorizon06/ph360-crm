@@ -18,6 +18,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { CustomSelect } from "@/components/ui/Select";
 import { UserRole } from "@/utils/constants/roles";
 import { fetcher } from "@/lib/fetcher";
+import { toast } from "sonner";
 
 export interface User {
   id: number;
@@ -82,7 +83,13 @@ export default function UsersPage() {
 
   async function handleDelete(id: number) {
     if (!confirm("¿Eliminar este usuario?")) return;
-    await fetch(`/api/users/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/users/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      toast.error(json.error ?? "Error al eliminar usuario");
+      return;
+    }
+    toast.success("Usuario eliminado");
     void mutateUsers();
   }
 

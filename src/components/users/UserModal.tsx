@@ -98,6 +98,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
       return;
     }
 
+    toast.success(user ? "Usuario actualizado" : "Usuario creado");
     onSave();
   }
 

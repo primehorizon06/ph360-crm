@@ -27,6 +27,7 @@ import { CustomSelect } from "@/components/ui/Select";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { CompanyGoals, Team } from "@/utils/interfaces/companies";
 import { fetcher } from "@/lib/fetcher";
+import { toast } from "sonner";
 
 export default function CompaniesPage() {
   usePageTitle("Empresas y Equipos");
@@ -67,13 +68,25 @@ export default function CompaniesPage() {
   async function handleDeleteCompany(id: number) {
     if (!confirm("¿Eliminar esta franquicia? Se eliminarán todos sus equipos."))
       return;
-    await fetch(`/api/companies/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/companies/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      toast.error(json.error ?? "Error al eliminar franquicia");
+      return;
+    }
+    toast.success("Franquicia eliminada");
     void mutate();
   }
 
   async function handleDeleteTeam(id: number, companyId: number) {
     if (!confirm("¿Eliminar este equipo?")) return;
-    await fetch(`/api/teams/${id}`, { method: "DELETE" });
+    const deleteRes = await fetch(`/api/teams/${id}`, { method: "DELETE" });
+    if (!deleteRes.ok) {
+      const json = await deleteRes.json().catch(() => ({}));
+      toast.error(json.error ?? "Error al eliminar equipo");
+      return;
+    }
+    toast.success("Equipo eliminado");
     const res = await fetch(`/api/teams?companyId=${companyId}`);
     const teams = await res.json();
     void mutate(
