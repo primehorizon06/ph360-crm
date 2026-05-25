@@ -23,6 +23,7 @@ import { Plus } from "lucide-react";
 import { GoalsData } from "@/utils/interfaces/goals";
 import { fetcher } from "@/lib/fetcher";
 import { toast } from "sonner";
+import { confirmToast } from "@/lib/confirmToast";
 import { UserRole } from "@/utils/constants/roles";
 import { Loading } from "@/components/ui/Loading";
 
@@ -49,22 +50,23 @@ export default function GoalsPage() {
 
   const { data, isLoading, mutate } = useSWR<GoalsData>(swrKey, fetcher);
 
-  async function handleDelete(id: number) {
-    if (!confirm("¿Eliminar esta meta?")) return;
-    setDeleting(id);
-    try {
-      const res = await fetch("/api/goals", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-      const json = await res.json();
-      if (!res.ok) { toast.error(json.error); return; }
-      toast.success("Meta eliminada");
-      void mutate();
-    } finally {
-      setDeleting(null);
-    }
+  function handleDelete(id: number) {
+    confirmToast("¿Eliminar esta meta?", async () => {
+      setDeleting(id);
+      try {
+        const res = await fetch("/api/goals", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id }),
+        });
+        const json = await res.json();
+        if (!res.ok) { toast.error(json.error); return; }
+        toast.success("Meta eliminada");
+        void mutate();
+      } finally {
+        setDeleting(null);
+      }
+    });
   }
 
   if (status === "loading" || permLoading) {

@@ -16,6 +16,8 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ### Changed
 
+- **refactor**(ux): reemplaza `confirm()` nativo por `confirmToast` con estilo del proyecto en eliminaciones de usuarios, franquicias, equipos y metas
+
 - **feat**(ux): añade `toast.success` en todos los casos de acción exitosa: modales de crear/editar, DELETEs de usuarios/franquicias/equipos/metas, subida de adjuntos, asociación y reenvío de productos, y aprobación/rechazo en checklist
 - **refactor**(forms): migra `RejectModal` y `GoalFormModal` a react-hook-form + zod con errores inline por campo; reemplaza `installmentError` state en `ProductsTab` por `setError("root")` de RHF
 - **refactor**(modals): reemplaza estado `serverError` e inline banners por `toast.error` en todos los modales; las validaciones de campo mantienen su error inline

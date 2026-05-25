@@ -28,6 +28,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { CompanyGoals, Team } from "@/utils/interfaces/companies";
 import { fetcher } from "@/lib/fetcher";
 import { toast } from "sonner";
+import { confirmToast } from "@/lib/confirmToast";
 
 export default function CompaniesPage() {
   usePageTitle("Empresas y Equipos");
@@ -65,34 +66,35 @@ export default function CompaniesPage() {
     setExpanded((prev) => [...prev, company.id]);
   }
 
-  async function handleDeleteCompany(id: number) {
-    if (!confirm("¿Eliminar esta franquicia? Se eliminarán todos sus equipos."))
-      return;
-    const res = await fetch(`/api/companies/${id}`, { method: "DELETE" });
-    if (!res.ok) {
-      const json = await res.json().catch(() => ({}));
-      toast.error(json.error ?? "Error al eliminar franquicia");
-      return;
-    }
-    toast.success("Franquicia eliminada");
-    void mutate();
+  function handleDeleteCompany(id: number) {
+    confirmToast("¿Eliminar esta franquicia? Se eliminarán todos sus equipos.", async () => {
+      const res = await fetch(`/api/companies/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        toast.error(json.error ?? "Error al eliminar franquicia");
+        return;
+      }
+      toast.success("Franquicia eliminada");
+      void mutate();
+    });
   }
 
-  async function handleDeleteTeam(id: number, companyId: number) {
-    if (!confirm("¿Eliminar este equipo?")) return;
-    const deleteRes = await fetch(`/api/teams/${id}`, { method: "DELETE" });
-    if (!deleteRes.ok) {
-      const json = await deleteRes.json().catch(() => ({}));
-      toast.error(json.error ?? "Error al eliminar equipo");
-      return;
-    }
-    toast.success("Equipo eliminado");
-    const res = await fetch(`/api/teams?companyId=${companyId}`);
-    const teams = await res.json();
-    void mutate(
-      companies.map((c) => (c.id === companyId ? { ...c, teams } : c)),
-      { revalidate: false },
-    );
+  function handleDeleteTeam(id: number, companyId: number) {
+    confirmToast("¿Eliminar este equipo?", async () => {
+      const deleteRes = await fetch(`/api/teams/${id}`, { method: "DELETE" });
+      if (!deleteRes.ok) {
+        const json = await deleteRes.json().catch(() => ({}));
+        toast.error(json.error ?? "Error al eliminar equipo");
+        return;
+      }
+      toast.success("Equipo eliminado");
+      const res = await fetch(`/api/teams?companyId=${companyId}`);
+      const teams = await res.json();
+      void mutate(
+        companies.map((c) => (c.id === companyId ? { ...c, teams } : c)),
+        { revalidate: false },
+      );
+    });
   }
 
   const filtered = useMemo(
