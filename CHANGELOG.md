@@ -14,8 +14,13 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **perf**(suspense): extrae `SearchParamsWatcher` en login y lo envuelve en `<Suspense>` para cumplir con el patrón requerido por Next.js 15+
 - **ia**(skills): añade skill `conventional-commit` para gestión de commits atómicos y changelog
 
+### Added
+
+- **refactor**(api): extrae lógica de transición de estado de aprobación a `approvalService` (`applyApprovalDecision`, `notifyCoachOfResubmit`)
+
 ### Changed
 
+- **refactor**(permissions): añade role guards puros en `lib/permissions` (`canViewProductChecklist`, `canSuspendLead`, `canResubmitProduct`, `canViewLeadRecord`) y migra componentes; corrige bug en `CustomerDetailClient` donde COACH y ADMIN no veían el `ProductChecklist`; simplifica `usePermissions` delegando `canViewLead` a función pura
 - **refactor**(ux): reemplaza `confirm()` nativo por `confirmToast` con estilo del proyecto en eliminaciones de usuarios, franquicias, equipos y metas
 
 - **feat**(ux): añade `toast.success` en todos los casos de acción exitosa: modales de crear/editar, DELETEs de usuarios/franquicias/equipos/metas, subida de adjuntos, asociación y reenvío de productos, y aprobación/rechazo en checklist
