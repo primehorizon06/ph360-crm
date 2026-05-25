@@ -35,7 +35,7 @@ import { PaymentPlanPicker } from "@/components/leads/PaymentPlanPicker/PaymentP
 import { formatAmount, formatDate } from "@/utils/helpers/format";
 import { ConfirmProductModal } from "@/components/leads/Confirmproductmodal/Confirmproductmodal";
 import { useSession } from "next-auth/react";
-import { UserRole } from "@/utils/constants/roles";
+import { canResubmitProduct } from "@/lib/permissions";
 
 // ─── Installment status helpers ───────────────────────────────────────────────
 
@@ -695,7 +695,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                         </p>
                       )}
                     </div>
-                    {(role === UserRole.COACH || role === UserRole.ADMIN) && (
+                    {canResubmitProduct(role ?? "") && (
                       <button
                         type="button"
                         onClick={() => handleResubmit(lp.id)}

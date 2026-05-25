@@ -25,7 +25,7 @@ import { VALID_TABS } from "@/utils/constants/leads";
 import { Product } from "@/utils/interfaces/products";
 import { fetcher } from "@/lib/fetcher";
 import { toast } from "sonner";
-import { UserRole } from "@/utils/constants/roles";
+import { canViewProductChecklist } from "@/lib/permissions";
 
 export function LeadDetailClient() {
   const { id } = useParams();
@@ -116,13 +116,13 @@ export function LeadDetailClient() {
         onEdit={() => setEditing(true)}
       />
 
-      {role === UserRole.COACH || role === UserRole.SUPERVISOR || role === UserRole.ADMIN ? (
+      {canViewProductChecklist(role ?? "") && (
         <ProductChecklist
           leadId={lead.id}
           products={products}
           onApprovalChange={handleApprovalChange}
         />
-      ) : null}
+      )}
 
       <LeadDetailTabs activeTab={activeTab} onChange={handleTabChange} />
 

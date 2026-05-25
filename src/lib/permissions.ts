@@ -8,6 +8,42 @@ export interface ScopeUser {
   teamId?: number | null;
 }
 
+// ── Role guards (pure, usable in server and client) ────────────────────────────
+
+export function canViewProductChecklist(role: string): boolean {
+  return (
+    role === UserRole.COACH ||
+    role === UserRole.SUPERVISOR ||
+    role === UserRole.ADMIN
+  );
+}
+
+export function canSuspendLead(role: string): boolean {
+  return role === UserRole.ADMIN || role === UserRole.SUPERVISOR;
+}
+
+export function canResubmitProduct(role: string): boolean {
+  return role === UserRole.COACH || role === UserRole.ADMIN;
+}
+
+export function canViewLeadRecord(
+  user: { role: string; companyId?: number | null; teamId?: number | null; id: string },
+  lead: { companyId: number; teamId: number; assignedToId: number },
+): boolean {
+  switch (user.role) {
+    case UserRole.ADMIN:
+      return true;
+    case UserRole.SUPERVISOR:
+      return user.companyId === lead.companyId;
+    case UserRole.COACH:
+      return user.teamId === lead.teamId;
+    case UserRole.AGENT:
+      return user.id === lead.assignedToId.toString();
+    default:
+      return false;
+  }
+}
+
 /**
  * Returns a Prisma WHERE fragment scoping a Lead/Customer list query to what
  * the user is allowed to see. Returns null when the role has no list access.
