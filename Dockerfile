@@ -100,12 +100,17 @@ RUN npm ci --include=dev
 # Generar Prisma Client
 RUN npx prisma generate
 
+# Valores ficticios solo para que `next build` pueda evaluar las rutas de API
+# (env.ts valida process.env al importarse). Railway inyecta los valores reales
+# en runtime, estos placeholders nunca se usan para servir tráfico.
+ENV DATABASE_URL="postgresql://user:password@localhost:5432/db"
+ENV NEXTAUTH_SECRET="build-time-placeholder"
+
 # Construir Next.js
 RUN npm run build
 
 # Etapa de producción
-FROM node:20-alpine AS runner
-WORKDIR /app
+FROM base AS runner
 
 # Configuración de producción
 ENV NODE_ENV=production
@@ -120,10 +125,10 @@ COPY --from=production-builder /app/public ./public
 COPY --from=production-builder /app/.next/standalone ./
 COPY --from=production-builder /app/.next/static ./.next/static
 
-# Copiar Prisma
+# Copiar Prisma (incluye node_modules completo para tener disponible el CLI
+# de Prisma en runtime y poder ejecutar `prisma migrate deploy` antes de arrancar)
 COPY --from=production-builder /app/prisma ./prisma
-COPY --from=production-builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=production-builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=production-builder /app/node_modules ./node_modules
 
 # Copiar package.json para scripts
 COPY --from=production-builder /app/package.json ./package.json
@@ -138,5 +143,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Comando para iniciar
-CMD ["node", "server.js"]
+# Aplica migraciones pendientes y luego arranca el servidor standalone
+CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]
