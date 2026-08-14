@@ -36,7 +36,7 @@ export const PATCH = withAuthParams<{ id: string; productId: string }>(
 
     // ── APPROVE / REJECT — solo coach, supervisor o admin ────────────────────
     if (
-      ![UserRole.COACH, UserRole.SUPERVISOR, UserRole.ADMIN].includes(
+      !([UserRole.COACH, UserRole.SUPERVISOR, UserRole.ADMIN] as UserRole[]).includes(
         session.user.role,
       )
     )

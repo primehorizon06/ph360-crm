@@ -9,12 +9,12 @@ const tarjetaSchema = z.object({
       "FORTALECIMIENTO_FINANCIERO",
     ],
     {
-      required_error: "Selecciona un producto",
+      error: "Selecciona un producto",
     },
   ),
   paymentType: z.literal("TARJETA"),
   cardType: z.enum(["DEBITO", "CREDITO"], {
-    required_error: "Selecciona débito o crédito",
+    error: "Selecciona débito o crédito",
   }),
   lastFour: z
     .string()
@@ -33,7 +33,7 @@ const cuentaSchema = z.object({
       "FORTALECIMIENTO_FINANCIERO",
     ],
     {
-      required_error: "Selecciona un producto",
+      error: "Selecciona un producto",
     },
   ),
   paymentType: z.literal("CUENTA"),
@@ -45,7 +45,7 @@ const cuentaSchema = z.object({
     .min(9, "El número de ruta debe tener 9 dígitos")
     .max(9, "El número de ruta debe tener 9 dígitos"),
   accountType: z.enum(["AHORROS", "CHEQUES"], {
-    required_error: "Selecciona el tipo de cuenta",
+    error: "Selecciona el tipo de cuenta",
   }),
 });
 

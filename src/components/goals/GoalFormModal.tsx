@@ -13,7 +13,7 @@ import { Goal } from "@/utils/interfaces/goals";
 import { UserRole } from "@/utils/constants/roles";
 
 const goalSchema = z.object({
-  amount: z.number({ invalid_type_error: "Ingresa un monto válido" }).positive("Ingresa un monto válido"),
+  amount: z.number({ error: "Ingresa un monto válido" }).positive("Ingresa un monto válido"),
   companyId: z.string().optional(),
   teamId: z.string().optional(),
   userId: z.string().optional(),

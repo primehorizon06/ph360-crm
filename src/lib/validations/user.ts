@@ -41,7 +41,7 @@ const baseSchema = z
       });
     }
 
-    const requiresTeam = [UserRole.AGENT, UserRole.COACH].includes(data.role);
+    const requiresTeam = ([UserRole.AGENT, UserRole.COACH] as UserRole[]).includes(data.role);
 
     if (requiresTeam && !data.teamId) {
       ctx.addIssue({

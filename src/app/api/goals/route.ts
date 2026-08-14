@@ -82,7 +82,7 @@ export const GET = withAuth(async (req, session) => {
 
 export const POST = withAuth(async (req, session) => {
   const user = session.user as unknown as SessionUser;
-  if (![UserRole.ADMIN, UserRole.SUPERVISOR].includes(user.role))
+  if (!([UserRole.ADMIN, UserRole.SUPERVISOR] as UserRole[]).includes(user.role))
     return forbidden();
 
   const body = await req.json();
@@ -220,7 +220,7 @@ export const POST = withAuth(async (req, session) => {
 
 export const DELETE = withAuth(async (req, session) => {
   const user = session.user as unknown as SessionUser;
-  if (![UserRole.ADMIN, UserRole.SUPERVISOR].includes(user.role))
+  if (!([UserRole.ADMIN, UserRole.SUPERVISOR] as UserRole[]).includes(user.role))
     return forbidden();
 
   const { id } = await req.json();

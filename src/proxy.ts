@@ -30,7 +30,7 @@ export async function proxy(req: NextRequest) {
 
   if (
     path.startsWith("/teams") &&
-    ![UserRole.ADMIN, UserRole.SUPERVISOR].includes(role)
+    !([UserRole.ADMIN, UserRole.SUPERVISOR] as UserRole[]).includes(role)
   ) {
     return NextResponse.redirect(new URL("/", req.url));
   }
