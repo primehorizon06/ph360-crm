@@ -62,24 +62,24 @@ export function DashboardClient({ initialData, user }: Props) {
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-zinc-800 dark:text-zinc-100">
-              {isAdmin ? "Casa Matriz" : "Dashboard"}
+            <h1 className="text-2xl font-bold text-on-surface">
+              {isAdmin ? "HOLDING" : "Dashboard"}
             </h1>
             {isAdmin && (
-              <span className="text-sm font-medium bg-cyan-100 dark:bg-cyan-950 text-cyan-600 dark:text-cyan-400 px-2 py-0.5 rounded-full">
+              <span className="text-sm font-medium bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded-full">
                 Vista global
               </span>
             )}
           </div>
-          <p className="text-lg text-zinc-400 mt-0.5">
+          <p className="text-lg text-on-surface-variant mt-0.5">
             Bienvenido,{" "}
-            <span className="font-medium text-zinc-600 dark:text-zinc-300">
+            <span className="font-medium text-on-surface">
               {user.name}
             </span>
             {user.companyName && !isAdmin && (
               <>
                 {" "}
-                · <span className="text-zinc-500">{user.companyName}</span>
+                · <span className="text-on-surface-variant">{user.companyName}</span>
               </>
             )}
           </p>
@@ -87,9 +87,9 @@ export function DashboardClient({ initialData, user }: Props) {
           {isAdmin && companyId !== "all" && (
             <div className="mt-1.5 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
-              <span className="text-sm text-zinc-400">
+              <span className="text-sm text-on-surface-variant">
                 Filtrando por:{" "}
-                <span className="text-zinc-600 dark:text-zinc-300 font-medium">
+                <span className="text-on-surface font-medium">
                   {selectedCompanyName}
                 </span>
               </span>
