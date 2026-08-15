@@ -46,6 +46,7 @@ export default function LoginPage() {
 
       if (result?.error) {
         setError("Credenciales inválidas");
+        setIsLoading(false);
       } else {
         router.push("/");
         router.refresh();
@@ -53,7 +54,6 @@ export default function LoginPage() {
     } catch (error) {
       setError("Error al iniciar sesión");
       console.error("Login error:", error);
-    } finally {
       setIsLoading(false);
     }
   };
