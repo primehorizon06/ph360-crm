@@ -12,21 +12,21 @@ interface StatCardProps {
 }
 
 const variantStyles = {
-  default: "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700",
+  default: "bg-surface-container border-outline-variant",
   accent: "bg-cyan-500 border-cyan-400",
   danger: "bg-red-500 border-red-400",
   warning: "bg-amber-500 border-amber-400",
 };
 
 const labelStyles = {
-  default: "text-zinc-400",
+  default: "text-on-surface-variant",
   accent: "text-cyan-100",
   danger: "text-red-100",
   warning: "text-amber-100",
 };
 
 const valueStyles = {
-  default: "text-zinc-800 dark:text-zinc-100",
+  default: "text-on-surface",
   accent: "text-white",
   danger: "text-white",
   warning: "text-white",
@@ -54,7 +54,7 @@ export function StatCard({
           {label}
         </span>
         {icon && (
-          <span className={isColored ? "text-white/70" : "text-zinc-400"}>
+          <span className={isColored ? "text-white/70" : "text-on-surface-variant"}>
             {icon}
           </span>
         )}
@@ -66,7 +66,7 @@ export function StatCard({
 
       {sublabel && (
         <span
-          className={`text-md ${isColored ? "text-white/70" : "text-zinc-400"}`}
+          className={`text-md ${isColored ? "text-white/70" : "text-on-surface-variant"}`}
         >
           {sublabel}
         </span>

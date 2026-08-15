@@ -96,11 +96,11 @@ export function FranchiseDashboard({ data, loading, quincena, companyName }: Fra
 
       {/* ── Cumplimiento de meta ── */}
       {data.goalAmount !== null ? (
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4">
+        <div className="bg-surface-container border border-outline-variant rounded-xl p-4">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <p className="text-lg font-semibold text-zinc-700 dark:text-zinc-200">Cumplimiento de meta</p>
-              <p className="text-md text-zinc-400">
+              <p className="text-lg font-semibold text-on-surface">Cumplimiento de meta</p>
+              <p className="text-md text-on-surface-variant">
                 {companyName ?? "Franquicia"} · meta {fmt(META_QUINCENA)}
               </p>
             </div>
@@ -112,7 +112,7 @@ export function FranchiseDashboard({ data, loading, quincena, companyName }: Fra
               {metaPctDisplay}
             </span>
           </div>
-          <div className="h-4 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+          <div className="h-4 bg-surface-container-high rounded-full overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-700 ${
                 metaPctRaw >= 100 ? "bg-emerald-500" : metaPctRaw >= 70 ? "bg-amber-500" : "bg-red-400"
@@ -120,7 +120,7 @@ export function FranchiseDashboard({ data, loading, quincena, companyName }: Fra
               style={{ width: metaPctRaw + "%" }}
             />
           </div>
-          <div className="flex justify-between mt-1.5 text-md text-zinc-400">
+          <div className="flex justify-between mt-1.5 text-md text-on-surface-variant">
             <span>{fmt(kpis.revenue)} recaudado</span>
             <span>{fmt(Math.max(META_QUINCENA - kpis.revenue, 0))} restante</span>
           </div>
@@ -139,7 +139,7 @@ export function FranchiseDashboard({ data, loading, quincena, companyName }: Fra
           className="lg:col-span-2"
         >
           {data.revenuePorDia.every((d) => d.amount === 0) ? (
-            <p className="text-md text-zinc-400 text-center py-10">Sin recaudo registrado</p>
+            <p className="text-md text-on-surface-variant text-center py-10">Sin recaudo registrado</p>
           ) : (
             <ResponsiveContainer width="100%" height={160}>
               <AreaChart data={data.revenuePorDia} margin={{ top: 4, right: 8, bottom: 0, left: 8 }}>
@@ -167,19 +167,19 @@ export function FranchiseDashboard({ data, loading, quincena, companyName }: Fra
 
         <ChartCard title="Panel de ventas">
           <div className="space-y-4">
-            <div className="bg-cyan-50 dark:bg-cyan-950/30 rounded-lg p-3 text-center">
+            <div className="bg-cyan-500/10 rounded-lg p-3 text-center">
               <p className="text-[10px] text-cyan-500 uppercase tracking-wider font-medium mb-1">Hoy</p>
-              <p className="text-3xl font-bold text-cyan-600 dark:text-cyan-400">{kpis.ventasHoy}</p>
-              <p className="text-md text-zinc-400 mt-0.5">conversiones</p>
-              <p className="text-lg font-semibold text-zinc-600 dark:text-zinc-300 mt-2">{todayLeads}</p>
-              <p className="text-md text-zinc-400">leads nuevos</p>
+              <p className="text-3xl font-bold text-cyan-400">{kpis.ventasHoy}</p>
+              <p className="text-md text-on-surface-variant mt-0.5">conversiones</p>
+              <p className="text-lg font-semibold text-on-surface mt-2">{todayLeads}</p>
+              <p className="text-md text-on-surface-variant">leads nuevos</p>
             </div>
-            <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-lg p-3 text-center">
-              <p className="text-[10px] text-zinc-400 uppercase tracking-wider font-medium mb-1">Quincena</p>
-              <p className="text-3xl font-bold text-zinc-700 dark:text-zinc-200">{kpis.conversions}</p>
-              <p className="text-md text-zinc-400 mt-0.5">conversiones</p>
-              <p className="text-lg font-semibold text-zinc-600 dark:text-zinc-300 mt-2">{kpis.newLeads}</p>
-              <p className="text-md text-zinc-400">leads nuevos</p>
+            <div className="bg-surface-container-high rounded-lg p-3 text-center">
+              <p className="text-[10px] text-on-surface-variant uppercase tracking-wider font-medium mb-1">Quincena</p>
+              <p className="text-3xl font-bold text-on-surface">{kpis.conversions}</p>
+              <p className="text-md text-on-surface-variant mt-0.5">conversiones</p>
+              <p className="text-lg font-semibold text-on-surface mt-2">{kpis.newLeads}</p>
+              <p className="text-md text-on-surface-variant">leads nuevos</p>
             </div>
           </div>
         </ChartCard>
@@ -188,7 +188,7 @@ export function FranchiseDashboard({ data, loading, quincena, companyName }: Fra
       {/* ── Histórico de metas ── */}
       {goalHistoricoSorted.length > 0 && (
         <ChartCard title="Histórico de metas" subtitle="Recaudo real vs meta — últimas 6 quincenas">
-          <div className="flex gap-4 mb-3 text-xs text-zinc-400">
+          <div className="flex gap-4 mb-3 text-xs text-on-surface-variant">
             <span className="flex items-center gap-1.5">
               <span className="w-4 h-0.5 bg-cyan-500 inline-block rounded" />
               Recaudo real
@@ -248,13 +248,13 @@ export function FranchiseDashboard({ data, loading, quincena, companyName }: Fra
                     }`}
                   >
                     <span
-                      className={`text-md font-bold w-5 text-center ${i < 3 ? "" : "text-zinc-400"}`}
+                      className={`text-md font-bold w-5 text-center ${i < 3 ? "" : "text-on-surface-variant"}`}
                       style={i < 3 ? { color: medalColors[i] } : {}}
                     >
                       {i + 1}
                     </span>
                     <span
-                      className={`text-md w-24 truncate font-medium ${isMe ? "text-cyan-400" : "text-zinc-600 dark:text-zinc-300"}`}
+                      className={`text-md w-24 truncate font-medium ${isMe ? "text-cyan-400" : "text-on-surface-variant"}`}
                     >
                       {a.name}
                       {isMe && (
@@ -263,24 +263,24 @@ export function FranchiseDashboard({ data, loading, quincena, companyName }: Fra
                         </span>
                       )}
                     </span>
-                    <div className="flex-1 h-3.5 bg-zinc-100 dark:bg-zinc-800 rounded overflow-hidden">
+                    <div className="flex-1 h-3.5 bg-surface-container-high rounded overflow-hidden">
                       <div
                         className={`h-full rounded transition-all ${isMe ? "bg-cyan-400" : "bg-cyan-500"}`}
                         style={{ width: pct + "%" }}
                       />
                     </div>
                     <span
-                      className={`text-md font-semibold w-16 text-right ${isMe ? "text-cyan-400" : "text-zinc-700 dark:text-zinc-200"}`}
+                      className={`text-md font-semibold w-16 text-right ${isMe ? "text-cyan-400" : "text-on-surface"}`}
                     >
                       {fmt(a.recaudo)}
                     </span>
-                    <span className="text-md text-zinc-400 w-14 text-right">{a.conversiones} conv.</span>
+                    <span className="text-md text-on-surface-variant w-14 text-right">{a.conversiones} conv.</span>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <p className="text-md text-zinc-400 text-center py-8">Sin recaudo en este período</p>
+            <p className="text-md text-on-surface-variant text-center py-8">Sin recaudo en este período</p>
           )}
         </ChartCard>
 
@@ -299,30 +299,30 @@ export function FranchiseDashboard({ data, loading, quincena, companyName }: Fra
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <p className="text-md text-zinc-400 text-center mt-2">Sin clientes activos</p>
+            <p className="text-md text-on-surface-variant text-center mt-2">Sin clientes activos</p>
           )}
         </ChartCard>
       </div>
 
       {/* ── Caída detallada ── */}
       {kpis.caida > 0 && (
-        <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl p-4">
+        <div className="bg-red-950/20 border border-red-800/40 rounded-xl p-4">
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-red-900/40 flex items-center justify-center shrink-0">
               <span className="text-red-500 text-lg font-bold">!</span>
             </div>
             <div className="flex-1">
-              <p className="text-lg font-semibold text-red-700 dark:text-red-400">
+              <p className="text-lg font-semibold text-red-400">
                 Caída — {companyName ?? "Franquicia"}
               </p>
               <div className="grid grid-cols-2 gap-3 mt-2">
-                <div className="bg-white dark:bg-zinc-900 rounded-lg p-3 text-center border border-red-100 dark:border-red-900">
+                <div className="bg-surface-container-high rounded-lg p-3 text-center border border-red-900/40">
                   <p className="text-2xl font-bold text-red-500">{kpis.cuotasFallidas}</p>
-                  <p className="text-md text-zinc-400 mt-0.5">Cuotas fallidas</p>
+                  <p className="text-md text-on-surface-variant mt-0.5">Cuotas fallidas</p>
                 </div>
-                <div className="bg-white dark:bg-zinc-900 rounded-lg p-3 text-center border border-red-100 dark:border-red-900">
+                <div className="bg-surface-container-high rounded-lg p-3 text-center border border-red-900/40">
                   <p className="text-2xl font-bold text-red-500">{kpis.leadsSuspendidos}</p>
-                  <p className="text-md text-zinc-400 mt-0.5">Clientes suspendidos</p>
+                  <p className="text-md text-on-surface-variant mt-0.5">Clientes suspendidos</p>
                 </div>
               </div>
             </div>

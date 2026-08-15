@@ -18,7 +18,7 @@ export function DashboardFilters({
   onQuincenaChange,
 }: DashboardFiltersProps) {
   const selectCls =
-    "text-lg px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 cursor-pointer w-36";
+    "text-lg px-3 py-1.5 rounded-lg border border-outline-variant bg-surface-container text-on-surface focus:outline-none focus:ring-2 focus:ring-cyan-500/40 cursor-pointer w-36";
 
   const selectedDate = new Date(year, month - 1, 1);
 
@@ -29,7 +29,7 @@ export function DashboardFilters({
     <div className="flex flex-wrap items-end gap-2">
       {showCompanySelector && companies.length > 0 && (
         <div className="flex flex-col gap-1 min-w-[180px]">
-          <label className="text-[10px] uppercase tracking-wider text-zinc-400 font-medium">
+          <label className="text-[10px] uppercase tracking-wider text-on-surface-variant font-medium">
             Franquicia
           </label>
           <CustomSelect
@@ -44,7 +44,7 @@ export function DashboardFilters({
       )}
 
       <div className="flex flex-col gap-1">
-        <label className="text-[10px] uppercase tracking-wider text-zinc-400 font-medium">
+        <label className="text-[10px] uppercase tracking-wider text-on-surface-variant font-medium">
           Período
         </label>
         <DatePicker
@@ -62,10 +62,10 @@ export function DashboardFilters({
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-[10px] uppercase tracking-wider text-zinc-400 font-medium">
+        <label className="text-[10px] uppercase tracking-wider text-on-surface-variant font-medium">
           Quincena
         </label>
-        <div className="flex rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700">
+        <div className="flex rounded-lg overflow-hidden border border-outline-variant">
           {([1, 2] as const).map((q) => (
             <button
               key={q}
@@ -73,7 +73,7 @@ export function DashboardFilters({
               className={`px-4 py-1.5 text-lg font-medium transition-colors ${
                 quincena === q
                   ? "bg-cyan-500 text-white"
-                  : "bg-white dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                  : "bg-surface-container text-on-surface-variant hover:bg-surface-container-high"
               }`}
             >
               {q === 1 ? "1" : "2"}

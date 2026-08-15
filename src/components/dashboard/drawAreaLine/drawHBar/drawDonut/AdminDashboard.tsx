@@ -92,7 +92,7 @@ export function AdminDashboard({ data, loading, quincena }: adminDashboardProps)
         subtitle={`Cuotas PAID · ${quincena === 1 ? "1er quincena" : "2da quincena"}`}
       >
         {data.revenuePorDia.every((d) => d.amount === 0) ? (
-          <p className="text-md text-zinc-400 text-center py-10">
+          <p className="text-md text-on-surface-variant text-center py-10">
             Sin recaudo en este período
           </p>
         ) : (
@@ -146,7 +146,7 @@ export function AdminDashboard({ data, loading, quincena }: adminDashboardProps)
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <p className="text-md text-zinc-400 text-center py-8">
+            <p className="text-md text-on-surface-variant text-center py-8">
               {data.meta.companyId ? "Selecciona 'Todas' para ver el ranking" : "Sin datos"}
             </p>
           )}
@@ -183,7 +183,7 @@ export function AdminDashboard({ data, loading, quincena }: adminDashboardProps)
                   />
                 </PieChart>
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <span className="text-lg font-semibold text-zinc-700 dark:text-zinc-200">
+                  <span className="text-lg font-semibold text-on-surface">
                     {installmentTotal}
                   </span>
                 </div>
@@ -197,18 +197,18 @@ export function AdminDashboard({ data, loading, quincena }: adminDashboardProps)
                         className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
                         style={{ background: INSTALLMENT_STATUS_COLORS[s.status] ?? "#6b7280" }}
                       />
-                      <span className="text-zinc-500 dark:text-zinc-400 flex-1">
+                      <span className="text-on-surface-variant flex-1">
                         {INSTALLMENT_STATUS_LABELS[s.status] ?? s.status}
                       </span>
-                      <span className="font-semibold text-zinc-700 dark:text-zinc-200">{pct}%</span>
-                      <span className="text-zinc-400">({s.count})</span>
+                      <span className="font-semibold text-on-surface">{pct}%</span>
+                      <span className="text-on-surface-variant">({s.count})</span>
                     </div>
                   );
                 })}
               </div>
             </div>
           ) : (
-            <p className="text-md text-zinc-400 text-center py-8">
+            <p className="text-md text-on-surface-variant text-center py-8">
               Sin cuotas en este período
             </p>
           )}
@@ -218,34 +218,34 @@ export function AdminDashboard({ data, loading, quincena }: adminDashboardProps)
       {/* ── Ventas: Hoy vs Quincena ── */}
       <ChartCard title="Ventas del día vs acumulado quincenal">
         <div className="grid grid-cols-2 gap-4">
-          <div className="flex flex-col items-center justify-center p-6 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
-            <span className="text-md text-zinc-400 uppercase tracking-wider mb-2">Hoy</span>
+          <div className="flex flex-col items-center justify-center p-6 bg-surface-container-high rounded-lg">
+            <span className="text-md text-on-surface-variant uppercase tracking-wider mb-2">Hoy</span>
             <span className="text-4xl font-bold text-cyan-500">{todayLeads}</span>
-            <span className="text-md text-zinc-400 mt-1">leads nuevos</span>
-            <span className="text-2xl font-bold text-zinc-700 dark:text-zinc-200 mt-3">
+            <span className="text-md text-on-surface-variant mt-1">leads nuevos</span>
+            <span className="text-2xl font-bold text-on-surface mt-3">
               {kpis.ventasHoy}
             </span>
-            <span className="text-md text-zinc-400">conversiones</span>
+            <span className="text-md text-on-surface-variant">conversiones</span>
           </div>
-          <div className="flex flex-col items-center justify-center p-6 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
-            <span className="text-md text-zinc-400 uppercase tracking-wider mb-2">Quincena</span>
-            <span className="text-4xl font-bold text-zinc-700 dark:text-zinc-200">{kpis.newLeads}</span>
-            <span className="text-md text-zinc-400 mt-1">leads nuevos</span>
+          <div className="flex flex-col items-center justify-center p-6 bg-surface-container-high rounded-lg">
+            <span className="text-md text-on-surface-variant uppercase tracking-wider mb-2">Quincena</span>
+            <span className="text-4xl font-bold text-on-surface">{kpis.newLeads}</span>
+            <span className="text-md text-on-surface-variant mt-1">leads nuevos</span>
             <span className="text-2xl font-bold text-cyan-500 mt-3">{kpis.conversions}</span>
-            <span className="text-md text-zinc-400">conversiones</span>
+            <span className="text-md text-on-surface-variant">conversiones</span>
           </div>
         </div>
       </ChartCard>
 
       {/* ── Indicador de caída ── */}
       {kpis.caida > 0 && (
-        <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl p-4">
+        <div className="bg-red-950/20 border border-red-800/40 rounded-xl p-4">
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <div className="w-8 h-8 rounded-full bg-red-900/40 flex items-center justify-center flex-shrink-0 mt-0.5">
               <span className="text-red-500 text-lg font-bold">!</span>
             </div>
             <div>
-              <p className="text-lg font-semibold text-red-700 dark:text-red-400">Alerta de caída</p>
+              <p className="text-lg font-semibold text-red-400">Alerta de caída</p>
               <p className="text-md text-red-500 mt-1">
                 <span className="font-bold">{kpis.cuotasFallidas}</span> cuotas fallidas ·{" "}
                 <span className="font-bold">{kpis.leadsSuspendidos}</span> clientes suspendidos
