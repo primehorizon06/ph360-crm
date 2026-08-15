@@ -101,8 +101,8 @@ RUN npm ci --include=dev
 RUN npx prisma generate
 
 # Valores ficticios solo para que `next build` pueda evaluar las rutas de API
-# (env.ts valida process.env al importarse). Railway inyecta los valores reales
-# en runtime, estos placeholders nunca se usan para servir tráfico.
+# (env.ts valida process.env al importarse). La plataforma de despliegue inyecta
+# los valores reales en runtime, estos placeholders nunca se usan para servir tráfico.
 ENV DATABASE_URL="postgresql://user:password@localhost:5432/db"
 ENV NEXTAUTH_SECRET="build-time-placeholder"
 
