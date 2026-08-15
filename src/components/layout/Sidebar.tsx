@@ -67,7 +67,7 @@ export function Sidebar() {
 
       <aside
         className={`
-          bg-[#13151c] flex flex-col h-screen fixed left-0 top-0 z-50 transition-all duration-300 overflow-visible
+          bg-[#13151c] flex flex-col h-dvh fixed left-0 top-0 z-50 transition-all duration-300 overflow-visible
           ${collapsed ? "w-16" : "w-56"}
           ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
           md:translate-x-0
