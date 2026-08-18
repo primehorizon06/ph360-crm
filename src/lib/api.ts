@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession, Session } from "next-auth";
+import { Prisma } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
 
 export const unauthorized = () =>
@@ -24,6 +25,33 @@ export async function getAuthSession() {
   return getServerSession(authOptions);
 }
 
+function handleRouteError(error: unknown): NextResponse {
+  console.error(error);
+
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    switch (error.code) {
+      case "P2002": {
+        const fields = (error.meta?.target as string[] | undefined)?.join(", ");
+        return conflict(
+          fields ? `Ya existe un registro con ese valor en: ${fields}` : "El registro ya existe",
+        );
+      }
+      case "P2003":
+        return badRequest("Uno de los datos relacionados no existe o no es válido");
+      case "P2011": {
+        const field = error.meta?.target as string | undefined;
+        return badRequest(field ? `Falta el campo requerido: ${field}` : "Falta un campo requerido");
+      }
+      case "P2025":
+        return notFound();
+      default:
+        return serverError();
+    }
+  }
+
+  return serverError();
+}
+
 export function withAuth(
   handler: (req: NextRequest, session: Session) => Promise<NextResponse>
 ) {
@@ -33,8 +61,7 @@ export function withAuth(
       if (!session) return unauthorized();
       return await handler(req, session);
     } catch (error) {
-      console.error(error);
-      return serverError();
+      return handleRouteError(error);
     }
   };
 }
@@ -52,8 +79,7 @@ export function withAuthParams<P extends Record<string, string>>(
       const resolvedParams = await params;
       return await handler(req, session, resolvedParams);
     } catch (error) {
-      console.error(error);
-      return serverError();
+      return handleRouteError(error);
     }
   };
 }
