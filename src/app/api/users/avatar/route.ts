@@ -2,20 +2,27 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
-import { withAuth, badRequest } from "@/lib/api";
+import { withAuth, badRequest, forbidden } from "@/lib/api";
+import { UserRole } from "@/utils/constants/roles";
+import { sniffImageType } from "@/lib/fileValidation";
 
-export const POST = withAuth(async (req) => {
+export const POST = withAuth(async (req, session) => {
   const formData = await req.formData();
   const file = formData.get("file") as File;
   const userId = formData.get("userId") as string;
 
-  if (!file) return badRequest("No se envió archivo");
-  if (!file.type.startsWith("image/")) return badRequest("Solo se permiten imágenes");
+  if (!file || !userId) return badRequest("Datos incompletos");
+
+  const isSelf = session.user.id === userId;
+  if (!isSelf && session.user.role !== UserRole.ADMIN) return forbidden();
 
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
-  const ext = file.name.split(".").pop();
-  const filename = `avatar-${userId}-${Date.now()}.${ext}`;
+
+  const detected = sniffImageType(buffer);
+  if (!detected) return badRequest("Solo se permiten imágenes JPEG, PNG o WebP");
+
+  const filename = `avatar-${userId}-${Date.now()}.${detected.ext}`;
   const uploadDir = path.join(process.cwd(), "public/uploads/avatars");
 
   await mkdir(uploadDir, { recursive: true });

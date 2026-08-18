@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { withAuthParams, badRequest } from "@/lib/api";
+import { sniffAttachmentType } from "@/lib/fileValidation";
 
 export const POST = withAuthParams<{ id: string }>(async (req, _session, { id }) => {
   const formData = await req.formData();
@@ -10,17 +11,17 @@ export const POST = withAuthParams<{ id: string }>(async (req, _session, { id })
 
   if (!files.length) return badRequest("No se enviaron archivos");
 
-  const allowedTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
   const attachments = [];
 
   for (const file of files) {
-    if (!allowedTypes.includes(file.type))
-      return badRequest(`Tipo no permitido: ${file.name}`);
-
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const ext = file.name.split(".").pop();
-    const filename = `note-${id}-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+    const detected = sniffAttachmentType(buffer);
+    if (!detected)
+      return badRequest(`Tipo no permitido: ${file.name}. Solo JPEG, PNG, WebP o PDF`);
+
+    const filename = `note-${id}-${Date.now()}-${Math.random().toString(36).slice(2)}.${detected.ext}`;
     const uploadDir = path.join(process.cwd(), "public/uploads/notes");
 
     await mkdir(uploadDir, { recursive: true });
@@ -31,7 +32,7 @@ export const POST = withAuthParams<{ id: string }>(async (req, _session, { id })
         noteId: Number(id),
         name: file.name,
         url: `/uploads/notes/${filename}`,
-        mimeType: file.type,
+        mimeType: detected.mime,
         size: file.size,
       },
     });
