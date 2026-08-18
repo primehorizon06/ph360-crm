@@ -113,6 +113,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
             {user ? "Editar Usuario" : "Nuevo Usuario"}
           </h2>
           <button
+            type="button"
             onClick={onClose}
             className="text-white/40 hover:text-white transition-colors"
           >
@@ -120,6 +121,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
           </button>
         </div>
 
+        <form onSubmit={handleSubmit(onSubmit)}>
         {/* Body */}
         <div className="p-5 space-y-4 max-h-[65vh] overflow-y-auto">
           {/* Avatar */}
@@ -145,20 +147,33 @@ export function UserModal({ user, onClose, onSave }: Props) {
               name: "username",
               type: "text",
               disabled: !!user,
+              autoComplete: "off",
             },
-            { label: "Nombre completo", name: "name", type: "text" },
-            { label: "Email (opcional)", name: "email", type: "email" },
+            {
+              label: "Nombre completo",
+              name: "name",
+              type: "text",
+              autoComplete: "off",
+            },
+            {
+              label: "Email (opcional)",
+              name: "email",
+              type: "email",
+              autoComplete: "off",
+            },
             {
               label: user
                 ? "Nueva contraseña (dejar vacío para no cambiar)"
                 : "Contraseña",
               name: "password",
               type: "password",
+              autoComplete: "new-password",
             },
             {
               label: "Confirmar contraseña",
               name: "confirmPassword",
               type: "password",
+              autoComplete: "new-password",
             },
           ].map((field) => (
             <div key={field.name}>
@@ -168,6 +183,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
               <input
                 type={field.type}
                 disabled={field.disabled}
+                autoComplete={field.autoComplete}
                 {...register(field.name as keyof UserFormData)}
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50 disabled:opacity-40"
               />
@@ -262,19 +278,21 @@ export function UserModal({ user, onClose, onSave }: Props) {
         {/* Footer */}
         <div className="flex justify-end gap-3 p-5 border-t border-white/10">
           <button
+            type="button"
             onClick={onClose}
             className="px-4 py-2 text-lg text-white/50 hover:text-white transition-colors"
           >
             Cancelar
           </button>
           <button
-            onClick={handleSubmit(onSubmit)}
+            type="submit"
             disabled={isSubmitting}
             className="px-4 py-2 text-lg bg-cyan-500 hover:bg-cyan-400 text-black font-medium rounded-lg transition-colors disabled:opacity-50"
           >
             {isSubmitting ? "Guardando..." : "Guardar"}
           </button>
         </div>
+        </form>
       </div>
     </div>
   );

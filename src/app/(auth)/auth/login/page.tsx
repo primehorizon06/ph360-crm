@@ -87,6 +87,7 @@ export default function LoginPage() {
                   name="username"
                   placeholder="Usuario"
                   type="text"
+                  autoComplete="username"
                   onChange={(e) => setUsername(e.target.value)}
                 />
               </div>
@@ -107,6 +108,7 @@ export default function LoginPage() {
                   name="password"
                   placeholder="••••••••"
                   type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
                   onChange={(e) => setPassword(e.target.value)}
                 />
                 <button

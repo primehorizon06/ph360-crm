@@ -1,6 +1,18 @@
 import { UserRole } from "@/utils/constants/roles";
 import { z } from "zod";
 
+const PASSWORD_MIN_LENGTH = 10;
+
+function isStrongPassword(password: string): boolean {
+  return (
+    password.length >= PASSWORD_MIN_LENGTH &&
+    /[a-z]/.test(password) &&
+    /[A-Z]/.test(password) &&
+    /[0-9]/.test(password) &&
+    /[^A-Za-z0-9]/.test(password)
+  );
+}
+
 const baseSchema = z
   .object({
     username: z
@@ -16,11 +28,7 @@ const baseSchema = z
       .min(3, "Mínimo 3 caracteres")
       .max(50, "Máximo 50 caracteres"),
     email: z.string().email("Email inválido").optional().or(z.literal("")),
-    password: z
-      .string()
-      .min(8, "Mínimo 8 caracteres")
-      .optional()
-      .or(z.literal("")),
+    password: z.string().optional().or(z.literal("")),
     confirmPassword: z.string().optional().or(z.literal("")),
     role: z.enum([
       UserRole.ADMIN,
@@ -33,6 +41,14 @@ const baseSchema = z
     active: z.boolean(),
   })
   .superRefine((data, ctx) => {
+    if (data.password && !isStrongPassword(data.password)) {
+      ctx.addIssue({
+        path: ["password"],
+        code: "custom",
+        message: `Mínimo ${PASSWORD_MIN_LENGTH} caracteres, con mayúscula, minúscula, número y símbolo`,
+      });
+    }
+
     if (data.password && data.password !== data.confirmPassword) {
       ctx.addIssue({
         path: ["confirmPassword"],
