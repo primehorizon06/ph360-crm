@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { withAuthParams, forbidden, notFound, conflict } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
 import { canAccessLead } from "@/lib/permissions";
+import { encryptDeterministic, decrypt } from "@/lib/crypto";
 
 export const GET = withAuthParams<{ id: string }>(
   async (_req, _session, { id }) => {
@@ -21,7 +22,7 @@ export const GET = withAuthParams<{ id: string }>(
     });
 
     if (!lead) return notFound("Lead no encontrado");
-    return NextResponse.json(lead);
+    return NextResponse.json({ ...lead, ssn: decrypt(lead.ssn) });
   },
 );
 
@@ -46,7 +47,7 @@ export const PATCH = withAuthParams<{ id: string }>(
         lastName: body.lastName || null,
         phone1: body.phone1,
         phone2: body.phone2 || null,
-        ssn: body.ssn || null,
+        ssn: body.ssn ? encryptDeterministic(body.ssn) : null,
         address: body.address || null,
         city: body.city || null,
         state: body.state || null,
@@ -66,7 +67,7 @@ export const PATCH = withAuthParams<{ id: string }>(
         firstName: body.firstName,
         lastName: body.lastName || null,
         phone2: body.phone2 || null,
-        ssn: body.ssn || null,
+        ssn: body.ssn ? encryptDeterministic(body.ssn) : null,
         address: body.address || null,
         city: body.city || null,
         state: body.state || null,
@@ -85,7 +86,7 @@ export const PATCH = withAuthParams<{ id: string }>(
         firstName: body.firstName,
         lastName: body.lastName || null,
         phone2: body.phone2 || null,
-        ssn: body.ssn || null,
+        ssn: body.ssn ? encryptDeterministic(body.ssn) : null,
         address: body.address || null,
         city: body.city || null,
         state: body.state || null,
@@ -124,8 +125,10 @@ export const PATCH = withAuthParams<{ id: string }>(
         );
     }
 
-    if (body.ssn && body.ssn !== existing.ssn) {
-      const dup = await prisma.lead.findUnique({ where: { ssn: body.ssn } });
+    if (body.ssn && body.ssn !== decrypt(existing.ssn)) {
+      const dup = await prisma.lead.findUnique({
+        where: { ssn: encryptDeterministic(body.ssn) },
+      });
       if (dup) return conflict("El Seguro social ya está registrado");
     }
 
@@ -138,6 +141,6 @@ export const PATCH = withAuthParams<{ id: string }>(
       },
     });
 
-    return NextResponse.json(lead);
+    return NextResponse.json({ ...lead, ssn: decrypt(lead.ssn) });
   },
 );

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { withAuth, forbidden, badRequest, conflict } from "@/lib/api";
 import { buildScopeFilter } from "@/lib/permissions";
 import { CustomerStatus, LeadStatus, Prisma } from "@prisma/client";
+import { encryptDeterministic } from "@/lib/crypto";
 
 const LIMIT_DEFAULT = 50;
 const LIMIT_MAX = 200;
@@ -105,8 +106,10 @@ export const POST = withAuth(async (req, session) => {
   const existingPhone = await prisma.lead.findUnique({ where: { phone1 } });
   if (existingPhone) return conflict("El teléfono ya está registrado");
 
-  if (ssn) {
-    const existingSsn = await prisma.lead.findUnique({ where: { ssn } });
+  const encryptedSsn = ssn ? encryptDeterministic(ssn) : null;
+
+  if (encryptedSsn) {
+    const existingSsn = await prisma.lead.findUnique({ where: { ssn: encryptedSsn } });
     if (existingSsn) return conflict("La Seguro social ya está registrada");
   }
 
@@ -116,7 +119,7 @@ export const POST = withAuth(async (req, session) => {
       lastName: lastName || null,
       phone1,
       phone2: phone2 || null,
-      ssn: ssn || null,
+      ssn: encryptedSsn,
       address: address || null,
       city: city || null,
       state: state || null,
@@ -130,5 +133,5 @@ export const POST = withAuth(async (req, session) => {
     },
   });
 
-  return NextResponse.json(lead, { status: 201 });
+  return NextResponse.json({ ...lead, ssn }, { status: 201 });
 });

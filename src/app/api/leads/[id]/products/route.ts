@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuthParams, badRequest } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
+import { encryptRandom, decrypt } from "@/lib/crypto";
 
 export const GET = withAuthParams<{ id: string }>(
   async (_req, _session, { id }) => {
@@ -17,7 +18,20 @@ export const GET = withAuthParams<{ id: string }>(
       orderBy: { createdAt: "asc" },
     });
 
-    return NextResponse.json(products);
+    const decrypted = products.map((p) =>
+      p.paymentMethod
+        ? {
+            ...p,
+            paymentMethod: {
+              ...p.paymentMethod,
+              accountNumber: decrypt(p.paymentMethod.accountNumber),
+              routingNumber: decrypt(p.paymentMethod.routingNumber),
+            },
+          }
+        : p,
+    );
+
+    return NextResponse.json(decrypted);
   },
 );
 
@@ -45,10 +59,10 @@ export const POST = withAuthParams<{ id: string }>(
             lastFour: paymentMethod.lastFour ?? null,
             holderName: paymentMethod.holderName ?? null,
             bank: paymentMethod.bank ?? null,
-            accountNumber: paymentMethod.accountNumber ?? null,
+            accountNumber: encryptRandom(paymentMethod.accountNumber ?? null),
             accountHolder: paymentMethod.accountHolder ?? null,
             accountBank: paymentMethod.accountBank ?? null,
-            routingNumber: paymentMethod.routingNumber ?? null,
+            routingNumber: encryptRandom(paymentMethod.routingNumber ?? null),
             accountType: paymentMethod.accountType ?? null,
           },
         },
@@ -101,6 +115,18 @@ export const POST = withAuthParams<{ id: string }>(
       }
     }
 
-    return NextResponse.json(leadProduct, { status: 201 });
+    return NextResponse.json(
+      {
+        ...leadProduct,
+        paymentMethod: leadProduct.paymentMethod
+          ? {
+              ...leadProduct.paymentMethod,
+              accountNumber: paymentMethod.accountNumber ?? null,
+              routingNumber: paymentMethod.routingNumber ?? null,
+            }
+          : leadProduct.paymentMethod,
+      },
+      { status: 201 },
+    );
   },
 );
