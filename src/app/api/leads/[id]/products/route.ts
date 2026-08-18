@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { withAuthParams, badRequest } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
 import { encryptRandom, decrypt } from "@/lib/crypto";
+import { productSchema } from "@/lib/validations/product";
 
 export const GET = withAuthParams<{ id: string }>(
   async (_req, _session, { id }) => {
@@ -42,6 +43,16 @@ export const POST = withAuthParams<{ id: string }>(
 
     if (!product || !paymentMethod?.type)
       return badRequest("Producto y método de pago son requeridos");
+
+    // productSchema espera un objeto plano (paymentType + campos), no el
+    // { product, paymentMethod: { type, ... } } que envía el cliente.
+    const parsed = productSchema.safeParse({
+      product,
+      paymentType: paymentMethod.type,
+      ...paymentMethod,
+    });
+    if (!parsed.success)
+      return badRequest(parsed.error.issues[0]?.message ?? "Datos inválidos");
 
     const existingCount = await prisma.product.count({
       where: { leadId: Number(id) },

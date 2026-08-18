@@ -1,15 +1,20 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { withAuthParams, forbidden, conflict } from "@/lib/api";
+import { withAuthParams, forbidden, conflict, badRequest } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
+import { userSchema } from "@/lib/validations/user";
 
 export const PATCH = withAuthParams<{ id: string }>(
   async (req, session, { id }) => {
     if (session.user.role !== UserRole.ADMIN) return forbidden();
 
-    const body = await req.json();
-    const { name, email, password, role, active, companyId, teamId } = body;
+    const rawBody = await req.json();
+    const parsed = userSchema.safeParse(rawBody);
+    if (!parsed.success)
+      return badRequest(parsed.error.issues[0]?.message ?? "Datos inválidos");
+
+    const { name, email, password, role, active, companyId, teamId } = parsed.data;
 
     const data: Record<string, unknown> = {
       name,

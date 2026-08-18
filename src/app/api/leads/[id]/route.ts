@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withAuthParams, forbidden, notFound, conflict } from "@/lib/api";
+import { withAuthParams, forbidden, notFound, conflict, badRequest } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
 import { canAccessLead } from "@/lib/permissions";
 import { encryptDeterministic, decrypt } from "@/lib/crypto";
+import { leadSchema } from "@/lib/validations/lead";
+
+const leadPatchSchema = leadSchema.partial().passthrough();
 
 export const GET = withAuthParams<{ id: string }>(
   async (_req, _session, { id }) => {
@@ -30,7 +33,12 @@ export const PATCH = withAuthParams<{ id: string }>(
   async (req, session, { id }) => {
     const user = session.user;
     const role = user.role;
-    const body = await req.json();
+    const rawBody = await req.json();
+
+    const parsed = leadPatchSchema.safeParse(rawBody);
+    if (!parsed.success)
+      return badRequest(parsed.error.issues[0]?.message ?? "Datos inválidos");
+    const body = parsed.data;
 
     const existing = await prisma.lead.findUnique({
       where: { id: Number(id) },

@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { Role } from "@prisma/client";
 import { withAuth, forbidden, badRequest, conflict } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
+import { createUserSchema } from "@/lib/validations/user";
 
 export const GET = withAuth(async (req, session) => {
   const { searchParams } = new URL(req.url);
@@ -41,16 +42,19 @@ export const POST = withAuth(async (req, session) => {
   if (session.user.role !== UserRole.ADMIN) return forbidden();
 
   const body = await req.json();
-  const { username, name, email, password, role, companyId } = body;
 
-  if (!username || !name || !password || !role)
-    return badRequest("Campos requeridos faltantes");
+  const parsed = createUserSchema.safeParse(body);
+  if (!parsed.success)
+    return badRequest(parsed.error.issues[0]?.message ?? "Datos inválidos");
+
+  const { username, name, email, password, role, companyId } = parsed.data;
 
   const existing = await prisma.user.findUnique({ where: { username } });
   if (existing) return conflict("El usuario ya existe");
 
-  const hashed = await bcrypt.hash(password, 10);
-  const teamId = body.teamId ? Number(body.teamId) : null;
+  // createUserSchema exige password no vacío vía refine (Zod no lo refleja en el tipo)
+  const hashed = await bcrypt.hash(password as string, 10);
+  const teamId = parsed.data.teamId ? Number(parsed.data.teamId) : null;
 
   const user = await prisma.user.create({
     data: {
