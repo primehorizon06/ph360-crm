@@ -27,9 +27,13 @@ services:
       dockerfile: Dockerfile.dev
     container_name: crm-nextjs-dev
     environment:
+      # Stack 100% local: no depende ni puede llegar a tocar el Supabase de
+      # desarrollo. No se monta .env.local a propósito — todo lo que la app
+      # necesita se define acá, con defaults que funcionan sin configurar nada.
       NODE_ENV: development
       DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-crm_db}
       NEXTAUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_API_URL: http://localhost:3000
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-development-secret-key}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:-FEz/Gm2rBSxGeXBWE+aLrGgzOOUg0waQtfcB0sm+ahI=}
     ports:
@@ -44,8 +48,7 @@ services:
       - ./next.config.ts:/app/next.config.ts
       - ./tsconfig.json:/app/tsconfig.json
       - ./middleware.ts:/app/middleware.ts
-      - ./.env.local:/app/.env.local
-      - ./node_modules:/app/node_modules
+      - nextjs_node_modules:/app/node_modules
       - /app/.next
     depends_on:
       postgres:
@@ -107,3 +110,4 @@ networks:
 
 volumes:
   postgres_data:
+  nextjs_node_modules:
