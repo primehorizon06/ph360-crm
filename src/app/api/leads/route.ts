@@ -4,6 +4,8 @@ import { withAuth, forbidden, badRequest, conflict } from "@/lib/api";
 import { buildScopeFilter } from "@/lib/permissions";
 import { CustomerStatus, LeadStatus, Prisma } from "@prisma/client";
 import { encryptDeterministic } from "@/lib/crypto";
+import { leadSchema } from "@/lib/validations/lead";
+import { UserRole } from "@/utils/constants/roles";
 
 const LIMIT_DEFAULT = 50;
 const LIMIT_MAX = 200;
@@ -84,7 +86,12 @@ export const GET = withAuth(async (req, session) => {
 
 export const POST = withAuth(async (req, session) => {
   const user = session.user;
-  const body = await req.json();
+  const rawBody = await req.json();
+
+  const parsed = leadSchema.safeParse(rawBody);
+  if (!parsed.success)
+    return badRequest(parsed.error.issues[0]?.message ?? "Datos inválidos");
+
   const {
     firstName,
     lastName,
@@ -98,10 +105,26 @@ export const POST = withAuth(async (req, session) => {
     email,
     birthDate,
     contactTime,
-  } = body;
+  } = parsed.data;
 
-  if (!firstName || !phone1 || !user.companyId || !user.id)
-    return badRequest("Campos requeridos faltantes");
+  let companyId: number;
+  let teamId: number;
+  let assignedToId: number;
+
+  if (user.role === UserRole.ADMIN) {
+    companyId = Number(rawBody.companyId);
+    teamId = Number(rawBody.teamId);
+    assignedToId = Number(rawBody.assignedToId);
+    if (!companyId || !teamId || !assignedToId)
+      return badRequest("Selecciona franquicia, equipo y agente asignado");
+  } else {
+    if (!user.companyId || !user.id) return badRequest("Campos requeridos faltantes");
+    if (!user.teamId)
+      return badRequest("Tu usuario no tiene un equipo asignado. Contacta a un administrador.");
+    companyId = Number(user.companyId);
+    teamId = Number(user.teamId);
+    assignedToId = Number(user.id);
+  }
 
   const existingPhone = await prisma.lead.findUnique({ where: { phone1 } });
   if (existingPhone) return conflict("El teléfono ya está registrado");
@@ -127,9 +150,9 @@ export const POST = withAuth(async (req, session) => {
       email: email || null,
       birthDate: birthDate ? new Date(birthDate) : null,
       contactTime: contactTime || null,
-      companyId: Number(user.companyId),
-      teamId: Number(user.teamId),
-      assignedToId: Number(user.id),
+      companyId,
+      teamId,
+      assignedToId,
     },
   });
 

@@ -1,13 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
+import useSWR from "swr";
+import { useSession } from "next-auth/react";
 import { leadSchema, LeadFormData } from "@/lib/validations/lead";
 import { X } from "lucide-react";
 import { LEAD_FIELDS, STATUS } from "@/utils/constants/leads";
 import { CustomSelect } from "../ui/Select";
 import { formatPhone } from "@/utils/helpers/format";
+import { UserRole } from "@/utils/constants/roles";
+import { fetcher } from "@/lib/fetcher";
 
 interface Props {
   onClose: () => void;
@@ -18,6 +23,8 @@ const statusOptions = Object.keys(STATUS);
 const statusLabels = Object.values(STATUS);
 
 export function LeadModal({ onClose, onSave }: Props) {
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === UserRole.ADMIN;
 
   const {
     register,
@@ -35,6 +42,23 @@ export function LeadModal({ onClose, onSave }: Props) {
   const phone1Value = watch("phone1") ?? "";
   const phone2Value = watch("phone2") ?? "";
 
+  const [companyId, setCompanyId] = useState("");
+  const [teamId, setTeamId] = useState("");
+  const [assignedToId, setAssignedToId] = useState("");
+
+  const { data: companies = [] } = useSWR<{ id: number; name: string }[]>(
+    isAdmin ? "/api/companies?simple=true" : null,
+    fetcher,
+  );
+  const { data: teams = [] } = useSWR<{ id: number; name: string }[]>(
+    isAdmin && companyId ? `/api/teams?companyId=${companyId}` : null,
+    fetcher,
+  );
+  const { data: agents = [] } = useSWR<{ id: number; name: string }[]>(
+    isAdmin && teamId ? `/api/users?teamId=${teamId}&role=AGENT` : null,
+    fetcher,
+  );
+
   function handleSsnChange(e: React.ChangeEvent<HTMLInputElement>) {
     const digits = e.target.value.replace(/\D/g, "").slice(0, 9);
     let masked = digits;
@@ -46,10 +70,17 @@ export function LeadModal({ onClose, onSave }: Props) {
   }
 
   async function onSubmit(data: LeadFormData) {
+    if (isAdmin && (!companyId || !teamId || !assignedToId)) {
+      toast.error("Selecciona franquicia, equipo y agente asignado");
+      return;
+    }
+
+    const body = isAdmin ? { ...data, companyId, teamId, assignedToId } : data;
+
     const res = await fetch("/api/leads", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify(body),
     });
     if (!res.ok) {
       const json = await res.json();
@@ -156,6 +187,64 @@ export function LeadModal({ onClose, onSave }: Props) {
                 )}
               </div>
             ))}
+
+            {isAdmin && (
+              <>
+                <div>
+                  <label className="text-sm text-white/40 mb-1 block">
+                    Franquicia <span className="text-red-400">*</span>
+                  </label>
+                  <CustomSelect
+                    name="companyId"
+                    value={
+                      companies.find((c) => String(c.id) === companyId)?.name ??
+                      "Seleccionar"
+                    }
+                    onChange={(val) => {
+                      setCompanyId(val);
+                      setTeamId("");
+                      setAssignedToId("");
+                    }}
+                    options={companies.map((c) => String(c.id))}
+                    labels={companies.map((c) => c.name)}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-white/40 mb-1 block">
+                    Equipo <span className="text-red-400">*</span>
+                  </label>
+                  <CustomSelect
+                    name="teamId"
+                    value={
+                      teams.find((t) => String(t.id) === teamId)?.name ??
+                      "Seleccionar"
+                    }
+                    onChange={(val) => {
+                      setTeamId(val);
+                      setAssignedToId("");
+                    }}
+                    options={teams.map((t) => String(t.id))}
+                    labels={teams.map((t) => t.name)}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-white/40 mb-1 block">
+                    Agente asignado <span className="text-red-400">*</span>
+                  </label>
+                  <CustomSelect
+                    searchable
+                    name="assignedToId"
+                    value={
+                      agents.find((a) => String(a.id) === assignedToId)?.name ??
+                      "Seleccionar"
+                    }
+                    onChange={setAssignedToId}
+                    options={agents.map((a) => String(a.id))}
+                    labels={agents.map((a) => a.name)}
+                  />
+                </div>
+              </>
+            )}
 
             {/* Status */}
             <Controller
