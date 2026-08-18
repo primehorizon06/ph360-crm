@@ -6,6 +6,36 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { env } from "@/env";
 
+const MAX_ATTEMPTS = 5;
+const WINDOW_MS = 15 * 60 * 1000;
+
+// Bloqueo simple en memoria por usuario. Suficiente para un solo proceso;
+// si la app pasa a correr en varias instancias hará falta un store compartido (Redis).
+const loginAttempts = new Map<string, { count: number; firstAttemptAt: number }>();
+
+function isLockedOut(key: string): boolean {
+  const entry = loginAttempts.get(key);
+  if (!entry) return false;
+  if (Date.now() - entry.firstAttemptAt > WINDOW_MS) {
+    loginAttempts.delete(key);
+    return false;
+  }
+  return entry.count >= MAX_ATTEMPTS;
+}
+
+function registerFailedAttempt(key: string): void {
+  const entry = loginAttempts.get(key);
+  if (!entry || Date.now() - entry.firstAttemptAt > WINDOW_MS) {
+    loginAttempts.set(key, { count: 1, firstAttemptAt: Date.now() });
+    return;
+  }
+  entry.count += 1;
+}
+
+function clearAttempts(key: string): void {
+  loginAttempts.delete(key);
+}
+
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
@@ -18,6 +48,13 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.username || !credentials?.password) {
           throw new Error("Credenciales inválidas");
+        }
+
+        const attemptKey = credentials.username.toLowerCase();
+        if (isLockedOut(attemptKey)) {
+          throw new Error(
+            "Demasiados intentos fallidos. Intenta de nuevo en unos minutos",
+          );
         }
 
         // Buscar usuario por username o email
@@ -35,6 +72,7 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user || !user.password) {
+          registerFailedAttempt(attemptKey);
           throw new Error("Usuario no encontrado");
         }
 
@@ -48,8 +86,11 @@ export const authOptions: NextAuthOptions = {
         );
 
         if (!isValid) {
+          registerFailedAttempt(attemptKey);
           throw new Error("Contraseña incorrecta");
         }
+
+        clearAttempts(attemptKey);
 
         return {
           id: user.id.toString(),
