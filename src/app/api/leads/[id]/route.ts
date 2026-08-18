@@ -5,6 +5,7 @@ import { UserRole } from "@/utils/constants/roles";
 import { canAccessLead } from "@/lib/permissions";
 import { encryptDeterministic, decrypt } from "@/lib/crypto";
 import { leadSchema } from "@/lib/validations/lead";
+import { logAudit, getRequestMeta } from "@/lib/audit";
 
 const leadPatchSchema = leadSchema.partial().passthrough();
 
@@ -147,6 +148,19 @@ export const PATCH = withAuthParams<{ id: string }>(
         company: { select: { id: true, name: true } },
         assignedTo: { select: { id: true, name: true } },
       },
+    });
+
+    const changedFields = (Object.keys(data) as Array<keyof typeof data>).filter(
+      (key) => (existing as Record<string, unknown>)[key] !== data[key],
+    );
+
+    await logAudit({
+      action: "LEAD_UPDATED",
+      actor: { id: user.id, role: user.role, name: user.name },
+      entityType: "Lead",
+      entityId: lead.id,
+      metadata: { changedFields },
+      ...getRequestMeta(req),
     });
 
     return NextResponse.json({ ...lead, ssn: decrypt(lead.ssn) });

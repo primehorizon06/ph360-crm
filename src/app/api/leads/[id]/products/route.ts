@@ -4,6 +4,7 @@ import { withAuthParams, badRequest } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
 import { encryptRandom, decrypt } from "@/lib/crypto";
 import { productSchema } from "@/lib/validations/product";
+import { logAudit, getRequestMeta } from "@/lib/audit";
 
 export const GET = withAuthParams<{ id: string }>(
   async (_req, _session, { id }) => {
@@ -125,6 +126,15 @@ export const POST = withAuthParams<{ id: string }>(
         });
       }
     }
+
+    await logAudit({
+      action: "PRODUCT_CREATED",
+      actor: { id: session.user.id, role: session.user.role, name: session.user.name },
+      entityType: "Product",
+      entityId: leadProduct.id,
+      metadata: { leadId: Number(id), product, paymentType: paymentMethod.type },
+      ...getRequestMeta(req),
+    });
 
     return NextResponse.json(
       {

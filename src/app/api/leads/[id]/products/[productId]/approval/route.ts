@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { withAuthParams, forbidden, badRequest, notFound } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
 import { applyApprovalDecision, notifyCoachOfResubmit } from "@/lib/approvalService";
+import { logAudit, getRequestMeta } from "@/lib/audit";
 
 export const PATCH = withAuthParams<{ id: string; productId: string }>(
   async (req, session, { id, productId }) => {
@@ -65,6 +66,15 @@ export const PATCH = withAuthParams<{ id: string; productId: string }>(
       action,
       isFirstProduct: approval.isFirstProduct,
       note,
+    });
+
+    await logAudit({
+      action: action === "APPROVE" ? "PRODUCT_APPROVED" : "PRODUCT_REJECTED",
+      actor: { id: session.user.id, role: session.user.role, name: session.user.name },
+      entityType: "Product",
+      entityId: Number(productId),
+      metadata: { leadId: Number(id), note: action === "REJECT" ? note : undefined },
+      ...getRequestMeta(req),
     });
 
     return NextResponse.json(updated);

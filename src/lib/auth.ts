@@ -5,6 +5,7 @@ import { Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { env } from "@/env";
+import { logAudit } from "@/lib/audit";
 
 const MAX_ATTEMPTS = 5;
 const WINDOW_MS = 15 * 60 * 1000;
@@ -45,13 +46,26 @@ export const authOptions: NextAuthOptions = {
         username: { label: "Usuario", type: "text" },
         password: { label: "Contraseña", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
+        const ip =
+          (req?.headers?.["x-forwarded-for"] as string | undefined)?.split(",")[0]?.trim() ??
+          (req?.headers?.["x-real-ip"] as string | undefined) ??
+          null;
+        const userAgent = (req?.headers?.["user-agent"] as string | undefined) ?? null;
+
         if (!credentials?.username || !credentials?.password) {
           throw new Error("Credenciales inválidas");
         }
 
         const attemptKey = credentials.username.toLowerCase();
         if (isLockedOut(attemptKey)) {
+          await logAudit({
+            action: "LOGIN_LOCKED_OUT",
+            entityType: "User",
+            metadata: { username: credentials.username },
+            ip,
+            userAgent,
+          });
           throw new Error(
             "Demasiados intentos fallidos. Intenta de nuevo en unos minutos",
           );
@@ -73,6 +87,13 @@ export const authOptions: NextAuthOptions = {
 
         if (!user || !user.password) {
           registerFailedAttempt(attemptKey);
+          await logAudit({
+            action: "LOGIN_FAILED",
+            entityType: "User",
+            metadata: { username: credentials.username, reason: "not_found" },
+            ip,
+            userAgent,
+          });
           throw new Error("Usuario no encontrado");
         }
 
@@ -87,10 +108,28 @@ export const authOptions: NextAuthOptions = {
 
         if (!isValid) {
           registerFailedAttempt(attemptKey);
+          await logAudit({
+            action: "LOGIN_FAILED",
+            actor: { id: user.id, role: user.role, name: user.name },
+            entityType: "User",
+            entityId: user.id,
+            metadata: { reason: "wrong_password" },
+            ip,
+            userAgent,
+          });
           throw new Error("Contraseña incorrecta");
         }
 
         clearAttempts(attemptKey);
+
+        await logAudit({
+          action: "LOGIN_SUCCESS",
+          actor: { id: user.id, role: user.role, name: user.name },
+          entityType: "User",
+          entityId: user.id,
+          ip,
+          userAgent,
+        });
 
         return {
           id: user.id.toString(),

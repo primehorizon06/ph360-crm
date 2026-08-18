@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth, forbidden, badRequest, conflict } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
+import { logAudit, getRequestMeta } from "@/lib/audit";
 
 export const GET = withAuth(async (req) => {
   const { searchParams } = new URL(req.url);
@@ -35,6 +36,15 @@ export const POST = withAuth(async (req, session) => {
   const company = await prisma.company.create({
     data: { name },
     select: { id: true, name: true, active: true, createdAt: true },
+  });
+
+  await logAudit({
+    action: "COMPANY_CREATED",
+    actor: { id: session.user.id, role: session.user.role, name: session.user.name },
+    entityType: "Company",
+    entityId: company.id,
+    metadata: { name },
+    ...getRequestMeta(req),
   });
 
   return NextResponse.json(company, { status: 201 });

@@ -5,6 +5,7 @@ import { Role } from "@prisma/client";
 import { withAuth, forbidden, badRequest, conflict } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
 import { createUserSchema } from "@/lib/validations/user";
+import { logAudit, getRequestMeta } from "@/lib/audit";
 
 export const GET = withAuth(async (req, session) => {
   const { searchParams } = new URL(req.url);
@@ -76,6 +77,15 @@ export const POST = withAuth(async (req, session) => {
       company: { select: { name: true } },
       team: { select: { name: true } },
     },
+  });
+
+  await logAudit({
+    action: "USER_CREATED",
+    actor: { id: session.user.id, role: session.user.role, name: session.user.name },
+    entityType: "User",
+    entityId: user.id,
+    metadata: { role, companyId: Number(companyId), teamId },
+    ...getRequestMeta(req),
   });
 
   return NextResponse.json(user, { status: 201 });

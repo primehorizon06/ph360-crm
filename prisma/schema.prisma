@@ -399,3 +399,50 @@ model Goal {
   @@unique([year, month, quincena, teamId])
   @@unique([year, month, quincena, userId])
 }
+
+// ─── AUDITORIA ───────────────────────────────────────────────────────────────
+
+enum AuditAction {
+  LOGIN_SUCCESS
+  LOGIN_FAILED
+  LOGIN_LOCKED_OUT
+  USER_CREATED
+  USER_UPDATED
+  USER_DELETED
+  LEAD_CREATED
+  LEAD_UPDATED
+  PRODUCT_CREATED
+  PRODUCT_APPROVED
+  PRODUCT_REJECTED
+  COMPANY_CREATED
+  COMPANY_UPDATED
+  COMPANY_DELETED
+  TEAM_CREATED
+  TEAM_UPDATED
+  TEAM_DELETED
+  ACCESS_DENIED
+}
+
+// Tabla de solo-escritura (sin update/delete en la aplicación): no tiene
+// relaciones FK a User/Lead/etc a propósito, para que el rastro sobreviva
+// aunque el registro relacionado se borre o cambie. Nunca debe guardarse el
+// valor de campos sensibles (ssn, cuentas bancarias, contraseñas) — solo el
+// hecho de que cambiaron, en `metadata`.
+model AuditLog {
+  id         Int          @id @default(autoincrement())
+  action     AuditAction
+  actorId    Int?
+  actorRole  Role?
+  actorName  String?
+  entityType String
+  entityId   Int?
+  metadata   Json?
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime     @default(now())
+
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([actorId])
+  @@index([createdAt])
+}

@@ -6,6 +6,7 @@ import { CustomerStatus, LeadStatus, Prisma } from "@prisma/client";
 import { encryptDeterministic } from "@/lib/crypto";
 import { leadSchema } from "@/lib/validations/lead";
 import { UserRole } from "@/utils/constants/roles";
+import { logAudit, getRequestMeta } from "@/lib/audit";
 
 const LIMIT_DEFAULT = 50;
 const LIMIT_MAX = 200;
@@ -154,6 +155,15 @@ export const POST = withAuth(async (req, session) => {
       teamId,
       assignedToId,
     },
+  });
+
+  await logAudit({
+    action: "LEAD_CREATED",
+    actor: { id: user.id, role: user.role, name: user.name },
+    entityType: "Lead",
+    entityId: lead.id,
+    metadata: { companyId, teamId, assignedToId, hasSsn: !!ssn },
+    ...getRequestMeta(req),
   });
 
   return NextResponse.json({ ...lead, ssn }, { status: 201 });

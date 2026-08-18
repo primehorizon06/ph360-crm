@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { withAuthParams, forbidden, conflict, badRequest } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
 import { userSchema } from "@/lib/validations/user";
+import { logAudit, getRequestMeta } from "@/lib/audit";
 
 export const PATCH = withAuthParams<{ id: string }>(
   async (req, session, { id }) => {
@@ -16,6 +17,9 @@ export const PATCH = withAuthParams<{ id: string }>(
 
     const { name, email, password, role, active, companyId, teamId } = parsed.data;
 
+    const existing = await prisma.user.findUnique({ where: { id: Number(id) } });
+    if (!existing) return badRequest("Usuario no encontrado");
+
     const data: Record<string, unknown> = {
       name,
       email: email || null,
@@ -26,10 +30,10 @@ export const PATCH = withAuthParams<{ id: string }>(
     };
 
     if (email) {
-      const existing = await prisma.user.findFirst({
+      const emailTaken = await prisma.user.findFirst({
         where: { email, NOT: { id: Number(id) } },
       });
-      if (existing) return conflict("El email ya está en uso");
+      if (emailTaken) return conflict("El email ya está en uso");
     }
 
     if (password) {
@@ -51,15 +55,41 @@ export const PATCH = withAuthParams<{ id: string }>(
       },
     });
 
+    const changedFields = (Object.keys(data) as Array<keyof typeof data>).filter(
+      (key) => (existing as Record<string, unknown>)[key] !== data[key],
+    );
+
+    await logAudit({
+      action: "USER_UPDATED",
+      actor: { id: session.user.id, role: session.user.role, name: session.user.name },
+      entityType: "User",
+      entityId: user.id,
+      metadata: { changedFields, roleChangedTo: existing.role !== role ? role : undefined },
+      ...getRequestMeta(req),
+    });
+
     return NextResponse.json(user);
   },
 );
 
 export const DELETE = withAuthParams<{ id: string }>(
-  async (_req, session, { id }) => {
+  async (req, session, { id }) => {
     if (session.user.role !== UserRole.ADMIN) return forbidden();
 
+    const existing = await prisma.user.findUnique({ where: { id: Number(id) } });
+    if (!existing) return badRequest("Usuario no encontrado");
+
     await prisma.user.delete({ where: { id: Number(id) } });
+
+    await logAudit({
+      action: "USER_DELETED",
+      actor: { id: session.user.id, role: session.user.role, name: session.user.name },
+      entityType: "User",
+      entityId: Number(id),
+      metadata: { username: existing.username, role: existing.role },
+      ...getRequestMeta(req),
+    });
+
     return NextResponse.json({ success: true });
   },
 );
