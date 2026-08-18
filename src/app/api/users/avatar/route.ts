@@ -4,7 +4,7 @@ import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { withAuth, badRequest, forbidden } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
-import { sniffImageType } from "@/lib/fileValidation";
+import { sniffImageType, MAX_IMAGE_SIZE } from "@/lib/fileValidation";
 
 export const POST = withAuth(async (req, session) => {
   const formData = await req.formData();
@@ -12,6 +12,7 @@ export const POST = withAuth(async (req, session) => {
   const userId = formData.get("userId") as string;
 
   if (!file || !userId) return badRequest("Datos incompletos");
+  if (file.size > MAX_IMAGE_SIZE) return badRequest("La imagen no puede superar 5MB");
 
   const isSelf = session.user.id === userId;
   if (!isSelf && session.user.role !== UserRole.ADMIN) return forbidden();

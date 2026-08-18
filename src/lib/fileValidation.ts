@@ -1,6 +1,9 @@
 // Detección de tipo de archivo por firma binaria (magic bytes), no por
 // Content-Type ni por el nombre del archivo, ambos controlables por el cliente.
 
+export const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+export const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
+
 type DetectedFile = { mime: string; ext: string };
 
 function matches(buffer: Buffer, offset: number, signature: number[]): boolean {

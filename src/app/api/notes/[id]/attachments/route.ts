@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { withAuthParams, badRequest } from "@/lib/api";
-import { sniffAttachmentType } from "@/lib/fileValidation";
+import { sniffAttachmentType, MAX_ATTACHMENT_SIZE } from "@/lib/fileValidation";
 
 export const POST = withAuthParams<{ id: string }>(async (req, _session, { id }) => {
   const formData = await req.formData();
@@ -14,6 +14,9 @@ export const POST = withAuthParams<{ id: string }>(async (req, _session, { id })
   const attachments = [];
 
   for (const file of files) {
+    if (file.size > MAX_ATTACHMENT_SIZE)
+      return badRequest(`Archivo demasiado grande: ${file.name}. Máximo 10MB`);
+
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
