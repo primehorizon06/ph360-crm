@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,8 +10,9 @@ import {
   userSchema,
   createUserSchema,
   UserFormData,
+  PASSWORD_RULES,
 } from "@/lib/validations/user";
-import { X, Camera } from "lucide-react";
+import { X, Camera, Eye, EyeOff, Check } from "lucide-react";
 import { Avatar } from "../ui/Avatar";
 import { CustomSelect } from "../ui/Select";
 import { roles, UserRole } from "@/utils/constants/roles";
@@ -24,6 +25,8 @@ interface Props {
 }
 
 export function UserModal({ user, onClose, onSave }: Props) {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
@@ -48,6 +51,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
 
   const companyId = watch("companyId");
   const role = watch("role");
+  const passwordValue = watch("password");
 
   useEffect(() => {
     if (role !== UserRole.AGENT && role !== UserRole.COACH) {
@@ -161,20 +165,6 @@ export function UserModal({ user, onClose, onSave }: Props) {
               type: "email",
               autoComplete: "off",
             },
-            {
-              label: user
-                ? "Nueva contraseña (dejar vacío para no cambiar)"
-                : "Contraseña",
-              name: "password",
-              type: "password",
-              autoComplete: "new-password",
-            },
-            {
-              label: "Confirmar contraseña",
-              name: "confirmPassword",
-              type: "password",
-              autoComplete: "new-password",
-            },
           ].map((field) => (
             <div key={field.name}>
               <label className="text-sm text-white/40 mb-1 block">
@@ -194,6 +184,74 @@ export function UserModal({ user, onClose, onSave }: Props) {
               )}
             </div>
           ))}
+
+          {/* Contraseña */}
+          <div>
+            <label className="text-sm text-white/40 mb-1 block">
+              {user ? "Nueva contraseña (dejar vacío para no cambiar)" : "Contraseña"}
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                {...register("password")}
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 pr-10 text-lg text-white outline-none focus:border-cyan-500/50"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+            {errors.password && (
+              <p className="text-red-400 text-sm mt-1">{errors.password.message}</p>
+            )}
+            {passwordValue && (
+              <ul className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
+                {PASSWORD_RULES.map((rule) => {
+                  const met = rule.test(passwordValue);
+                  return (
+                    <li
+                      key={rule.label}
+                      className={`flex items-center gap-1.5 text-sm ${met ? "text-green-400" : "text-white/30"}`}
+                    >
+                      <Check size={12} className={met ? "opacity-100" : "opacity-30"} />
+                      {rule.label}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+
+          {/* Confirmar contraseña */}
+          <div>
+            <label className="text-sm text-white/40 mb-1 block">
+              Confirmar contraseña
+            </label>
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                autoComplete="new-password"
+                {...register("confirmPassword")}
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 pr-10 text-lg text-white outline-none focus:border-cyan-500/50"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+              >
+                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+            {errors.confirmPassword && (
+              <p className="text-red-400 text-sm mt-1">
+                {errors.confirmPassword.message}
+              </p>
+            )}
+          </div>
 
           {/* Rol */}
           <div>

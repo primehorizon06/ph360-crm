@@ -1,16 +1,18 @@
 import { UserRole } from "@/utils/constants/roles";
 import { z } from "zod";
 
-const PASSWORD_MIN_LENGTH = 10;
+export const PASSWORD_MIN_LENGTH = 10;
+
+export const PASSWORD_RULES: { label: string; test: (password: string) => boolean }[] = [
+  { label: `Mínimo ${PASSWORD_MIN_LENGTH} caracteres`, test: (p) => p.length >= PASSWORD_MIN_LENGTH },
+  { label: "Una mayúscula", test: (p) => /[A-Z]/.test(p) },
+  { label: "Una minúscula", test: (p) => /[a-z]/.test(p) },
+  { label: "Un número", test: (p) => /[0-9]/.test(p) },
+  { label: "Un símbolo", test: (p) => /[^A-Za-z0-9]/.test(p) },
+];
 
 function isStrongPassword(password: string): boolean {
-  return (
-    password.length >= PASSWORD_MIN_LENGTH &&
-    /[a-z]/.test(password) &&
-    /[A-Z]/.test(password) &&
-    /[0-9]/.test(password) &&
-    /[^A-Za-z0-9]/.test(password)
-  );
+  return PASSWORD_RULES.every((rule) => rule.test(password));
 }
 
 const baseSchema = z
