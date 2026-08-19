@@ -21,7 +21,7 @@ interface Props {
 export function LeadDetailHeader({ lead, role, onSuspend, onEdit }: Props) {
   return (
     <>
-      <div className="bg-[#13151c] border border-white/10 rounded-xl p-5">
+      <div className="bg-surface border border-white/10 rounded-xl p-5">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 flex-wrap">

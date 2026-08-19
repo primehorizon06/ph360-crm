@@ -8,7 +8,7 @@ interface Props {
 export function PersonalTab({ lead }: Props) {
   return (
     <div className="space-y-4">
-      <div className="bg-[#13151c] border border-white/10 rounded-xl p-5">
+      <div className="bg-surface border border-white/10 rounded-xl p-5">
         <h2 className="text-white font-semibold mb-4 pb-3 border-b border-white/10">
           Información Personal
         </h2>
@@ -28,7 +28,7 @@ export function PersonalTab({ lead }: Props) {
         </div>
       </div>
 
-      <div className="bg-[#13151c] border border-white/10 rounded-xl p-5">
+      <div className="bg-surface border border-white/10 rounded-xl p-5">
         <h2 className="text-white font-semibold mb-4 pb-3 border-b border-white/10">
           Contacto
         </h2>
@@ -39,7 +39,7 @@ export function PersonalTab({ lead }: Props) {
         </div>
       </div>
 
-      <div className="bg-[#13151c] border border-white/10 rounded-xl p-5">
+      <div className="bg-surface border border-white/10 rounded-xl p-5">
         <h2 className="text-white font-semibold mb-4 pb-3 border-b border-white/10">
           Dirección
         </h2>
@@ -51,7 +51,7 @@ export function PersonalTab({ lead }: Props) {
         </div>
       </div>
 
-      <div className="bg-[#13151c] border border-white/10 rounded-xl p-5">
+      <div className="bg-surface border border-white/10 rounded-xl p-5">
         <h2 className="text-white font-semibold mb-4 pb-3 border-b border-white/10">
           Registro
         </h2>

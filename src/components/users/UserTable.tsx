@@ -16,7 +16,7 @@ interface Props {
 
 export function UserTable({ users, onEdit, onToggleActive }: Props) {
   return (
-    <div className="bg-[#13151c] rounded-xl border border-white/10 overflow-hidden">
+    <div className="bg-surface rounded-xl border border-white/10 overflow-hidden">
       {/* Vista desktop — tabla */}
       <div className="hidden md:block">
         <table className="w-full">

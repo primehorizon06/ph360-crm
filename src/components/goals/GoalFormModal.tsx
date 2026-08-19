@@ -213,7 +213,7 @@ export function GoalFormModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#1a1c27] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+      <div className="bg-surface-container-low border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl">
         <h2 className="text-lg font-bold text-white mb-4">
           Nueva meta quincenal
         </h2>

@@ -47,7 +47,7 @@ export function TeamModal({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-[#13151c] border border-white/10 rounded-xl w-full max-w-sm">
+      <div className="bg-surface border border-white/10 rounded-xl w-full max-w-sm">
         <div className="flex items-center justify-between p-5 border-b border-white/10">
           <h2 className="text-white font-semibold">
             {team ? "Editar Equipo" : "Nuevo Equipo"}

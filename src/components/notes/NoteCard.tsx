@@ -6,7 +6,7 @@ export function NoteCard({ note }: { note: Note }) {
   const date = new Date(note.createdAt);
 
   return (
-    <div className="bg-[#13151c] border border-white/10 rounded-xl p-4 space-y-3">
+    <div className="bg-surface border border-white/10 rounded-xl p-4 space-y-3">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">
           <FileText size={14} className="text-cyan-400 shrink-0" />

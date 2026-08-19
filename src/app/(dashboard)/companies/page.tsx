@@ -162,7 +162,7 @@ export default function CompaniesPage() {
         {filtered.map((company) => (
           <div
             key={company.id}
-            className="bg-[#13151c] border border-white/10 rounded-xl overflow-hidden"
+            className="bg-surface border border-white/10 rounded-xl overflow-hidden"
           >
             {/* Empresa */}
             <div className="flex items-start justify-between px-4 py-3 gap-2">

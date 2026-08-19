@@ -174,7 +174,7 @@ export function CustomSelect({
           <div
             id={listboxId}
             style={dropdownStyle}
-            className="bg-[#1e2030] border border-white/10 rounded-lg overflow-hidden shadow-xl"
+            className="bg-surface-container border border-white/10 rounded-lg overflow-hidden shadow-xl"
           >
             {/* Buscador opcional */}
             {searchable && (

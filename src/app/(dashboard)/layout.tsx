@@ -10,7 +10,7 @@ export default function DashboardLayout({
 }) {
   return (
     <SidebarProvider>
-      <div className="flex h-dvh bg-[#0f1117] text-white">
+      <div className="flex h-dvh bg-background text-white">
         <Sidebar />
         <DashboardContent>{children}</DashboardContent>
       </div>

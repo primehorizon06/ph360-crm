@@ -156,7 +156,7 @@ export function NotificationBell() {
             className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 mt-2 w-80 bg-[#1a1c23] border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden">
+          <div className="absolute right-0 mt-2 w-80 bg-surface-container-low border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden">
             {/* ── Recordatorios ── */}
             {pendingReminders.length > 0 && (
               <>

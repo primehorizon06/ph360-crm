@@ -87,7 +87,7 @@ export function PaymentPlanPicker({ value, onChange, error }: Props) {
           {value.map((installment, idx) => (
             <div
               key={installment.date.toDateString()}
-              className="flex items-center gap-3 bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2"
+              className="flex items-center gap-3 bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2"
             >
               {/* Número de cuota */}
               <span className="shrink-0 w-6 h-6 rounded-full bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 text-lg font-semibold">
@@ -111,7 +111,7 @@ export function PaymentPlanPicker({ value, onChange, error }: Props) {
                   placeholder="0.00"
                   value={installment.amount}
                   onChange={(e) => handleAmountChange(idx, e.target.value)}
-                  className={`w-full bg-[#13151c] border rounded-md pl-6 pr-2 py-1.5 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 transition-all ${
+                  className={`w-full bg-surface border rounded-md pl-6 pr-2 py-1.5 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 transition-all ${
                     errors.installments?.[idx]?.amount
                       ? "border-red-500/50"
                       : "border-white/10"

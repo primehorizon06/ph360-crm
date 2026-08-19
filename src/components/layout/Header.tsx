@@ -15,7 +15,7 @@ export function Header() {
   return (
     <>
       <header
-        className={`fixed top-0 right-0 ${collapsed ? "md:left-16" : "md:left-56"} left-0 h-14 bg-[#13151c]/60 backdrop-blur-xl border-b border-white/10 flex items-center justify-between px-4 md:px-8 z-40 transition-all duration-300`}
+        className={`fixed top-0 right-0 ${collapsed ? "md:left-16" : "md:left-56"} left-0 h-14 bg-surface/60 backdrop-blur-xl border-b border-white/10 flex items-center justify-between px-4 md:px-8 z-40 transition-all duration-300`}
       >
         <div className="flex items-center gap-3">
           {/* Hamburguesa móvil */}

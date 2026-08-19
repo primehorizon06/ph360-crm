@@ -41,7 +41,7 @@ export function NotesTab({ leadId }: PropsNotesTab) {
           <Loading />
         </div>
       ) : notes.length === 0 ? (
-        <div className="bg-[#13151c] border border-white/10 rounded-xl p-12 flex flex-col items-center justify-center gap-2">
+        <div className="bg-surface border border-white/10 rounded-xl p-12 flex flex-col items-center justify-center gap-2">
           <FileText size={32} className="text-white/20" />
           <p className="text-white/30 text-lg">No hay notas aún</p>
         </div>

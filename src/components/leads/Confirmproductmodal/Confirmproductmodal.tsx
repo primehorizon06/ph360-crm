@@ -34,7 +34,7 @@ export function ConfirmProductModal({
         onClick={onCancel}
       />
 
-      <div className="relative bg-[#13151c] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-5">
+      <div className="relative bg-surface border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-5">
         {/* Header */}
         <div className="flex items-center justify-between">
           <h3 className="text-white/80 font-medium">Confirmar producto</h3>
@@ -56,7 +56,7 @@ export function ConfirmProductModal({
         </span>
 
         {/* Método de pago */}
-        <div className="bg-[#0d0f14] border border-white/10 rounded-xl p-4 space-y-2">
+        <div className="bg-surface-container-lowest border border-white/10 rounded-xl p-4 space-y-2">
           <p className="text-white/30 text-sm uppercase tracking-widest font-medium">
             Método de pago
           </p>
@@ -89,7 +89,7 @@ export function ConfirmProductModal({
         </div>
 
         {/* Plan de pagos */}
-        <div className="bg-[#0d0f14] border border-white/10 rounded-xl p-4 space-y-2">
+        <div className="bg-surface-container-lowest border border-white/10 rounded-xl p-4 space-y-2">
           <p className="text-white/30 text-sm uppercase tracking-widest font-medium">
             Plan de pagos
           </p>

@@ -36,7 +36,7 @@ export function ToastHandler() {
 
     toast.custom(
       (t) => (
-        <div className="bg-[#1a1c23] border border-white/10 rounded-lg shadow-xl w-80 overflow-hidden">
+        <div className="bg-surface-container-low border border-white/10 rounded-lg shadow-xl w-80 overflow-hidden">
           <div className="p-3 border-b border-white/10 bg-gradient-to-r from-cyan-500/10 to-transparent">
             <div className="flex items-center gap-2">
               <Bell className="w-4 h-4 text-cyan-400" />

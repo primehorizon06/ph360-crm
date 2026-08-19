@@ -99,7 +99,7 @@ export function ProductChecklistItem({
 
   return (
     <>
-      <div className="bg-[#13151c] border border-amber-500/20 rounded-xl overflow-hidden">
+      <div className="bg-surface border border-amber-500/20 rounded-xl overflow-hidden">
         {/* Header del producto */}
         <button
           type="button"

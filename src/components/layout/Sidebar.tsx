@@ -74,7 +74,7 @@ export function Sidebar() {
 
       <aside
         className={`
-          bg-[#13151c] flex flex-col h-dvh fixed left-0 top-0 z-50 transition-all duration-300 overflow-visible
+          bg-surface flex flex-col h-dvh fixed left-0 top-0 z-50 transition-all duration-300 overflow-visible
           ${collapsed ? "w-16" : "w-56"}
           ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
           md:translate-x-0
@@ -130,7 +130,7 @@ export function Sidebar() {
                   </Link>
 
                   {collapsed && (
-                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-[#1e2030] border border-white/10 rounded-lg text-sm text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-surface-container border border-white/10 rounded-lg text-sm text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                       {item.label}
                     </div>
                   )}
@@ -149,7 +149,7 @@ export function Sidebar() {
               {!collapsed && "Nuevo Lead"}
             </button>
             {collapsed && (
-              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-[#1e2030] border border-white/10 rounded-lg text-sm text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-surface-container border border-white/10 rounded-lg text-sm text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                 Nuevo Lead
               </div>
             )}
@@ -167,7 +167,7 @@ export function Sidebar() {
               {!collapsed && "Cerrar Sesión"}
             </button>
             {collapsed && (
-              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-[#1e2030] border border-white/10 rounded-lg text-sm text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-surface-container border border-white/10 rounded-lg text-sm text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                 Cerrar Sesión
               </div>
             )}

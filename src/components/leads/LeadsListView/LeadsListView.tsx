@@ -150,7 +150,7 @@ export function LeadsListView({ type }: Props) {
       </div>
 
       {/* Tabla desktop */}
-      <div className="bg-[#13151c] rounded-xl border border-white/10 overflow-hidden">
+      <div className="bg-surface rounded-xl border border-white/10 overflow-hidden">
         <div className="hidden overflow-x-auto md:block">
           <table className="w-full">
             <thead>

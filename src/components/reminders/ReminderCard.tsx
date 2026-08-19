@@ -7,7 +7,7 @@ export function ReminderCard({ reminder }: { reminder: Reminder }) {
 
   return (
     <div
-      className={`bg-[#13151c] border rounded-xl p-4 space-y-3 ${isPast ? "border-red-500/20" : "border-white/10"}`}
+      className={`bg-surface border rounded-xl p-4 space-y-3 ${isPast ? "border-red-500/20" : "border-white/10"}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">

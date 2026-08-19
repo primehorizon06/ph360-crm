@@ -131,7 +131,7 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
       </div>
 
       {/* Filters */}
-      <div className="bg-[#13151c] border border-white/10 rounded-xl p-4 space-y-3">
+      <div className="bg-surface border border-white/10 rounded-xl p-4 space-y-3">
         <div className="grid grid-cols-3 gap-3">
           <div className="space-y-1">
             <label className="flex items-center gap-1.5 text-sm text-white/40">
@@ -142,7 +142,7 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all [color-scheme:dark]"
+              className="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all [color-scheme:dark]"
             />
           </div>
           <div className="space-y-1">
@@ -155,7 +155,7 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
               min={dateFrom || undefined}
-              className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all [color-scheme:dark]"
+              className="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all [color-scheme:dark]"
             />
           </div>
           <div className="space-y-1">
@@ -173,7 +173,7 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
               placeholder="Buscar por nombre de autor..."
               value={authorSearch}
               onChange={(e) => setAuthorSearch(e.target.value)}
-              className="w-full bg-[#0d0f14] border border-white/10 rounded-lg pl-8 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
+              className="w-full bg-surface-container-lowest border border-white/10 rounded-lg pl-8 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
             />
             {authorSearch && (
               <button
@@ -191,7 +191,7 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
       </div>
 
       {/* Uploader */}
-      <div className="bg-[#13151c] border border-white/10 rounded-xl p-4 space-y-3">
+      <div className="bg-surface border border-white/10 rounded-xl p-4 space-y-3">
         <p className="text-white/30 text-sm font-medium uppercase tracking-widest">
           Subir archivos
         </p>
@@ -272,7 +272,7 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
           <Loading />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-[#13151c] border border-white/10 rounded-xl p-12 flex flex-col items-center justify-center gap-2">
+        <div className="bg-surface border border-white/10 rounded-xl p-12 flex flex-col items-center justify-center gap-2">
           <Paperclip size={32} className="text-white/20" />
           <p className="text-white/30 text-lg">
             {hasFilters

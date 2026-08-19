@@ -19,11 +19,11 @@ export function InlineDatePicker({ onChange, highlightDates = [] }: Props) {
         style={{ transform: "scale(1.3)", transformOrigin: "top center" }}
         className={[
           "flex justify-center",
-          "[&_.react-datepicker]:bg-[#0d0f14]",
+          "[&_.react-datepicker]:bg-surface-container-lowest",
           "[&_.react-datepicker]:border-white/10",
           "[&_.react-datepicker]:rounded-xl",
           "[&_.react-datepicker]:font-sans",
-          "[&_.react-datepicker__header]:bg-[#13151c]",
+          "[&_.react-datepicker__header]:bg-surface",
           "[&_.react-datepicker__header]:border-white/10",
           "[&_.react-datepicker__current-month]:text-white/70",
           "[&_.react-datepicker__day-name]:text-white/50",

@@ -31,7 +31,7 @@ export function RejectModal({ onConfirm, onCancel, saving }: Props) {
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onCancel}
       />
-      <div className="relative bg-[#13151c] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4">
+      <div className="relative bg-surface border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-white/80 font-medium">Motivo de rechazo</h3>
           <button
@@ -53,7 +53,7 @@ export function RejectModal({ onConfirm, onCancel, saving }: Props) {
             {...register("note")}
             placeholder="Ej: Falta el reporte de crédito actualizado..."
             rows={4}
-            className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all resize-none"
+            className="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all resize-none"
           />
           {errors.note && (
             <p className="text-red-400 text-sm mt-1">{errors.note.message}</p>

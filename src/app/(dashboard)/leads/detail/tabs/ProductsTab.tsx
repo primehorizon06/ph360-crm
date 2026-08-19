@@ -288,7 +288,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
       {showForm && (
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="bg-[#13151c] border border-white/10 rounded-xl p-4 space-y-4"
+          className="bg-surface border border-white/10 rounded-xl p-4 space-y-4"
         >
           <div className="flex items-center justify-between">
             <p className="text-white/60 text-lg font-medium">Nuevo producto</p>
@@ -400,7 +400,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                   inputMode="numeric"
                   maxLength={4}
                   placeholder="0000"
-                  className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all tracking-widest"
+                  className="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all tracking-widest"
                 />
                 {"lastFour" in errors && errors.lastFour && (
                   <p className="text-red-400 text-lg">
@@ -417,7 +417,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                   {...register("holderName")}
                   type="text"
                   placeholder="Como aparece en la tarjeta"
-                  className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
+                  className="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
                 />
                 {"holderName" in errors && errors.holderName && (
                   <p className="text-red-400 text-lg">
@@ -432,7 +432,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                   {...register("bank")}
                   type="text"
                   placeholder="Ej. Chase, Bank of America..."
-                  className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
+                  className="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
                 />
                 {"bank" in errors && errors.bank && (
                   <p className="text-red-400 text-lg">{errors.bank.message}</p>
@@ -452,7 +452,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                   type="text"
                   inputMode="numeric"
                   placeholder="Número de cuenta"
-                  className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
+                  className="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
                 />
                 {"accountNumber" in errors && errors.accountNumber && (
                   <p className="text-red-400 text-lg">
@@ -469,7 +469,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                   {...register("accountHolder")}
                   type="text"
                   placeholder="Nombre del titular"
-                  className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
+                  className="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
                 />
                 {"accountHolder" in errors && errors.accountHolder && (
                   <p className="text-red-400 text-lg">
@@ -484,7 +484,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                   {...register("accountBank")}
                   type="text"
                   placeholder="Ej. Chase, Bank of America..."
-                  className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
+                  className="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
                 />
                 {"accountBank" in errors && errors.accountBank && (
                   <p className="text-red-400 text-lg">
@@ -501,7 +501,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                   inputMode="numeric"
                   maxLength={9}
                   placeholder="000000000"
-                  className="w-full bg-[#0d0f14] border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all tracking-widest"
+                  className="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all tracking-widest"
                 />
                 {"routingNumber" in errors && errors.routingNumber && (
                   <p className="text-red-400 text-sm">
@@ -573,7 +573,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
           <Loading />
         </div>
       ) : products.length === 0 ? (
-        <div className="bg-[#13151c] border border-white/10 rounded-xl p-12 flex flex-col items-center justify-center gap-2">
+        <div className="bg-surface border border-white/10 rounded-xl p-12 flex flex-col items-center justify-center gap-2">
           <ShoppingBag size={32} className="text-white/20" />
           <p className="text-white/50 text-lg">No hay productos asociados</p>
         </div>
@@ -593,7 +593,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
             return (
               <div
                 key={lp.id}
-                className={`bg-[#13151c] border rounded-xl p-4 flex flex-col gap-3 ${
+                className={`bg-surface border rounded-xl p-4 flex flex-col gap-3 ${
                   isRejected ? "border-red-500/30" : "border-white/10"
                 }`}
               >

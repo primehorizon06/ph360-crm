@@ -112,7 +112,7 @@ export default function AuditPage() {
         />
       </div>
 
-      <div className="bg-[#13151c] rounded-xl border border-white/10 overflow-hidden">
+      <div className="bg-surface rounded-xl border border-white/10 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>

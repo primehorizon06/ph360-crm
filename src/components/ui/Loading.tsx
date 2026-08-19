@@ -11,7 +11,7 @@ export function Loading({
 }: LoadingProps) {
   return (
     <div
-      className={`flex items-center justify-center bg-[#0f1117] z-50 ${
+      className={`flex items-center justify-center bg-background z-50 ${
         fullScreen ? "fixed inset-0" : "w-full h-full"
       }`}
     >
