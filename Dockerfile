@@ -105,6 +105,7 @@ RUN npx prisma generate
 # los valores reales en runtime, estos placeholders nunca se usan para servir tráfico.
 ENV DATABASE_URL="postgresql://user:password@localhost:5432/db"
 ENV NEXTAUTH_SECRET="build-time-placeholder"
+ENV ENCRYPTION_KEY="NguLMTQ7VBmFIUEyFUiyt97b8OFgWK6x2LUEi8+BhA8="
 
 # Construir Next.js
 RUN npm run build
