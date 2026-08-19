@@ -1,17 +1,75 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { Role } from "@prisma/client";
+import { Prisma, Role } from "@prisma/client";
 import { withAuth, forbidden, badRequest, conflict } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
 import { createUserSchema } from "@/lib/validations/user";
 import { logAudit, getRequestMeta } from "@/lib/audit";
+
+const LIMIT_DEFAULT = 50;
+const LIMIT_MAX = 200;
+
+const userListSelect = {
+  id: true,
+  username: true,
+  name: true,
+  email: true,
+  role: true,
+  active: true,
+  companyId: true,
+  teamId: true,
+  avatar: true,
+  createdAt: true,
+  company: { select: { name: true } },
+  team: { select: { name: true } },
+} satisfies Prisma.UserSelect;
 
 export const GET = withAuth(async (req, session) => {
   const { searchParams } = new URL(req.url);
   const teamId = searchParams.get("teamId");
   const roleFilter = searchParams.get("role");
 
+  // Listado de administración (paginado): lo usa la tabla de /users.
+  if (searchParams.get("paginated") === "true") {
+    if (session.user.role !== UserRole.ADMIN) return forbidden();
+
+    const search = searchParams.get("search")?.trim() || undefined;
+    const companyId = searchParams.get("companyId");
+    const page = Math.max(1, parseInt(searchParams.get("page") ?? "1") || 1);
+    const limit = Math.min(
+      LIMIT_MAX,
+      Math.max(1, parseInt(searchParams.get("limit") ?? String(LIMIT_DEFAULT)) || LIMIT_DEFAULT),
+    );
+
+    const where: Prisma.UserWhereInput = {
+      ...(companyId ? { companyId: Number(companyId) } : {}),
+      ...(teamId ? { teamId: Number(teamId) } : {}),
+      ...(search
+        ? {
+            OR: [
+              { name: { contains: search, mode: "insensitive" } },
+              { username: { contains: search, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    };
+
+    const [data, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        select: userListSelect,
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.user.count({ where }),
+    ]);
+
+    return NextResponse.json({ data, total, page, limit, totalPages: Math.ceil(total / limit) });
+  }
+
+  // Modo picker (sin paginar): usado por los selects de "asignar a" en leads y recordatorios.
   if (session.user.role !== UserRole.ADMIN && !teamId) return forbidden();
 
   const users = await prisma.user.findMany({
@@ -19,20 +77,7 @@ export const GET = withAuth(async (req, session) => {
       ...(teamId ? { teamId: Number(teamId), active: true } : {}),
       ...(roleFilter ? { role: roleFilter as Role } : {}),
     },
-    select: {
-      id: true,
-      username: true,
-      name: true,
-      email: true,
-      role: true,
-      active: true,
-      companyId: true,
-      teamId: true,
-      avatar: true,
-      createdAt: true,
-      company: { select: { name: true } },
-      team: { select: { name: true } },
-    },
+    select: userListSelect,
     orderBy: { createdAt: "desc" },
   });
 

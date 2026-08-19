@@ -21,6 +21,8 @@ import { fetcher } from "@/lib/fetcher";
 import { toast } from "sonner";
 import { confirmToast } from "@/lib/confirmToast";
 
+const LIMIT = 20;
+
 export interface User {
   id: number;
   username: string;
@@ -36,6 +38,14 @@ export interface User {
   createdAt?: string;
 }
 
+interface UserListResponse {
+  data: User[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export default function UsersPage() {
   usePageTitle("Usuarios");
   const { data: session, status } = useSession();
@@ -43,16 +53,36 @@ export default function UsersPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filterCompany, setFilterCompany] = useState("");
   const [filterTeam, setFilterTeam] = useState("");
+  const [page, setPage] = useState(1);
 
-  const usersKey = status === "authenticated" ? "/api/users" : null;
+  // Debounce búsqueda: el setState ocurre en el callback del timer, no directo en el efecto
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const usersKey = useMemo(() => {
+    if (status !== "authenticated") return null;
+    const params = new URLSearchParams({
+      paginated: "true",
+      page: String(page),
+      limit: String(LIMIT),
+    });
+    if (debouncedSearch) params.set("search", debouncedSearch);
+    if (filterCompany) params.set("companyId", filterCompany);
+    if (filterTeam) params.set("teamId", filterTeam);
+    return `/api/users?${params}`;
+  }, [status, page, debouncedSearch, filterCompany, filterTeam]);
+
   const teamsKey = filterCompany
     ? `/api/teams?companyId=${filterCompany}`
     : null;
 
-  const { data: users = [], isLoading: loadingUsers, mutate: mutateUsers } =
-    useSWR<User[]>(usersKey, fetcher);
+  const { data, isLoading: loadingUsers, mutate: mutateUsers } =
+    useSWR<UserListResponse>(usersKey, fetcher);
   const { data: companies = [] } = useSWR<{ id: number; name: string }[]>(
     "/api/companies?simple=true",
     fetcher,
@@ -68,19 +98,7 @@ export default function UsersPage() {
       router.push("/");
   }, [status, session, router]);
 
-  const filtered = useMemo(
-    () =>
-      users.filter((user) => {
-        const matchSearch = `${user.name} ${user.username}`
-          .toLowerCase()
-          .includes(search.toLowerCase());
-        const matchCompany =
-          !filterCompany || String(user.companyId) === filterCompany;
-        const matchTeam = !filterTeam || String(user.teamId) === filterTeam;
-        return matchSearch && matchCompany && matchTeam;
-      }),
-    [users, search, filterCompany, filterTeam],
-  );
+  const users = data?.data ?? [];
 
   function handleToggleActive(user: User) {
     const activating = !user.active;
@@ -129,14 +147,14 @@ export default function UsersPage() {
     void mutateUsers();
   }
 
-  if (status === "loading" || loadingUsers) return <Loading />;
+  if (status === "loading" || (loadingUsers && !data)) return <Loading />;
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <PageHeader
         title="Usuarios"
-        description={`${filtered.length} de ${users.length} usuarios registrados`}
+        description={`${data?.total ?? 0} usuarios registrados`}
         action={{
           label: "Nuevo Usuario",
           icon: Plus,
@@ -153,7 +171,10 @@ export default function UsersPage() {
             type="text"
             placeholder="Buscar por nombre o usuario..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
             className="bg-transparent text-lg text-white/70 placeholder:text-white/30 outline-none w-full"
           />
         </div>
@@ -166,6 +187,7 @@ export default function UsersPage() {
         {/* Filtro franquicia */}
         <CustomSelect
           name="filterCompany"
+          aria-label="Filtrar por franquicia"
           value={
             companies.find((c) => String(c.id) === filterCompany)?.name ??
             "Todas las franquicias"
@@ -173,6 +195,7 @@ export default function UsersPage() {
           onChange={(val) => {
             setFilterCompany(val);
             setFilterTeam("");
+            setPage(1);
           }}
           options={["", ...companies.map((c) => String(c.id))]}
           labels={["Todas las franquicias", ...companies.map((c) => c.name)]}
@@ -181,18 +204,45 @@ export default function UsersPage() {
         {/* Filtro equipo */}
         <CustomSelect
           name="filterTeam"
+          aria-label="Filtrar por equipo"
           value={
             teams.find((t) => String(t.id) === filterTeam)?.name ??
             "Todos los equipos"
           }
-          onChange={(val) => setFilterTeam(val)}
+          onChange={(val) => {
+            setFilterTeam(val);
+            setPage(1);
+          }}
           options={["", ...teams.map((t) => String(t.id))]}
           labels={["Todos los equipos", ...teams.map((t) => t.name)]}
         />
       </div>
 
       {/* Tabla */}
-      <UserTable users={filtered} onEdit={handleEdit} onToggleActive={handleToggleActive} />
+      <UserTable users={users} onEdit={handleEdit} onToggleActive={handleToggleActive} />
+
+      {/* Paginación */}
+      {data && data.totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className="px-3 py-1.5 rounded-lg bg-white/5 text-white/60 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            Anterior
+          </button>
+          <span className="text-white/40 text-lg">
+            Página {data.page} de {data.totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(data.totalPages, p + 1))}
+            disabled={page >= data.totalPages}
+            className="px-3 py-1.5 rounded-lg bg-white/5 text-white/60 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            Siguiente
+          </button>
+        </div>
+      )}
 
       {/* Modal */}
       {modalOpen && (
