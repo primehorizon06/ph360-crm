@@ -82,17 +82,36 @@ export default function UsersPage() {
     [users, search, filterCompany, filterTeam],
   );
 
-  function handleDelete(id: number) {
-    confirmToast("¿Eliminar este usuario?", async () => {
-      const res = await fetch(`/api/users/${id}`, { method: "DELETE" });
-      if (!res.ok) {
-        const json = await res.json().catch(() => ({}));
-        toast.error(json.error ?? "Error al eliminar usuario");
-        return;
-      }
-      toast.success("Usuario eliminado");
-      void mutateUsers();
-    });
+  function handleToggleActive(user: User) {
+    const activating = !user.active;
+    confirmToast(
+      activating
+        ? "¿Activar este usuario? Podrá volver a iniciar sesión."
+        : "¿Desactivar este usuario? No podrá iniciar sesión mientras esté desactivado.",
+      async () => {
+        const res = await fetch(`/api/users/${user.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: user.username,
+            name: user.name,
+            email: user.email ?? "",
+            role: user.role,
+            companyId: user.companyId ? String(user.companyId) : "",
+            teamId: user.teamId ? String(user.teamId) : "",
+            active: activating,
+          }),
+        });
+        if (!res.ok) {
+          const json = await res.json().catch(() => ({}));
+          toast.error(json.error ?? "Error al actualizar usuario");
+          return;
+        }
+        toast.success(activating ? "Usuario activado" : "Usuario desactivado");
+        void mutateUsers();
+      },
+      activating ? "Activar" : "Desactivar",
+    );
   }
 
   function handleEdit(user: User) {
@@ -173,7 +192,7 @@ export default function UsersPage() {
       </div>
 
       {/* Tabla */}
-      <UserTable users={filtered} onEdit={handleEdit} onDelete={handleDelete} />
+      <UserTable users={filtered} onEdit={handleEdit} onToggleActive={handleToggleActive} />
 
       {/* Modal */}
       {modalOpen && (

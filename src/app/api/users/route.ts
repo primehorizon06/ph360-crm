@@ -16,7 +16,7 @@ export const GET = withAuth(async (req, session) => {
 
   const users = await prisma.user.findMany({
     where: {
-      ...(teamId ? { teamId: Number(teamId) } : {}),
+      ...(teamId ? { teamId: Number(teamId), active: true } : {}),
       ...(roleFilter ? { role: roleFilter as Role } : {}),
     },
     select: {

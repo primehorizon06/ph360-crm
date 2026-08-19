@@ -71,25 +71,3 @@ export const PATCH = withAuthParams<{ id: string }>(
     return NextResponse.json(user);
   },
 );
-
-export const DELETE = withAuthParams<{ id: string }>(
-  async (req, session, { id }) => {
-    if (session.user.role !== UserRole.ADMIN) return forbidden();
-
-    const existing = await prisma.user.findUnique({ where: { id: Number(id) } });
-    if (!existing) return badRequest("Usuario no encontrado");
-
-    await prisma.user.delete({ where: { id: Number(id) } });
-
-    await logAudit({
-      action: "USER_DELETED",
-      actor: { id: session.user.id, role: session.user.role, name: session.user.name },
-      entityType: "User",
-      entityId: Number(id),
-      metadata: { username: existing.username, role: existing.role },
-      ...getRequestMeta(req),
-    });
-
-    return NextResponse.json({ success: true });
-  },
-);

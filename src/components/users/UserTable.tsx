@@ -1,5 +1,5 @@
 import { User } from "@/app/(dashboard)/users/page";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Power, PowerOff } from "lucide-react";
 
 const roleColors: Record<string, string> = {
   ADMIN: "bg-purple-500/20 text-purple-400",
@@ -11,10 +11,10 @@ const roleColors: Record<string, string> = {
 interface Props {
   users: User[];
   onEdit: (user: User) => void;
-  onDelete: (id: number) => void;
+  onToggleActive: (user: User) => void;
 }
 
-export function UserTable({ users, onEdit, onDelete }: Props) {
+export function UserTable({ users, onEdit, onToggleActive }: Props) {
   return (
     <div className="bg-[#13151c] rounded-xl border border-white/10 overflow-hidden">
       {/* Vista desktop — tabla */}
@@ -78,10 +78,15 @@ export function UserTable({ users, onEdit, onDelete }: Props) {
                       <Pencil size={14} />
                     </button>
                     <button
-                      onClick={() => onDelete(user.id)}
-                      className="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                      onClick={() => onToggleActive(user)}
+                      title={user.active ? "Desactivar" : "Activar"}
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        user.active
+                          ? "text-white/40 hover:text-red-400 hover:bg-red-500/10"
+                          : "text-white/40 hover:text-green-400 hover:bg-green-500/10"
+                      }`}
                     >
-                      <Trash2 size={14} />
+                      {user.active ? <PowerOff size={14} /> : <Power size={14} />}
                     </button>
                   </div>
                 </td>
@@ -135,10 +140,15 @@ export function UserTable({ users, onEdit, onDelete }: Props) {
                 <Pencil size={14} />
               </button>
               <button
-                onClick={() => onDelete(user.id)}
-                className="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                onClick={() => onToggleActive(user)}
+                title={user.active ? "Desactivar" : "Activar"}
+                className={`p-1.5 rounded-lg transition-colors ${
+                  user.active
+                    ? "text-white/40 hover:text-red-400 hover:bg-red-500/10"
+                    : "text-white/40 hover:text-green-400 hover:bg-green-500/10"
+                }`}
               >
-                <Trash2 size={14} />
+                {user.active ? <PowerOff size={14} /> : <Power size={14} />}
               </button>
             </div>
           </div>

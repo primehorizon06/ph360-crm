@@ -1,6 +1,10 @@
 import { toast } from "sonner";
 
-export function confirmToast(message: string, onConfirm: () => void | Promise<void>) {
+export function confirmToast(
+  message: string,
+  onConfirm: () => void | Promise<void>,
+  actionLabel = "Eliminar",
+) {
   toast(message, {
     style: {
       background: "#13151c",
@@ -22,7 +26,7 @@ export function confirmToast(message: string, onConfirm: () => void | Promise<vo
       borderRadius: "0.5rem",
     },
     action: {
-      label: "Eliminar",
+      label: actionLabel,
       onClick: onConfirm,
     },
     cancel: { label: "Cancelar", onClick: () => {} },
