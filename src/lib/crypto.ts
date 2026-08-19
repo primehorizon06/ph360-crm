@@ -1,19 +1,11 @@
 import crypto from "crypto";
 import { env } from "@/env";
 
-// Cifrado de campo para datos sensibles (SSN, cuentas bancarias) antes de
-// persistirlos con Prisma. AES-256-GCM autenticado.
-//
-// - encryptDeterministic: mismo texto -> mismo cifrado (IV derivado por HMAC
-//   del texto plano). Necesario para preservar búsquedas por igualdad
-//   (p. ej. el índice único de SSN). Es intencionalmente menos "seguro
-//   semánticamente" que un IV aleatorio, pero es el estándar para este caso.
-// - encryptRandom: IV aleatorio, para campos que nunca se buscan por valor
-//   (números de cuenta/ruta bancarios).
-//
-// Los valores cifrados llevan el prefijo ENC_PREFIX. decrypt() devuelve el
-// valor tal cual si no lo tiene, para no romper filas legadas aún no
-// migradas.
+// encryptDeterministic usa un IV derivado del texto plano (mismo valor ->
+// mismo cifrado) para preservar búsquedas por igualdad, como el índice único
+// de SSN; encryptRandom es para campos que nunca se buscan por valor.
+// decrypt() devuelve el valor sin cambios si no tiene el prefijo ENC_PREFIX,
+// para no romper filas legadas aún no migradas.
 
 const ALGO = "aes-256-gcm";
 const IV_LENGTH = 12;

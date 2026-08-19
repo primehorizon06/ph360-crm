@@ -7,7 +7,6 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 const APPLY = process.argv.includes("--apply");
 
-// Política de retención: 2 años. Cambiar aquí si la política cambia.
 const RETENTION_DAYS = 730;
 
 async function main() {

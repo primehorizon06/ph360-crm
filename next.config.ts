@@ -27,8 +27,7 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              // 'unsafe-eval' solo en dev: React Refresh/Turbopack lo necesitan
-              // para el hot-reload y no debe llegar a producción.
+              // 'unsafe-eval' solo en dev: React Refresh lo necesita para el hot-reload.
               `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob:",

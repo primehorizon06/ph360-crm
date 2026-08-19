@@ -25,10 +25,9 @@ export function getRequestMeta(req: NextRequest): { ip: string | null; userAgent
   return { ip, userAgent: req.headers.get("user-agent") };
 }
 
-// Nunca debe fallar la operación de negocio por un error de auditoría: se
-// registra el error y se sigue. Tampoco debe recibir valores en claro de
-// campos sensibles (ssn, cuentas bancarias) en `metadata` — solo nombres de
-// campo o metadatos no sensibles.
+// Nunca lanza: un fallo de auditoría no debe tumbar la operación de negocio.
+// `metadata` nunca debe llevar valores en claro de campos sensibles (ssn,
+// cuentas bancarias) — solo nombres de campo u otros metadatos no sensibles.
 export async function logAudit({
   action,
   actor,
