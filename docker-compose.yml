@@ -36,6 +36,9 @@ services:
       NEXT_PUBLIC_API_URL: http://localhost:3000
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-development-secret-key}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:-FEz/Gm2rBSxGeXBWE+aLrGgzOOUg0waQtfcB0sm+ahI=}
+      # Turbopack no detecta cambios de forma confiable en binds Windows->WSL2->contenedor
+      # (vercel/next.js#68255, #80665). webpack sí soporta polling estable para este caso.
+      WATCHPACK_POLLING: "true"
     ports:
       - "3000:3000"
       - "5555:5555"
@@ -55,7 +58,7 @@ services:
         condition: service_healthy
     networks:
       - crm-network
-    command: sh -c "npx prisma generate && npm run dev"
+    command: sh -c "npx prisma generate && npm run dev:webpack"
 
   # Servicio para producción
   nextjs:
