@@ -95,7 +95,7 @@ export function PaymentPlanPicker({ value, onChange, error }: Props) {
               </span>
 
               {/* Fecha */}
-              <span className="text-white/50 text-lg w-28 shrink-0">
+              <span className="text-white/50 text-lg shrink-0 whitespace-nowrap">
                 {formatDate(installment.date)}
               </span>
 
