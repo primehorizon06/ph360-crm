@@ -1,13 +1,18 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withAuthParams, badRequest } from "@/lib/api";
+import { withAuthParams, badRequest, forbidden, notFound } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
+import { canAccessLead } from "@/lib/permissions";
 import { encryptRandom, decrypt } from "@/lib/crypto";
 import { productSchema } from "@/lib/validations/product";
 import { logAudit, getRequestMeta } from "@/lib/audit";
 
 export const GET = withAuthParams<{ id: string }>(
-  async (_req, _session, { id }) => {
+  async (_req, session, { id }) => {
+    const lead = await prisma.lead.findUnique({ where: { id: Number(id) } });
+    if (!lead) return notFound("Lead no encontrado");
+    if (!canAccessLead(session.user, lead)) return forbidden();
+
     const products = await prisma.product.findMany({
       where: { leadId: Number(id) },
       include: {
@@ -39,6 +44,11 @@ export const GET = withAuthParams<{ id: string }>(
 
 export const POST = withAuthParams<{ id: string }>(
   async (req, session, { id }) => {
+    const leadId = Number(id);
+    const lead = await prisma.lead.findUnique({ where: { id: leadId } });
+    if (!lead) return notFound("Lead no encontrado");
+    if (!canAccessLead(session.user, lead)) return forbidden();
+
     const body = await req.json();
     const { product, paymentMethod } = body;
 
@@ -56,13 +66,13 @@ export const POST = withAuthParams<{ id: string }>(
       return badRequest(parsed.error.issues[0]?.message ?? "Datos inválidos");
 
     const existingCount = await prisma.product.count({
-      where: { leadId: Number(id) },
+      where: { leadId },
     });
     const isFirstProduct = existingCount === 0;
 
     const leadProduct = await prisma.product.create({
       data: {
-        leadId: Number(id),
+        leadId,
         product,
         paymentMethod: {
           create: {
@@ -85,7 +95,7 @@ export const POST = withAuthParams<{ id: string }>(
     await prisma.productApproval.create({
       data: {
         productId: leadProduct.id,
-        leadId: Number(id),
+        leadId,
         isFirstProduct,
         status: "PENDING",
       },
@@ -93,7 +103,7 @@ export const POST = withAuthParams<{ id: string }>(
 
     if (isFirstProduct) {
       await prisma.lead.update({
-        where: { id: Number(id) },
+        where: { id: leadId },
         data: {
           conversionStatus: "PENDING",
           conversionRequestedAt: new Date(),
@@ -101,30 +111,23 @@ export const POST = withAuthParams<{ id: string }>(
       });
     }
 
-    const lead = await prisma.lead.findUnique({
-      where: { id: Number(id) },
-      select: { firstName: true, lastName: true, teamId: true },
+    const coach = await prisma.user.findFirst({
+      where: { teamId: lead.teamId, role: UserRole.COACH },
+      select: { id: true },
     });
 
-    if (lead) {
-      const coach = await prisma.user.findFirst({
-        where: { teamId: lead.teamId, role: UserRole.COACH },
-        select: { id: true },
+    if (coach) {
+      const leadName = `${lead.firstName} ${lead.lastName ?? ""}`.trim();
+      await prisma.notification.create({
+        data: {
+          userId: coach.id,
+          type: "PRODUCT_APPROVAL_PENDING",
+          title: "Producto pendiente de aprobación",
+          body: `${leadName} tiene un nuevo producto que requiere tu revisión.`,
+          leadId,
+          productId: leadProduct.id,
+        },
       });
-
-      if (coach) {
-        const leadName = `${lead.firstName} ${lead.lastName ?? ""}`.trim();
-        await prisma.notification.create({
-          data: {
-            userId: coach.id,
-            type: "PRODUCT_APPROVAL_PENDING",
-            title: "Producto pendiente de aprobación",
-            body: `${leadName} tiene un nuevo producto que requiere tu revisión.`,
-            leadId: Number(id),
-            productId: leadProduct.id,
-          },
-        });
-      }
     }
 
     await logAudit({
@@ -132,7 +135,7 @@ export const POST = withAuthParams<{ id: string }>(
       actor: { id: session.user.id, role: session.user.role, name: session.user.name },
       entityType: "Product",
       entityId: leadProduct.id,
-      metadata: { leadId: Number(id), product, paymentType: paymentMethod.type },
+      metadata: { leadId, product, paymentType: paymentMethod.type },
       ...getRequestMeta(req),
     });
 

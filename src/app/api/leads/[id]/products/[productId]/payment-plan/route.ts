@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withAuthParams, badRequest } from "@/lib/api";
+import { withAuthParams, badRequest, forbidden, notFound } from "@/lib/api";
+import { canAccessLead } from "@/lib/permissions";
+import { findLeadProduct } from "@/lib/leadService";
 
 export const PUT = withAuthParams<{ id: string; productId: string }>(
-  async (req, _session, { productId }) => {
+  async (req, session, { id, productId }) => {
+    const match = await findLeadProduct(Number(id), Number(productId));
+    if (!match) return notFound("Producto no encontrado");
+    if (!canAccessLead(session.user, match.lead)) return forbidden();
+
     const { installments } = await req.json();
 
     if (!Array.isArray(installments) || installments.length === 0)
@@ -43,7 +49,11 @@ export const PUT = withAuthParams<{ id: string; productId: string }>(
 );
 
 export const GET = withAuthParams<{ id: string; productId: string }>(
-  async (_req, _session, { productId }) => {
+  async (_req, session, { id, productId }) => {
+    const match = await findLeadProduct(Number(id), Number(productId));
+    if (!match) return notFound("Producto no encontrado");
+    if (!canAccessLead(session.user, match.lead)) return forbidden();
+
     const plan = await prisma.paymentPlan.findUnique({
       where: { productId: Number(productId) },
       include: { installments: { orderBy: { number: "asc" } } },

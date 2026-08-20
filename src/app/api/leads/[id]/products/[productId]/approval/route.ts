@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuthParams, forbidden, badRequest, notFound } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
+import { canAccessLead } from "@/lib/permissions";
+import { findLeadProduct } from "@/lib/leadService";
 import { applyApprovalDecision, notifyCoachOfResubmit } from "@/lib/approvalService";
 import { logAudit, getRequestMeta } from "@/lib/audit";
 
@@ -11,6 +13,10 @@ export const PATCH = withAuthParams<{ id: string; productId: string }>(
 
     if (!action || !["APPROVE", "REJECT", "RESUBMIT"].includes(action))
       return badRequest("Acción inválida");
+
+    const match = await findLeadProduct(Number(id), Number(productId));
+    if (!match) return notFound("Producto no encontrado");
+    if (!canAccessLead(session.user, match.lead)) return forbidden();
 
     // ── RESUBMIT — solo agente o admin ───────────────────────────────────────
     if (action === "RESUBMIT") {

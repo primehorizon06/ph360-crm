@@ -56,3 +56,12 @@ export function describeDuplicateOwner(dup: DuplicateOwner) {
     franquicia: dup.company.name,
   };
 }
+
+export async function findLeadProduct(leadId: number, productId: number) {
+  const [lead, product] = await Promise.all([
+    prisma.lead.findUnique({ where: { id: leadId } }),
+    prisma.product.findUnique({ where: { id: productId } }),
+  ]);
+  if (!lead || !product || product.leadId !== leadId) return null;
+  return { lead, product };
+}
