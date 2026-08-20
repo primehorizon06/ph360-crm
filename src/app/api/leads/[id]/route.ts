@@ -6,18 +6,10 @@ import { canAccessLead } from "@/lib/permissions";
 import { encryptDeterministic, decrypt } from "@/lib/crypto";
 import { leadSchema } from "@/lib/validations/lead";
 import { logAudit, getRequestMeta } from "@/lib/audit";
+import { optionalField, optionalDate } from "@/lib/patchFields";
+import { findDuplicatePhone } from "@/lib/leadService";
 
 const leadPatchSchema = leadSchema.partial().passthrough();
-
-function optionalField(value: string | undefined): string | null | undefined {
-  if (value === undefined) return undefined;
-  return value || null;
-}
-
-function optionalDate(value: string | undefined): Date | null | undefined {
-  if (value === undefined) return undefined;
-  return value ? new Date(value) : null;
-}
 
 export const GET = withAuthParams<{ id: string }>(
   async (_req, _session, { id }) => {
@@ -44,6 +36,7 @@ export const PATCH = withAuthParams<{ id: string }>(
   async (req, session, { id }) => {
     const user = session.user;
     const role = user.role;
+    const leadId = Number(id);
     const rawBody = await req.json();
 
     const parsed = leadPatchSchema.safeParse(rawBody);
@@ -51,9 +44,7 @@ export const PATCH = withAuthParams<{ id: string }>(
       return badRequest(parsed.error.issues[0]?.message ?? "Datos inválidos");
     const body = parsed.data;
 
-    const existing = await prisma.lead.findUnique({
-      where: { id: Number(id) },
-    });
+    const existing = await prisma.lead.findUnique({ where: { id: leadId } });
     if (!existing) return notFound("Lead no encontrado");
 
     if (!canAccessLead(user, existing)) return forbidden();
@@ -69,23 +60,45 @@ export const PATCH = withAuthParams<{ id: string }>(
         ? null
         : existing.ssn;
 
-    let data: Record<string, unknown> = {};
+    if (
+      (role === UserRole.SUPERVISOR || role === UserRole.COACH) &&
+      body.assignedToId &&
+      Number(body.assignedToId) !== existing.assignedToId
+    ) {
+      const target = await prisma.user.findUnique({
+        where: { id: Number(body.assignedToId) },
+        select: { companyId: true, teamId: true },
+      });
+      const inScope =
+        !!target &&
+        (role === UserRole.SUPERVISOR
+          ? target.companyId === user.companyId
+          : target.teamId === user.teamId);
+      if (!inScope)
+        return forbidden("No puedes asignar el lead a ese usuario");
+    }
+
+    const baseData = {
+      firstName: body.firstName,
+      lastName: optionalField(body.lastName),
+      phone2: optionalField(body.phone2),
+      ssn: ssnValue,
+      address: optionalField(body.address),
+      city: optionalField(body.city),
+      state: optionalField(body.state),
+      zipCode: optionalField(body.zipCode),
+      email: optionalField(body.email),
+      birthDate: optionalDate(body.birthDate),
+      contactTime: optionalField(body.contactTime),
+      status: body.status,
+    };
+
+    let data: Record<string, unknown>;
 
     if (role === UserRole.ADMIN) {
       data = {
-        firstName: body.firstName,
-        lastName: optionalField(body.lastName),
+        ...baseData,
         phone1: body.phone1,
-        phone2: optionalField(body.phone2),
-        ssn: ssnValue,
-        address: optionalField(body.address),
-        city: optionalField(body.city),
-        state: optionalField(body.state),
-        zipCode: optionalField(body.zipCode),
-        email: optionalField(body.email),
-        birthDate: optionalDate(body.birthDate),
-        contactTime: optionalField(body.contactTime),
-        status: body.status,
         companyId: body.companyId ? Number(body.companyId) : existing.companyId,
         teamId: body.teamId ? Number(body.teamId) : existing.teamId,
         assignedToId: body.assignedToId
@@ -94,18 +107,7 @@ export const PATCH = withAuthParams<{ id: string }>(
       };
     } else if (role === UserRole.SUPERVISOR || role === UserRole.COACH) {
       data = {
-        firstName: body.firstName,
-        lastName: optionalField(body.lastName),
-        phone2: optionalField(body.phone2),
-        ssn: ssnValue,
-        address: optionalField(body.address),
-        city: optionalField(body.city),
-        state: optionalField(body.state),
-        zipCode: optionalField(body.zipCode),
-        email: optionalField(body.email),
-        birthDate: optionalDate(body.birthDate),
-        contactTime: optionalField(body.contactTime),
-        status: body.status,
+        ...baseData,
         assignedToId: body.assignedToId
           ? Number(body.assignedToId)
           : existing.assignedToId,
@@ -113,18 +115,7 @@ export const PATCH = withAuthParams<{ id: string }>(
       };
     } else {
       data = {
-        firstName: body.firstName,
-        lastName: optionalField(body.lastName),
-        phone2: optionalField(body.phone2),
-        ssn: ssnValue,
-        address: optionalField(body.address),
-        city: optionalField(body.city),
-        state: optionalField(body.state),
-        zipCode: optionalField(body.zipCode),
-        email: optionalField(body.email),
-        birthDate: optionalDate(body.birthDate),
-        contactTime: optionalField(body.contactTime),
-        status: body.status,
+        ...baseData,
         customerStatus: body.customerStatus || existing.customerStatus,
       };
     }
@@ -134,10 +125,7 @@ export const PATCH = withAuthParams<{ id: string }>(
     );
 
     if (body.phone1 && body.phone1 !== existing.phone1) {
-      const dup = await prisma.lead.findFirst({
-        where: { id: { not: Number(id) }, OR: [{ phone1: body.phone1 }, { phone2: body.phone1 }] },
-        select: { phone1: true },
-      });
+      const dup = await findDuplicatePhone(leadId, body.phone1);
       if (dup)
         return conflict(
           dup.phone1 === body.phone1
@@ -147,10 +135,7 @@ export const PATCH = withAuthParams<{ id: string }>(
     }
 
     if (body.phone2 && body.phone2 !== existing.phone2) {
-      const dup = await prisma.lead.findFirst({
-        where: { id: { not: Number(id) }, OR: [{ phone1: body.phone2 }, { phone2: body.phone2 }] },
-        select: { phone1: true },
-      });
+      const dup = await findDuplicatePhone(leadId, body.phone2);
       if (dup)
         return conflict(
           dup.phone1 === body.phone2
@@ -167,7 +152,7 @@ export const PATCH = withAuthParams<{ id: string }>(
     }
 
     const lead = await prisma.lead.update({
-      where: { id: Number(id) },
+      where: { id: leadId },
       data,
       include: {
         company: { select: { id: true, name: true } },
@@ -176,7 +161,13 @@ export const PATCH = withAuthParams<{ id: string }>(
     });
 
     const changedFields = (Object.keys(data) as Array<keyof typeof data>).filter(
-      (key) => (existing as Record<string, unknown>)[key] !== data[key],
+      (key) => {
+        const prev = (existing as Record<string, unknown>)[key];
+        const next = data[key];
+        if (prev instanceof Date && next instanceof Date)
+          return prev.getTime() !== next.getTime();
+        return prev !== next;
+      },
     );
 
     await logAudit({
