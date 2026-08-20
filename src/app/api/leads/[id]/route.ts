@@ -7,7 +7,7 @@ import { encryptDeterministic, decrypt } from "@/lib/crypto";
 import { leadSchema } from "@/lib/validations/lead";
 import { logAudit, getRequestMeta } from "@/lib/audit";
 import { optionalField, optionalDate } from "@/lib/patchFields";
-import { findDuplicatePhone } from "@/lib/leadService";
+import { findDuplicatePhone, findDuplicateSsn, describeDuplicateOwner } from "@/lib/leadService";
 
 const leadPatchSchema = leadSchema.partial().passthrough();
 
@@ -131,6 +131,7 @@ export const PATCH = withAuthParams<{ id: string }>(
           dup.phone1 === body.phone1
             ? "El teléfono ya está registrado"
             : "El teléfono 1 ya está registrado como teléfono 2 en otro cliente",
+          { registeredTo: describeDuplicateOwner(dup) },
         );
     }
 
@@ -141,14 +142,16 @@ export const PATCH = withAuthParams<{ id: string }>(
           dup.phone1 === body.phone2
             ? "El teléfono 2 ya está registrado como teléfono 1 en otro cliente"
             : "El teléfono 2 ya está registrado en otro cliente",
+          { registeredTo: describeDuplicateOwner(dup) },
         );
     }
 
     if (body.ssn && body.ssn !== decrypt(existing.ssn)) {
-      const dup = await prisma.lead.findUnique({
-        where: { ssn: encryptDeterministic(body.ssn) },
-      });
-      if (dup) return conflict("El Seguro social ya está registrado");
+      const dup = await findDuplicateSsn(leadId, encryptDeterministic(body.ssn));
+      if (dup)
+        return conflict("El Seguro social ya está registrado", {
+          registeredTo: describeDuplicateOwner(dup),
+        });
     }
 
     const lead = await prisma.lead.update({

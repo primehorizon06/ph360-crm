@@ -7,6 +7,7 @@ import { encryptDeterministic } from "@/lib/crypto";
 import { leadSchema } from "@/lib/validations/lead";
 import { UserRole } from "@/utils/constants/roles";
 import { logAudit, getRequestMeta } from "@/lib/audit";
+import { findDuplicatePhone, findDuplicateSsn, describeDuplicateOwner } from "@/lib/leadService";
 
 const LIMIT_DEFAULT = 50;
 const LIMIT_MAX = 200;
@@ -127,14 +128,20 @@ export const POST = withAuth(async (req, session) => {
     assignedToId = Number(user.id);
   }
 
-  const existingPhone = await prisma.lead.findUnique({ where: { phone1 } });
-  if (existingPhone) return conflict("El teléfono ya está registrado");
+  const existingPhone = await findDuplicatePhone(null, phone1);
+  if (existingPhone)
+    return conflict("El teléfono ya está registrado", {
+      registeredTo: describeDuplicateOwner(existingPhone),
+    });
 
   const encryptedSsn = ssn ? encryptDeterministic(ssn) : null;
 
   if (encryptedSsn) {
-    const existingSsn = await prisma.lead.findUnique({ where: { ssn: encryptedSsn } });
-    if (existingSsn) return conflict("La Seguro social ya está registrada");
+    const existingSsn = await findDuplicateSsn(null, encryptedSsn);
+    if (existingSsn)
+      return conflict("La Seguro social ya está registrada", {
+        registeredTo: describeDuplicateOwner(existingSsn),
+      });
   }
 
   const lead = await prisma.lead.create({

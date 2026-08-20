@@ -15,8 +15,8 @@ export const badRequest = (msg: string) =>
 export const notFound = (msg = "No encontrado") =>
   NextResponse.json({ error: msg }, { status: 404 });
 
-export const conflict = (msg: string) =>
-  NextResponse.json({ error: msg }, { status: 409 });
+export const conflict = (msg: string, extra?: Record<string, unknown>) =>
+  NextResponse.json({ error: msg, ...extra }, { status: 409 });
 
 export const serverError = (msg = "Error interno del servidor") =>
   NextResponse.json({ error: msg }, { status: 500 });

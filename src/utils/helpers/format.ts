@@ -26,6 +26,20 @@ export function formatTotalAmount(installments: Installment[]): string {
   });
 }
 
+export function formatDuplicateOwner(
+  info?: { agente: string; coach: string | null; equipo: string | null; franquicia: string } | null,
+): string {
+  if (!info) return "";
+  return [
+    `Agente: ${info.agente}`,
+    info.coach ? `Coach: ${info.coach}` : null,
+    info.equipo ? `Equipo: ${info.equipo}` : null,
+    `Franquicia: ${info.franquicia}`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 export function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, "").slice(0, 10);
   if (digits.length > 6)
