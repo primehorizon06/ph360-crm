@@ -9,6 +9,16 @@ import { logAudit, getRequestMeta } from "@/lib/audit";
 
 const leadPatchSchema = leadSchema.partial().passthrough();
 
+function optionalField(value: string | undefined): string | null | undefined {
+  if (value === undefined) return undefined;
+  return value || null;
+}
+
+function optionalDate(value: string | undefined): Date | null | undefined {
+  if (value === undefined) return undefined;
+  return value ? new Date(value) : null;
+}
+
 export const GET = withAuthParams<{ id: string }>(
   async (_req, _session, { id }) => {
     const lead = await prisma.lead.findUnique({
@@ -64,17 +74,17 @@ export const PATCH = withAuthParams<{ id: string }>(
     if (role === UserRole.ADMIN) {
       data = {
         firstName: body.firstName,
-        lastName: body.lastName || null,
+        lastName: optionalField(body.lastName),
         phone1: body.phone1,
-        phone2: body.phone2 || null,
+        phone2: optionalField(body.phone2),
         ssn: ssnValue,
-        address: body.address || null,
-        city: body.city || null,
-        state: body.state || null,
-        zipCode: body.zipCode || null,
-        email: body.email || null,
-        birthDate: body.birthDate ? new Date(body.birthDate) : null,
-        contactTime: body.contactTime || null,
+        address: optionalField(body.address),
+        city: optionalField(body.city),
+        state: optionalField(body.state),
+        zipCode: optionalField(body.zipCode),
+        email: optionalField(body.email),
+        birthDate: optionalDate(body.birthDate),
+        contactTime: optionalField(body.contactTime),
         status: body.status,
         companyId: body.companyId ? Number(body.companyId) : existing.companyId,
         teamId: body.teamId ? Number(body.teamId) : existing.teamId,
@@ -85,16 +95,16 @@ export const PATCH = withAuthParams<{ id: string }>(
     } else if (role === UserRole.SUPERVISOR || role === UserRole.COACH) {
       data = {
         firstName: body.firstName,
-        lastName: body.lastName || null,
-        phone2: body.phone2 || null,
+        lastName: optionalField(body.lastName),
+        phone2: optionalField(body.phone2),
         ssn: ssnValue,
-        address: body.address || null,
-        city: body.city || null,
-        state: body.state || null,
-        zipCode: body.zipCode || null,
-        email: body.email || null,
-        birthDate: body.birthDate ? new Date(body.birthDate) : null,
-        contactTime: body.contactTime || null,
+        address: optionalField(body.address),
+        city: optionalField(body.city),
+        state: optionalField(body.state),
+        zipCode: optionalField(body.zipCode),
+        email: optionalField(body.email),
+        birthDate: optionalDate(body.birthDate),
+        contactTime: optionalField(body.contactTime),
         status: body.status,
         assignedToId: body.assignedToId
           ? Number(body.assignedToId)
@@ -104,20 +114,24 @@ export const PATCH = withAuthParams<{ id: string }>(
     } else {
       data = {
         firstName: body.firstName,
-        lastName: body.lastName || null,
-        phone2: body.phone2 || null,
+        lastName: optionalField(body.lastName),
+        phone2: optionalField(body.phone2),
         ssn: ssnValue,
-        address: body.address || null,
-        city: body.city || null,
-        state: body.state || null,
-        zipCode: body.zipCode || null,
-        email: body.email || null,
-        birthDate: body.birthDate ? new Date(body.birthDate) : null,
-        contactTime: body.contactTime || null,
+        address: optionalField(body.address),
+        city: optionalField(body.city),
+        state: optionalField(body.state),
+        zipCode: optionalField(body.zipCode),
+        email: optionalField(body.email),
+        birthDate: optionalDate(body.birthDate),
+        contactTime: optionalField(body.contactTime),
         status: body.status,
         customerStatus: body.customerStatus || existing.customerStatus,
       };
     }
+
+    data = Object.fromEntries(
+      Object.entries(data).filter(([, value]) => value !== undefined),
+    );
 
     if (body.phone1 && body.phone1 !== existing.phone1) {
       const dup = await prisma.lead.findFirst({
