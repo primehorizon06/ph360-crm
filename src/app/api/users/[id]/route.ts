@@ -5,6 +5,7 @@ import { withAuthParams, forbidden, conflict, badRequest } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
 import { userSchema } from "@/lib/validations/user";
 import { logAudit, getRequestMeta } from "@/lib/audit";
+import { optionalField } from "@/lib/patchFields";
 
 export const PATCH = withAuthParams<{ id: string }>(
   async (req, session, { id }) => {
@@ -20,14 +21,16 @@ export const PATCH = withAuthParams<{ id: string }>(
     const existing = await prisma.user.findUnique({ where: { id: Number(id) } });
     if (!existing) return badRequest("Usuario no encontrado");
 
-    const data: Record<string, unknown> = {
-      name,
-      email: email || null,
-      role,
-      active,
-      companyId: Number(companyId),
-      teamId: Number(teamId),
-    };
+    const data: Record<string, unknown> = Object.fromEntries(
+      Object.entries({
+        name,
+        email: optionalField(email),
+        role,
+        active,
+        companyId: Number(companyId),
+        teamId: Number(teamId),
+      }).filter(([, value]) => value !== undefined),
+    );
 
     if (email) {
       const emailTaken = await prisma.user.findFirst({
