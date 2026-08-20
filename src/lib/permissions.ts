@@ -26,24 +26,6 @@ export function canResubmitProduct(role: string): boolean {
   return role === UserRole.COACH || role === UserRole.ADMIN;
 }
 
-export function canViewLeadRecord(
-  user: { role: string; companyId?: number | null; teamId?: number | null; id: string },
-  lead: { companyId: number; teamId: number; assignedToId: number },
-): boolean {
-  switch (user.role) {
-    case UserRole.ADMIN:
-      return true;
-    case UserRole.SUPERVISOR:
-      return user.companyId === lead.companyId;
-    case UserRole.COACH:
-      return user.teamId === lead.teamId;
-    case UserRole.AGENT:
-      return user.id === lead.assignedToId.toString();
-    default:
-      return false;
-  }
-}
-
 /**
  * Returns a Prisma WHERE fragment scoping a Lead/Customer list query to what
  * the user is allowed to see. Returns null when the role has no list access.
@@ -65,18 +47,19 @@ export function buildScopeFilter(user: ScopeUser): Prisma.LeadWhereInput | null 
 
 /**
  * Checks whether a user can access a specific lead/customer record.
- * ADMIN: always. SUPERVISOR/COACH: same company. AGENT: own record only.
+ * ADMIN: always. SUPERVISOR: same company. COACH: same team. AGENT: own record only.
  */
 export function canAccessLead(
   user: ScopeUser,
-  resource: { companyId: number | null; assignedToId: number | null },
+  resource: { companyId: number; teamId: number; assignedToId: number },
 ): boolean {
   switch (user.role) {
     case UserRole.ADMIN:
       return true;
     case UserRole.SUPERVISOR:
-    case UserRole.COACH:
       return resource.companyId === Number(user.companyId);
+    case UserRole.COACH:
+      return resource.teamId === Number(user.teamId);
     case UserRole.AGENT:
       return resource.assignedToId === Number(user.id);
     default:

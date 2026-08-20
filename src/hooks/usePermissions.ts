@@ -1,7 +1,7 @@
 import { useSession } from "next-auth/react";
 import { useCallback } from "react";
 import { PermissionScope } from "@prisma/client";
-import { canViewLeadRecord } from "@/lib/permissions";
+import { canAccessLead } from "@/lib/permissions";
 
 interface Permission {
   canCreate: boolean;
@@ -95,7 +95,7 @@ export function usePermissions() {
   const canViewLead = useCallback(
     (lead: { companyId: number; teamId: number; assignedToId: number }) => {
       if (!session?.user) return false;
-      return canViewLeadRecord(session.user, lead);
+      return canAccessLead(session.user, lead);
     },
     [session],
   );
