@@ -6,8 +6,8 @@ import { authOptions } from "@/lib/auth";
 export const unauthorized = () =>
   NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-export const forbidden = () =>
-  NextResponse.json({ error: "Sin permisos" }, { status: 403 });
+export const forbidden = (msg = "Sin permisos") =>
+  NextResponse.json({ error: msg }, { status: 403 });
 
 export const badRequest = (msg: string) =>
   NextResponse.json({ error: msg }, { status: 400 });

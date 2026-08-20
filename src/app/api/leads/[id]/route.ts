@@ -48,6 +48,17 @@ export const PATCH = withAuthParams<{ id: string }>(
 
     if (!canAccessLead(user, existing)) return forbidden();
 
+    if (role !== UserRole.ADMIN && existing.ssn && !body.ssn) {
+      return forbidden(
+        "Solo un administrador puede eliminar el número de seguro social",
+      );
+    }
+    const ssnValue = body.ssn
+      ? encryptDeterministic(body.ssn)
+      : role === UserRole.ADMIN
+        ? null
+        : existing.ssn;
+
     let data: Record<string, unknown> = {};
 
     if (role === UserRole.ADMIN) {
@@ -56,7 +67,7 @@ export const PATCH = withAuthParams<{ id: string }>(
         lastName: body.lastName || null,
         phone1: body.phone1,
         phone2: body.phone2 || null,
-        ssn: body.ssn ? encryptDeterministic(body.ssn) : null,
+        ssn: ssnValue,
         address: body.address || null,
         city: body.city || null,
         state: body.state || null,
@@ -76,7 +87,7 @@ export const PATCH = withAuthParams<{ id: string }>(
         firstName: body.firstName,
         lastName: body.lastName || null,
         phone2: body.phone2 || null,
-        ssn: body.ssn ? encryptDeterministic(body.ssn) : null,
+        ssn: ssnValue,
         address: body.address || null,
         city: body.city || null,
         state: body.state || null,
@@ -95,7 +106,7 @@ export const PATCH = withAuthParams<{ id: string }>(
         firstName: body.firstName,
         lastName: body.lastName || null,
         phone2: body.phone2 || null,
-        ssn: body.ssn ? encryptDeterministic(body.ssn) : null,
+        ssn: ssnValue,
         address: body.address || null,
         city: body.city || null,
         state: body.state || null,
