@@ -4,7 +4,7 @@ import { withAuthParams, forbidden, badRequest, notFound } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
 import { canAccessLead } from "@/lib/permissions";
 import { findLeadProduct } from "@/lib/leadService";
-import { applyApprovalDecision, notifyCoachOfResubmit } from "@/lib/approvalService";
+import { applyApprovalDecision, notifyReviewersOfResubmit } from "@/lib/approvalService";
 import { logAudit, getRequestMeta } from "@/lib/audit";
 
 export const PATCH = withAuthParams<{ id: string; productId: string }>(
@@ -36,7 +36,7 @@ export const PATCH = withAuthParams<{ id: string; productId: string }>(
         data: { status: "ACTIVE" },
       });
 
-      await notifyCoachOfResubmit(Number(id), Number(productId));
+      await notifyReviewersOfResubmit(Number(id), Number(productId));
 
       return NextResponse.json({ ok: true });
     }

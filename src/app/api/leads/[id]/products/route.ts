@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuthParams, badRequest, forbidden, notFound } from "@/lib/api";
-import { UserRole } from "@/utils/constants/roles";
 import { canAccessLead } from "@/lib/permissions";
 import { encryptRandom, decrypt } from "@/lib/crypto";
 import { productSchema } from "@/lib/validations/product";
 import { logAudit, getRequestMeta } from "@/lib/audit";
+import { notifyLeadReviewers } from "@/lib/approvalService";
 
 export const GET = withAuthParams<{ id: string }>(
   async (_req, session, { id }) => {
@@ -111,24 +111,13 @@ export const POST = withAuthParams<{ id: string }>(
       });
     }
 
-    const coach = await prisma.user.findFirst({
-      where: { teamId: lead.teamId, role: UserRole.COACH },
-      select: { id: true },
+    const leadName = `${lead.firstName} ${lead.lastName ?? ""}`.trim();
+    await notifyLeadReviewers({
+      leadId,
+      productId: leadProduct.id,
+      title: "Producto pendiente de aprobación",
+      body: `${leadName} tiene un nuevo producto que requiere tu revisión.`,
     });
-
-    if (coach) {
-      const leadName = `${lead.firstName} ${lead.lastName ?? ""}`.trim();
-      await prisma.notification.create({
-        data: {
-          userId: coach.id,
-          type: "PRODUCT_APPROVAL_PENDING",
-          title: "Producto pendiente de aprobación",
-          body: `${leadName} tiene un nuevo producto que requiere tu revisión.`,
-          leadId,
-          productId: leadProduct.id,
-        },
-      });
-    }
 
     await logAudit({
       action: "PRODUCT_CREATED",

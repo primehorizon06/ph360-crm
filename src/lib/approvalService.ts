@@ -43,33 +43,64 @@ export async function applyApprovalDecision({
   }
 }
 
-export async function notifyCoachOfResubmit(
+export async function notifyLeadReviewers({
+  leadId,
+  productId,
+  title,
+  body,
+}: {
+  leadId: number;
+  productId: number;
+  title: string;
+  body: string;
+}): Promise<void> {
+  const lead = await prisma.lead.findUnique({
+    where: { id: leadId },
+    select: { companyId: true, teamId: true },
+  });
+
+  if (!lead) return;
+
+  const reviewers = await prisma.user.findMany({
+    where: {
+      OR: [
+        { teamId: lead.teamId, role: UserRole.COACH },
+        { companyId: lead.companyId, role: UserRole.SUPERVISOR },
+      ],
+    },
+    select: { id: true },
+  });
+
+  if (reviewers.length === 0) return;
+
+  await prisma.notification.createMany({
+    data: reviewers.map((reviewer) => ({
+      userId: reviewer.id,
+      type: "PRODUCT_APPROVAL_PENDING",
+      title,
+      body,
+      leadId,
+      productId,
+    })),
+  });
+}
+
+export async function notifyReviewersOfResubmit(
   leadId: number,
   productId: number,
 ): Promise<void> {
   const lead = await prisma.lead.findUnique({
     where: { id: leadId },
-    select: { firstName: true, lastName: true, teamId: true },
+    select: { firstName: true, lastName: true },
   });
 
   if (!lead) return;
 
-  const coach = await prisma.user.findFirst({
-    where: { teamId: lead.teamId, role: UserRole.COACH },
-    select: { id: true },
-  });
-
-  if (!coach) return;
-
   const leadName = `${lead.firstName} ${lead.lastName ?? ""}`.trim();
-  await prisma.notification.create({
-    data: {
-      userId: coach.id,
-      type: "PRODUCT_APPROVAL_PENDING",
-      title: "Producto reenviado para aprobación",
-      body: `${leadName} ha corregido y reenviado un producto para tu revisión.`,
-      leadId,
-      productId,
-    },
+  await notifyLeadReviewers({
+    leadId,
+    productId,
+    title: "Producto reenviado para aprobación",
+    body: `${leadName} ha corregido y reenviado un producto para tu revisión.`,
   });
 }
