@@ -5,7 +5,7 @@ import { withAuthParams, forbidden, conflict, badRequest } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
 import { userSchema } from "@/lib/validations/user";
 import { logAudit, getRequestMeta } from "@/lib/audit";
-import { optionalField } from "@/lib/patchFields";
+import { optionalField, optionalNumber } from "@/lib/patchFields";
 
 export const PATCH = withAuthParams<{ id: string }>(
   async (req, session, { id }) => {
@@ -28,7 +28,7 @@ export const PATCH = withAuthParams<{ id: string }>(
         role,
         active,
         companyId: Number(companyId),
-        teamId: Number(teamId),
+        teamId: optionalNumber(teamId),
       }).filter(([, value]) => value !== undefined),
     );
 

@@ -84,16 +84,10 @@ export function UserModal({ user, onClose, onSave }: Props) {
     const method = user ? "PATCH" : "POST";
     const url = user ? `/api/users/${user.id}` : "/api/users";
 
-    const payload = {
-      ...data,
-      teamId: data.teamId ? Number(data.teamId) : null,
-      companyId: Number(data.companyId),
-    };
-
     const res = await fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(data),
     });
 
     if (!res.ok) {
