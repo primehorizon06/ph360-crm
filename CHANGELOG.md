@@ -27,6 +27,8 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **style**(ui): agranda tipografía y espaciado del modal `ConfirmProductModal`
 - **fix**(layout): `Sidebar` resalta el ítem activo también en subrutas (`/leads/9`, no solo `/leads`) y aclara el color de los ítems inactivos a `text-white/90`
 - **style**(ui): reemplaza `text-white/40` por el token semántico `text-on-surface-variant` en toda la app para mejorar el contraste de etiquetas y textos secundarios
+- **style**(products): agranda la letra y aclara el color de la información de método de pago y del plan de pagos ya asociado en la tarjeta de producto
+- **style**(ui): reemplaza `text-white/50` (y variantes cercanas) por `text-white/90` en el resto de la app para mejorar el contraste
 
 ### Fixed
 

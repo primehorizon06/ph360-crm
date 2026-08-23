@@ -44,7 +44,7 @@ import { canResubmitProduct } from "@/lib/permissions";
 const STATUS_STYLES: Record<string, string> = {
   PAID: "bg-emerald-500/10 text-emerald-400",
   FAILED: "bg-red-500/10 text-red-400",
-  CANCELLED: "bg-white/10 text-white/30",
+  CANCELLED: "bg-white/10 text-white/90",
   PENDING: "bg-amber-500/10 text-amber-400",
 };
 
@@ -81,10 +81,10 @@ function InstallmentRow({ inst, idx }: { inst: InstallmentItem; idx: number }) {
         } ${isPaid ? "cursor-pointer hover:bg-white/10" : "cursor-default"}`}
       >
         <div className="flex items-center gap-2">
-          <span className="w-5 h-5 rounded-full bg-white/5 flex items-center justify-center text-md text-white/50 shrink-0">
+          <span className="w-5 h-5 rounded-full bg-white/5 flex items-center justify-center text-md text-white/90 shrink-0">
             {inst.number}
           </span>
-          <span className="text-white/30 text-[15px] font-mono shrink-0">
+          <span className="text-white/90 text-[15px] font-mono shrink-0">
             #{inst.id}
           </span>
           <span className="text-white text-sm">{formatDate(inst.date)}</span>
@@ -101,9 +101,9 @@ function InstallmentRow({ inst, idx }: { inst: InstallmentItem; idx: number }) {
           </span>
           {isPaid &&
             (expanded ? (
-              <ChevronUp size={12} className="text-white/30" />
+              <ChevronUp size={12} className="text-white/90" />
             ) : (
-              <ChevronDown size={12} className="text-white/30" />
+              <ChevronDown size={12} className="text-white/90" />
             ))}
         </div>
       </button>
@@ -112,21 +112,21 @@ function InstallmentRow({ inst, idx }: { inst: InstallmentItem; idx: number }) {
       {isPaid && expanded && (
         <div className="mx-2 mb-1.5 px-3 py-2.5 bg-emerald-500/5 border border-emerald-500/15 rounded-lg space-y-1.5">
           <div className="flex items-center justify-between text-md">
-            <span className="text-white/30">ID cuota</span>
+            <span className="text-white/90">ID cuota</span>
             <span className="text-on-surface-variant font-mono">#{inst.id}</span>
           </div>
           <div className="flex items-center justify-between text-md">
-            <span className="text-white/30">Fecha programada</span>
-            <span className="text-white/50">{formatDate(inst.date)}</span>
+            <span className="text-white/90">Fecha programada</span>
+            <span className="text-white/90">{formatDate(inst.date)}</span>
           </div>
           <div className="flex items-center justify-between text-md">
-            <span className="text-white/30">Fecha de pago</span>
+            <span className="text-white/90">Fecha de pago</span>
             <span className="text-emerald-400">
               {inst.paidAt ? formatDate(inst.paidAt) : "—"}
             </span>
           </div>
           <div className="flex items-center justify-between text-md border-t border-emerald-500/10 pt-1.5 mt-1">
-            <span className="text-white/30 font-medium">Monto pagado</span>
+            <span className="text-white/90 font-medium">Monto pagado</span>
             <span className="text-emerald-400 font-semibold">
               $ {formatAmount(Number(inst.amount))}
             </span>
@@ -288,7 +288,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
             <button
               type="button"
               onClick={resetForm}
-              className="text-white/20 hover:text-white/50 transition-colors"
+              className="text-white/20 hover:text-white/90 transition-colors"
             >
               <X size={16} />
             </button>
@@ -565,7 +565,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
       ) : products.length === 0 ? (
         <div className="bg-surface border border-white/10 rounded-xl p-12 flex flex-col items-center justify-center gap-2">
           <ShoppingBag size={32} className="text-white/20" />
-          <p className="text-white/50 text-lg">No hay productos asociados</p>
+          <p className="text-white/90 text-lg">No hay productos asociados</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
@@ -614,35 +614,35 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                     <div className="min-w-0">
                       {lp.paymentMethod.type === "TARJETA" ? (
                         <>
-                          <p className="text-white/70 text-sm font-medium">
+                          <p className="text-white/90 text-lg font-medium">
                             Tarjeta{" "}
                             {lp.paymentMethod.cardType === "DEBITO"
                               ? "Débito"
                               : "Crédito"}{" "}
                             ···· {lp.paymentMethod.lastFour}
                           </p>
-                          <p className="text-white/50 text-md truncate">
+                          <p className="text-white/90 text-lg truncate">
                             Titular: {lp.paymentMethod.holderName}
                           </p>
-                          <p className="text-white/50 text-md truncate">
+                          <p className="text-white/90 text-lg truncate">
                             Banco: {lp.paymentMethod.bank}
                           </p>
                         </>
                       ) : (
                         <>
-                          <p className="text-white/70 text-sm font-medium truncate">
+                          <p className="text-white/90 text-lg font-medium truncate">
                             Cuenta: {lp.paymentMethod.accountNumber}
                           </p>
-                          <p className="text-white/50 text-md truncate">
+                          <p className="text-white/90 text-lg truncate">
                             Titular: {lp.paymentMethod.accountHolder}
                           </p>
-                          <p className="text-white/50 text-md truncate">
+                          <p className="text-white/90 text-lg truncate">
                             Banco: {lp.paymentMethod.accountBank}
                           </p>
-                          <p className="text-white/50 text-md truncate">
+                          <p className="text-white/90 text-lg truncate">
                             Ruta: {lp.paymentMethod.routingNumber}
                           </p>
-                          <p className="text-white/50 text-md truncate">
+                          <p className="text-white/90 text-lg truncate">
                             Tipo:{" "}
                             {lp.paymentMethod.accountType === "AHORROS"
                               ? "Ahorros"
