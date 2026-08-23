@@ -1,11 +1,14 @@
 import { Lead } from "@/utils/interfaces/leads";
 import { InfoField } from "../InfoField";
+import { calculateAge } from "@/utils/helpers/format";
 
 interface Props {
   lead: Lead;
 }
 
 export function PersonalTab({ lead }: Props) {
+  const age = lead.birthDate ? calculateAge(lead.birthDate) : null;
+
   return (
     <div className="space-y-4">
       <div className="bg-surface border border-white/10 rounded-xl p-5">
@@ -23,6 +26,10 @@ export function PersonalTab({ lead }: Props) {
                 ? new Date(lead.birthDate).toLocaleDateString("es-CO")
                 : null
             }
+          />
+          <InfoField
+            label="Edad"
+            value={age !== null ? `${age} ${age === 1 ? "año" : "años"}` : null}
           />
           <InfoField label="Email" value={lead.email} />
         </div>
