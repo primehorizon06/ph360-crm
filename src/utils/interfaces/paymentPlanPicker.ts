@@ -1,3 +1,5 @@
+import { ReactNode } from "react";
+
 export interface Installment {
   number: number;
   date: Date;
@@ -8,4 +10,5 @@ export interface Props {
   value: Installment[];
   onChange: (installments: Installment[]) => void;
   error?: string;
+  children?: ReactNode;
 }

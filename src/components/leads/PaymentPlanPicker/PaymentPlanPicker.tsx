@@ -12,7 +12,7 @@ import { Installment, Props } from "@/utils/interfaces/paymentPlanPicker";
 import { formatDate, formatTotalAmount } from "@/utils/helpers/format";
 import { InlineDatePicker } from "@/components/ui/InlineDatePicker";
 
-export function PaymentPlanPicker({ value, onChange, error }: Props) {
+export function PaymentPlanPicker({ value, onChange, error, children }: Props) {
   const {
     register,
     control,
@@ -70,93 +70,99 @@ export function PaymentPlanPicker({ value, onChange, error }: Props) {
 
   return (
     <div className="space-y-3">
-      <label className="flex items-center gap-1.5 text-lg text-white/40">
+      <label className="flex items-center gap-1.5 text-lg text-on-surface-variant">
         <CalendarDays size={11} />
         Plan de pagos — selecciona las fechas de cada cuota
       </label>
 
-      {/* Datepicker inline */}
-      <InlineDatePicker
-        onChange={handleDateClick}
-        highlightDates={highlightedDates}
-      />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:items-center">
+        {/* Datepicker inline */}
+        <InlineDatePicker
+          onChange={handleDateClick}
+          highlightDates={highlightedDates}
+        />
 
-      {/* Installment list */}
-      {value.length > 0 && (
-        <div className="space-y-2">
-          {value.map((installment, idx) => (
-            <div
-              key={installment.date.toDateString()}
-              className="flex items-center gap-3 bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2"
-            >
-              {/* Número de cuota */}
-              <span className="shrink-0 w-6 h-6 rounded-full bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 text-lg font-semibold">
-                {installment.number}
-              </span>
+        <div className="space-y-3">
+          {/* Installment list */}
+          {value.length > 0 && (
+            <div className="space-y-2">
+              {value.map((installment, idx) => (
+                <div
+                  key={installment.date.toDateString()}
+                  className="flex items-center gap-3 bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2"
+                >
+                  {/* Número de cuota */}
+                  <span className="shrink-0 w-6 h-6 rounded-full bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 text-lg font-semibold">
+                    {installment.number}
+                  </span>
 
-              {/* Fecha */}
-              <span className="text-white/50 text-lg shrink-0 whitespace-nowrap">
-                {formatDate(installment.date)}
-              </span>
+                  {/* Fecha */}
+                  <span className="text-white/50 text-lg shrink-0 whitespace-nowrap">
+                    {formatDate(installment.date)}
+                  </span>
 
-              {/* Monto */}
-              <div className="flex-1 relative">
-                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/50 text-lg">
-                  $
-                </span>
-                <input
-                  {...register(`installments.${idx}.amount`)}
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="0.00"
-                  value={installment.amount}
-                  onChange={(e) => handleAmountChange(idx, e.target.value)}
-                  className={`w-full bg-surface border rounded-md pl-6 pr-2 py-1.5 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 transition-all ${
-                    errors.installments?.[idx]?.amount
-                      ? "border-red-500/50"
-                      : "border-white/10"
-                  }`}
-                />
-                {errors.installments?.[idx]?.amount && (
-                  <p className="text-red-400 text-[10px] mt-0.5">
-                    {errors.installments[idx]?.amount?.message}
-                  </p>
-                )}
-              </div>
+                  {/* Monto */}
+                  <div className="flex-1 relative">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/50 text-lg">
+                      $
+                    </span>
+                    <input
+                      {...register(`installments.${idx}.amount`)}
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="0.00"
+                      value={installment.amount}
+                      onChange={(e) => handleAmountChange(idx, e.target.value)}
+                      className={`w-full bg-surface border rounded-md pl-6 pr-2 py-1.5 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 transition-all ${
+                        errors.installments?.[idx]?.amount
+                          ? "border-red-500/50"
+                          : "border-white/10"
+                      }`}
+                    />
+                    {errors.installments?.[idx]?.amount && (
+                      <p className="text-red-400 text-[10px] mt-0.5">
+                        {errors.installments[idx]?.amount?.message}
+                      </p>
+                    )}
+                  </div>
 
-              {/* Eliminar */}
-              <button
-                type="button"
-                onClick={() => handleRemove(idx)}
-                className="shrink-0 text-white/20 hover:text-red-400 transition-colors"
-              >
-                <Trash2 size={13} />
-              </button>
-            </div>
-          ))}
+                  {/* Eliminar */}
+                  <button
+                    type="button"
+                    onClick={() => handleRemove(idx)}
+                    className="shrink-0 text-white/20 hover:text-red-400 transition-colors"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              ))}
 
-          {/* Total */}
-          {hasAmounts && (
-            <div className="flex items-center justify-between px-3 py-2 bg-cyan-500/5 border border-cyan-500/20 rounded-lg">
-              <span className="text-lg text-white/40">
-                Total · {value.length} cuota{value.length !== 1 ? "s" : ""}
-              </span>
-              <span className="text-lg font-semibold text-cyan-400">
-                $ {formatTotalAmount(value)}
-              </span>
+              {/* Total */}
+              {hasAmounts && (
+                <div className="flex items-center justify-between px-3 py-2 bg-cyan-500/5 border border-cyan-500/20 rounded-lg">
+                  <span className="text-lg text-on-surface-variant">
+                    Total · {value.length} cuota{value.length !== 1 ? "s" : ""}
+                  </span>
+                  <span className="text-lg font-semibold text-cyan-400">
+                    $ {formatTotalAmount(value)}
+                  </span>
+                </div>
+              )}
             </div>
           )}
+
+          {/* Error desde el padre (validación al submit) */}
+          {error && <p className="text-red-400 text-lg">{error}</p>}
+
+          {value.length === 0 && (
+            <p className="text-center text-white/20 text-lg py-2">
+              Haz clic en el calendario para agregar cuotas
+            </p>
+          )}
+
+          {children}
         </div>
-      )}
-
-      {/* Error desde el padre (validación al submit) */}
-      {error && <p className="text-red-400 text-lg">{error}</p>}
-
-      {value.length === 0 && (
-        <p className="text-center text-white/20 text-lg py-2">
-          Haz clic en el calendario para agregar cuotas
-        </p>
-      )}
+      </div>
     </div>
   );
 }

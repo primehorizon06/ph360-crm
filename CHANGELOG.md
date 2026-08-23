@@ -14,6 +14,8 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **perf**(suspense): extrae `SearchParamsWatcher` en login y lo envuelve en `<Suspense>` para cumplir con el patrón requerido por Next.js 15+
 - **ia**(skills): añade skill `conventional-commit` para gestión de commits atómicos y changelog
 - **feat**(leads): calcula y muestra la edad junto a la fecha de nacimiento en el formulario de lead; exige confirmar carta de emancipación cuando la edad está entre 18 y 20 años, en creación y edición
+- **feat**(leads): añade campo "Edad" calculado en la pestaña Datos Personales del detalle de lead
+- **feat**(products): reorganiza el formulario de asociar producto y el plan de pagos a 2 columnas; el botón "Asociar producto" pasa a ser `children` de `PaymentPlanPicker` junto a la lista de cuotas
 
 ### Changed
 
@@ -22,10 +24,14 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **fix**(products): reordena los campos del formulario de cuenta bancaria a Banco, Titular, No. de ruta, No. de cuenta y Tipo de cuenta
 - **refactor**(products): migra la carga de productos en `ProductsTab` de `useEffect` + `fetch` a SWR y reemplaza `watch()` por `useWatch()`, eliminando los warnings de dependencia faltante y de React Compiler
 - **feat**(notes): permite fijar una sola nota por lead de forma persistente, con nuevo endpoint `PATCH /api/notes/[id]` y campo `pinned` en el modelo `Note`
+- **style**(ui): agranda tipografía y espaciado del modal `ConfirmProductModal`
+- **fix**(layout): `Sidebar` resalta el ítem activo también en subrutas (`/leads/9`, no solo `/leads`) y aclara el color de los ítems inactivos a `text-white/90`
+- **style**(ui): reemplaza `text-white/40` por el token semántico `text-on-surface-variant` en toda la app para mejorar el contraste de etiquetas y textos secundarios
 
 ### Fixed
 
 - **fix**(leads): corrige error de build en producción (`'.partial() cannot be used on object schemas containing refinements'`) separando `leadObjectSchema` (base) de `leadSchema` (con `superRefine` de carta de emancipación); `PATCH /api/leads/[id]` ahora usa el schema base para `.partial()`
+- **fix**(ui): corrige colores del calendario inline (`react-datepicker`): "hoy" ahora es solo borde blanco sin relleno, las cuotas seleccionadas se ven en cyan y se neutraliza el resaltado de teclado; corrige recorte del calendario en meses de 6 filas y elimina clases Tailwind arbitrarias que nunca compilaban por conflicto de escapado con el `__` de las clases BEM de la librería
 
 ### Added
 

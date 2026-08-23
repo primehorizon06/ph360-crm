@@ -113,7 +113,7 @@ function InstallmentRow({ inst, idx }: { inst: InstallmentItem; idx: number }) {
         <div className="mx-2 mb-1.5 px-3 py-2.5 bg-emerald-500/5 border border-emerald-500/15 rounded-lg space-y-1.5">
           <div className="flex items-center justify-between text-md">
             <span className="text-white/30">ID cuota</span>
-            <span className="text-white/40 font-mono">#{inst.id}</span>
+            <span className="text-on-surface-variant font-mono">#{inst.id}</span>
           </div>
           <div className="flex items-center justify-between text-md">
             <span className="text-white/30">Fecha programada</span>
@@ -264,7 +264,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
     <div className="space-y-4">
       
       <div className="flex items-center justify-between">
-        <p className="text-white/40 text-lg">
+        <p className="text-on-surface-variant text-lg">
           {products.length} producto{products.length !== 1 ? "s" : ""}
         </p>
         {!showForm && (
@@ -295,7 +295,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
           </div>
 
           <div className="space-y-1">
-            <label className="text-lg text-white/40">Producto</label>
+            <label className="text-lg text-on-surface-variant">Producto</label>
             <Controller
               control={control}
               name="product"
@@ -317,7 +317,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
 
           {product && (
             <div className="space-y-1">
-              <label className="text-lg text-white/40">Método de pago</label>
+              <label className="text-lg text-on-surface-variant">Método de pago</label>
               <Controller
                 control={control}
                 name="paymentType"
@@ -332,7 +332,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                           className={`flex items-center justify-center gap-2 py-2.5 rounded-lg border text-lg font-medium transition-all ${
                             field.value === type
                               ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400"
-                              : "border-white/10 bg-white/5 text-white/40 hover:text-white/60"
+                              : "border-white/10 bg-white/5 text-on-surface-variant hover:text-white/60"
                           }`}
                         >
                           {type === "TARJETA" ? (
@@ -351,9 +351,9 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
           )}
 
           {paymentType === "TARJETA" && (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
               <div className="space-y-1">
-                <label className="text-lg text-white/40">Tipo de tarjeta</label>
+                <label className="text-lg text-on-surface-variant">Tipo de tarjeta</label>
                 <Controller
                   control={control}
                   name="cardType"
@@ -367,7 +367,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                           className={`py-2 rounded-lg border text-lg font-medium transition-all ${
                             field.value === ct
                               ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400"
-                              : "border-white/10 bg-white/5 text-white/40 hover:text-white/60"
+                              : "border-white/10 bg-white/5 text-on-surface-variant hover:text-white/60"
                           }`}
                         >
                           {ct === "DEBITO" ? "Débito" : "Crédito"}
@@ -384,7 +384,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
               </div>
 
               <div className="space-y-1">
-                <label className="text-lg text-white/40">
+                <label className="text-lg text-on-surface-variant">
                   Últimos 4 dígitos
                 </label>
                 <input
@@ -403,7 +403,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
               </div>
 
               <div className="space-y-1">
-                <label className="text-lg text-white/40">
+                <label className="text-lg text-on-surface-variant">
                   Nombre del titular
                 </label>
                 <input
@@ -420,7 +420,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
               </div>
 
               <div className="space-y-1">
-                <label className="text-lg text-white/40">Banco</label>
+                <label className="text-lg text-on-surface-variant">Banco</label>
                 <input
                   {...register("bank")}
                   type="text"
@@ -435,9 +435,9 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
           )}
 
           {paymentType === "CUENTA" && (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
               <div className="space-y-1">
-                <label className="text-lg text-white/40">Banco</label>
+                <label className="text-lg text-on-surface-variant">Banco</label>
                 <input
                   {...register("accountBank")}
                   type="text"
@@ -452,7 +452,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
               </div>
 
               <div className="space-y-1">
-                <label className="text-lg text-white/40">
+                <label className="text-lg text-on-surface-variant">
                   Titular de la cuenta
                 </label>
                 <input
@@ -469,7 +469,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm text-white/40">Número de ruta</label>
+                <label className="text-sm text-on-surface-variant">Número de ruta</label>
                 <input
                   {...register("routingNumber")}
                   type="text"
@@ -486,7 +486,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
               </div>
 
               <div className="space-y-1">
-                <label className="text-lg text-white/40">
+                <label className="text-lg text-on-surface-variant">
                   Número de cuenta
                 </label>
                 <input
@@ -503,8 +503,8 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                 )}
               </div>
 
-              <div className="space-y-1">
-                <label className="text-sm text-white/40">Tipo de cuenta</label>
+              <div className="space-y-1 sm:col-span-2">
+                <label className="text-sm text-on-surface-variant">Tipo de cuenta</label>
                 <Controller
                   control={control}
                   name="accountType"
@@ -518,7 +518,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                           className={`py-2 rounded-lg border text-lg font-medium transition-all ${
                             field.value === type
                               ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400"
-                              : "border-white/10 bg-white/5 text-white/40 hover:text-white/60"
+                              : "border-white/10 bg-white/5 text-on-surface-variant hover:text-white/60"
                           }`}
                         >
                           {type === "AHORROS" ? "Ahorros" : "Cheques"}
@@ -545,18 +545,15 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                 clearErrors("root");
               }}
               error={errors.root?.message ?? ""}
-            />
-          )}
-
-          {/* Submit */}
-          {paymentType && (
-            <button
-              type="submit"
-              className="flex items-center justify-center gap-2 w-full bg-cyan-500 hover:bg-cyan-400 text-black font-medium px-4 py-2 rounded-lg text-lg transition-colors"
             >
-              <Plus size={15} />
-              Asociar producto
-            </button>
+              <button
+                type="submit"
+                className="flex items-center justify-center gap-2 w-full bg-cyan-500 hover:bg-cyan-400 text-black font-medium px-4 py-2 rounded-lg text-lg transition-colors"
+              >
+                <Plus size={15} />
+                Asociar producto
+              </button>
+            </PaymentPlanPicker>
           )}
         </form>
       )}
@@ -609,9 +606,9 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                   <div className="flex items-center gap-4">
                     <div className="shrink-0 w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
                       {lp.paymentMethod.type === "TARJETA" ? (
-                        <CreditCard size={16} className="text-white/40" />
+                        <CreditCard size={16} className="text-on-surface-variant" />
                       ) : (
-                        <Building2 size={16} className="text-white/40" />
+                        <Building2 size={16} className="text-on-surface-variant" />
                       )}
                     </div>
                     <div className="min-w-0">
@@ -683,7 +680,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                         Rechazado
                       </p>
                       {lp.approval?.note && (
-                        <p className="text-white/40 text-md mt-1 leading-relaxed">
+                        <p className="text-on-surface-variant text-md mt-1 leading-relaxed">
                           {lp.approval.note}
                         </p>
                       )}
