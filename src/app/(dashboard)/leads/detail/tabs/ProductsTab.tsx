@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import useSWR from "swr";
 import { toast } from "sonner";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ShoppingBag,
@@ -33,6 +34,7 @@ import { CustomSelect } from "@/components/ui/Select";
 import { Installment } from "@/utils/interfaces/paymentPlanPicker";
 import { PaymentPlanPicker } from "@/components/leads/PaymentPlanPicker/PaymentPlanPicker";
 import { formatAmount, formatDate } from "@/utils/helpers/format";
+import { fetcher } from "@/lib/fetcher";
 import { ConfirmProductModal } from "@/components/leads/Confirmproductmodal/Confirmproductmodal";
 import { useSession } from "next-auth/react";
 import { canResubmitProduct } from "@/lib/permissions";
@@ -141,8 +143,11 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
   const { data: session } = useSession();
   const role = session?.user?.role;
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    data: products = [],
+    isLoading: loading,
+    mutate: reloadProducts,
+  } = useSWR<Product[]>(`/api/leads/${leadId}/products`, fetcher);
   const [showForm, setShowForm] = useState(false);
   const [installments, setInstallments] = useState<Installment[]>([]);
   const [saving, setSaving] = useState(false);
@@ -152,7 +157,6 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
   const {
     register,
     handleSubmit,
-    watch,
     control,
     reset,
     setError,
@@ -162,19 +166,8 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
     resolver: zodResolver(productSchema),
   });
 
-  const paymentType = watch("paymentType");
-  const product = watch("product");
-
-  async function loadProducts() {
-    setLoading(true);
-    const res = await fetch(`/api/leads/${leadId}/products`);
-    setProducts(await res.json());
-    setLoading(false);
-  }
-
-  useEffect(() => {
-    loadProducts();
-  }, [leadId]);
+  const paymentType = useWatch({ control, name: "paymentType" });
+  const product = useWatch({ control, name: "product" });
 
   function resetForm() {
     reset({ paymentType: "TARJETA" });
@@ -250,7 +243,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
     setPendingData(null);
     toast.success("Producto asociado exitosamente");
     resetForm();
-    loadProducts();
+    reloadProducts();
     onProductCreated?.();
   };
 
@@ -263,7 +256,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
     });
     setResubmitting(null);
     toast.success("Producto reenviado para aprobación");
-    loadProducts();
+    reloadProducts();
     onProductCreated?.();
   }
 
