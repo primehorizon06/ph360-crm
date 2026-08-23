@@ -197,21 +197,21 @@ export function LeadModal({ onClose, onSave }: Props) {
 
             {/* Fecha de nacimiento + edad calculada */}
             <div>
-              <label className="text-sm text-on-surface-variant mb-1 block">
-                Fecha de nacimiento
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="date"
-                  {...register("birthDate")}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50"
-                />
+              <div className="flex items-center gap-1.5 mb-1">
+                <label className="text-sm text-on-surface-variant">
+                  Fecha de nacimiento
+                </label>
                 {age !== null && (
                   <span className="whitespace-nowrap text-sm text-white/90">
-                    {age} {age === 1 ? "año" : "años"}
+                    · {age} {age === 1 ? "año" : "años"}
                   </span>
                 )}
               </div>
+              <input
+                type="date"
+                {...register("birthDate")}
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50"
+              />
               {errors.birthDate && (
                 <p className="text-red-400 text-sm mt-1">
                   {errors.birthDate.message}
