@@ -43,13 +43,13 @@ export function ToastHandler() {
               <span className="text-white font-semibold text-lg">
                 Nuevo Recordatorio
               </span>
-              <span className="text-white/40 text-sm ml-auto">{time}</span>
+              <span className="text-on-surface-variant text-sm ml-auto">{time}</span>
             </div>
           </div>
 
           <div className="p-3">
             <p className="text-white text-lg font-medium">{reminder.reason}</p>
-            <p className="text-white/40 text-sm mt-1">Lead: {leadName}</p>
+            <p className="text-on-surface-variant text-sm mt-1">Lead: {leadName}</p>
           </div>
 
           <div className="flex border-t border-white/10">

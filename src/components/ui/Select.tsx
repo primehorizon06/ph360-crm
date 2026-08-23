@@ -164,7 +164,7 @@ export function CustomSelect({
         </span>
         <ChevronDown
           size={14}
-          className={`text-white/40 transition-transform shrink-0 ml-2 ${open ? "rotate-180" : ""}`}
+          className={`text-on-surface-variant transition-transform shrink-0 ml-2 ${open ? "rotate-180" : ""}`}
         />
       </button>
 
@@ -179,7 +179,7 @@ export function CustomSelect({
             {/* Buscador opcional */}
             {searchable && (
               <div className="flex items-center gap-2 px-3 py-2 border-b border-white/10">
-                <Search size={14} className="text-white/40 shrink-0" />
+                <Search size={14} className="text-on-surface-variant shrink-0" />
                 <input
                   ref={searchInputRef}
                   type="text"

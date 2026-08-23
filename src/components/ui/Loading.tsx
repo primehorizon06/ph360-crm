@@ -21,7 +21,7 @@ export function Loading({
           <div className="absolute inset-0 rounded-full border-2 border-white/10" />
           <div className="absolute inset-0 rounded-full border-2 border-t-cyan-400 animate-spin" />
         </div>
-        <p className="text-white/40 text-lg">{message}</p>
+        <p className="text-on-surface-variant text-lg">{message}</p>
       </div>
     </div>
   );

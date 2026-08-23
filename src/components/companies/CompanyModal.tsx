@@ -66,7 +66,7 @@ export function CompanyModal({ company, onClose, onSave }: Props) {
           </h2>
           <button
             onClick={onClose}
-            className="text-white/40 hover:text-white transition-colors"
+            className="text-on-surface-variant hover:text-white transition-colors"
           >
             <X size={18} />
           </button>
@@ -74,7 +74,7 @@ export function CompanyModal({ company, onClose, onSave }: Props) {
 
         <div className="p-5 space-y-4">
           <div>
-            <label className="text-sm text-white/40 mb-1 block">Nombre</label>
+            <label className="text-sm text-on-surface-variant mb-1 block">Nombre</label>
             <input
               {...register("name")}
               className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50"

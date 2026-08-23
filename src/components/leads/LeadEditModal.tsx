@@ -118,7 +118,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
           </h2>
           <button
             onClick={onClose}
-            className="text-white/40 hover:text-white transition-colors"
+            className="text-on-surface-variant hover:text-white transition-colors"
           >
             <X size={18} />
           </button>
@@ -129,7 +129,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
               {/* phone1 — editable solo para admin, readonly para el resto */}
               {isAdmin ? (
                 <div>
-                  <label className="text-sm text-white/40 mb-1 block">
+                  <label className="text-sm text-on-surface-variant mb-1 block">
                     Teléfono 1 <span className="text-red-400">*</span>
                   </label>
                   <input
@@ -153,7 +153,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
                 </div>
               ) : (
                 <div>
-                  <label className="text-sm text-white/40 mb-1 block">
+                  <label className="text-sm text-on-surface-variant mb-1 block">
                     Teléfono 1
                   </label>
                   <input
@@ -166,7 +166,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
               )}
 
               <div>
-                <label className="text-sm text-white/40 mb-1 block">
+                <label className="text-sm text-on-surface-variant mb-1 block">
                   Teléfono 2
                 </label>
                 <input
@@ -191,7 +191,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
 
               {/* SSN con máscara */}
               <div>
-                <label className="text-sm text-white/40 mb-1 block">
+                <label className="text-sm text-on-surface-variant mb-1 block">
                   Seguro Social
                 </label>
                 <input
@@ -214,7 +214,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
               {LEAD_FIELDS.filter((field) => field.name !== "birthDate").map(
                 (field) => (
                   <div key={field.name}>
-                    <label className="text-sm text-white/40 mb-1 block">
+                    <label className="text-sm text-on-surface-variant mb-1 block">
                       {field.label}
                       {field.required && (
                         <span className="text-red-400 ml-1">*</span>
@@ -236,7 +236,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
 
               {/* Fecha de nacimiento + edad calculada */}
               <div>
-                <label className="text-sm text-white/40 mb-1 block">
+                <label className="text-sm text-on-surface-variant mb-1 block">
                   Fecha de nacimiento
                 </label>
                 <div className="flex items-center gap-2">
@@ -275,7 +275,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
 
               {/* Estado */}
               <div>
-                <label className="text-sm text-white/40 mb-1 block">
+                <label className="text-sm text-on-surface-variant mb-1 block">
                   Status
                 </label>
                 {isCustomer ? (
@@ -300,7 +300,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
               {/* Franquicia — solo ADMIN */}
               {isAdmin && (
                 <div>
-                  <label className="text-sm text-white/40 mb-1 block">
+                  <label className="text-sm text-on-surface-variant mb-1 block">
                     Franquicia
                   </label>
                   <CustomSelect
@@ -325,7 +325,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
                 role === UserRole.SUPERVISOR ||
                 role === UserRole.COACH) && (
                 <div>
-                  <label className="text-sm text-white/40 mb-1 block">
+                  <label className="text-sm text-on-surface-variant mb-1 block">
                     Equipo
                   </label>
                   <CustomSelect
@@ -349,7 +349,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
                 role === UserRole.SUPERVISOR ||
                 role === UserRole.COACH) && (
                 <div>
-                  <label className="text-sm text-white/40 mb-1 block">
+                  <label className="text-sm text-on-surface-variant mb-1 block">
                     Agente asignado
                   </label>
                   <CustomSelect

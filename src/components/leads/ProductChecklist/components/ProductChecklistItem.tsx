@@ -159,7 +159,7 @@ export function ProductChecklistItem({
                   ) : (
                     <Circle
                       size={16}
-                      className="text-white/20 shrink-0 group-hover:text-white/40 transition-colors"
+                      className="text-white/20 shrink-0 group-hover:text-on-surface-variant transition-colors"
                     />
                   )}
                   <span

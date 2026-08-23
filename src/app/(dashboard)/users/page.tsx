@@ -166,7 +166,7 @@ export default function UsersPage() {
       <div className="flex flex-col sm:flex-row gap-3">
         {/* Buscador */}
         <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2 flex-1">
-          <Search size={16} className="text-white/40 shrink-0" />
+          <Search size={16} className="text-on-surface-variant shrink-0" />
           <input
             type="text"
             placeholder="Buscar por nombre o usuario..."
@@ -231,7 +231,7 @@ export default function UsersPage() {
           >
             Anterior
           </button>
-          <span className="text-white/40 text-lg">
+          <span className="text-on-surface-variant text-lg">
             Página {data.page} de {data.totalPages}
           </span>
           <button

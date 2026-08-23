@@ -39,7 +39,7 @@ export function NotesTab({ leadId }: PropsNotesTab) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-white/40 text-lg">
+        <p className="text-on-surface-variant text-lg">
           {notes.length} nota{notes.length !== 1 ? "s" : ""}
         </p>
         <button

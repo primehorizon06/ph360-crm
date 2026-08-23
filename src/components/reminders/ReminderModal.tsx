@@ -85,7 +85,7 @@ export function ReminderModal({ leadId, onClose, onSave }: ReminderModalProps) {
           <h2 className="text-white font-semibold">Nuevo Recordatorio</h2>
           <button
             onClick={onClose}
-            className="text-white/40 hover:text-white transition-colors"
+            className="text-on-surface-variant hover:text-white transition-colors"
           >
             <X size={18} />
           </button>
@@ -115,7 +115,7 @@ export function ReminderModal({ leadId, onClose, onSave }: ReminderModalProps) {
 
             {/* Asignar a */}
             <div>
-              <label className="text-sm text-white/40 mb-1 block">
+              <label className="text-sm text-on-surface-variant mb-1 block">
                 Asignar a <span className="text-red-400">*</span>
               </label>
               <Controller
@@ -139,7 +139,7 @@ export function ReminderModal({ leadId, onClose, onSave }: ReminderModalProps) {
 
             {/* Título/Motivo */}
             <div>
-              <label className="text-sm text-white/40 mb-1 block">
+              <label className="text-sm text-on-surface-variant mb-1 block">
                 Título <span className="text-red-400">*</span>
               </label>
               <Controller

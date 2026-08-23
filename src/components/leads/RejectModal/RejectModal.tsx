@@ -43,7 +43,7 @@ export function RejectModal({ onConfirm, onCancel, saving }: Props) {
           </button>
         </div>
 
-        <p className="text-white/40 text-lg">
+        <p className="text-on-surface-variant text-lg">
           Explica al asesor qué debe corregir antes de volver a solicitar
           aprobación.
         </p>
@@ -63,7 +63,7 @@ export function RejectModal({ onConfirm, onCancel, saving }: Props) {
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 py-2 rounded-lg border border-white/10 text-white/40 hover:text-white/60 hover:bg-white/5 text-lg transition-colors"
+              className="flex-1 py-2 rounded-lg border border-white/10 text-on-surface-variant hover:text-white/60 hover:bg-white/5 text-lg transition-colors"
             >
               Cancelar
             </button>

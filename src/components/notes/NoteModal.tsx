@@ -72,7 +72,7 @@ export function NoteModal({ leadId, onClose, onSave }: Props) {
           <h2 className="text-white font-semibold">Nueva Nota</h2>
           <button
             onClick={onClose}
-            className="text-white/40 hover:text-white transition-colors"
+            className="text-on-surface-variant hover:text-white transition-colors"
           >
             <X size={18} />
           </button>
@@ -80,7 +80,7 @@ export function NoteModal({ leadId, onClose, onSave }: Props) {
 
         <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
           <div>
-            <label className="text-sm text-white/40 mb-1 block">
+            <label className="text-sm text-on-surface-variant mb-1 block">
               Título <span className="text-red-400">*</span>
             </label>
             <Controller
@@ -103,7 +103,7 @@ export function NoteModal({ leadId, onClose, onSave }: Props) {
           </div>
 
           <div>
-            <label className="text-sm text-white/40 mb-1 block">
+            <label className="text-sm text-on-surface-variant mb-1 block">
               Contenido <span className="text-red-400">*</span>
             </label>
             <textarea
@@ -120,7 +120,7 @@ export function NoteModal({ leadId, onClose, onSave }: Props) {
           </div>
 
           <div>
-            <label className="text-sm text-white/40 mb-1 block">
+            <label className="text-sm text-on-surface-variant mb-1 block">
               Adjuntos (imágenes y PDF)
             </label>
             <button

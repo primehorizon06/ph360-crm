@@ -33,7 +33,7 @@ export function UserTable({ users, onEdit, onToggleActive }: Props) {
               ].map((h) => (
                 <th
                   key={h}
-                  className="text-left px-4 py-3 text-sm text-white/40 font-medium uppercase tracking-wider"
+                  className="text-left px-4 py-3 text-sm text-on-surface-variant font-medium uppercase tracking-wider"
                 >
                   {h}
                 </th>
@@ -73,7 +73,7 @@ export function UserTable({ users, onEdit, onToggleActive }: Props) {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => onEdit(user)}
-                      className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+                      className="p-1.5 rounded-lg text-on-surface-variant hover:text-white hover:bg-white/10 transition-colors"
                     >
                       <Pencil size={14} />
                     </button>
@@ -82,8 +82,8 @@ export function UserTable({ users, onEdit, onToggleActive }: Props) {
                       title={user.active ? "Desactivar" : "Activar"}
                       className={`p-1.5 rounded-lg transition-colors ${
                         user.active
-                          ? "text-white/40 hover:text-red-400 hover:bg-red-500/10"
-                          : "text-white/40 hover:text-green-400 hover:bg-green-500/10"
+                          ? "text-on-surface-variant hover:text-red-400 hover:bg-red-500/10"
+                          : "text-on-surface-variant hover:text-green-400 hover:bg-green-500/10"
                       }`}
                     >
                       {user.active ? <PowerOff size={14} /> : <Power size={14} />}
@@ -111,7 +111,7 @@ export function UserTable({ users, onEdit, onToggleActive }: Props) {
                 <p className="text-white font-medium text-lg truncate">
                   {user.name}
                 </p>
-                <p className="text-white/40 text-sm">{user.username}</p>
+                <p className="text-on-surface-variant text-sm">{user.username}</p>
                 <div className="flex flex-wrap items-center gap-2 mt-1.5">
                   <span
                     className={`text-sm px-2 py-0.5 rounded-full font-medium ${roleColors[user.role]}`}
@@ -135,7 +135,7 @@ export function UserTable({ users, onEdit, onToggleActive }: Props) {
             <div className="flex items-center gap-1 shrink-0">
               <button
                 onClick={() => onEdit(user)}
-                className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+                className="p-1.5 rounded-lg text-on-surface-variant hover:text-white hover:bg-white/10 transition-colors"
               >
                 <Pencil size={14} />
               </button>
@@ -144,8 +144,8 @@ export function UserTable({ users, onEdit, onToggleActive }: Props) {
                 title={user.active ? "Desactivar" : "Activar"}
                 className={`p-1.5 rounded-lg transition-colors ${
                   user.active
-                    ? "text-white/40 hover:text-red-400 hover:bg-red-500/10"
-                    : "text-white/40 hover:text-green-400 hover:bg-green-500/10"
+                    ? "text-on-surface-variant hover:text-red-400 hover:bg-red-500/10"
+                    : "text-on-surface-variant hover:text-green-400 hover:bg-green-500/10"
                 }`}
               >
                 {user.active ? <PowerOff size={14} /> : <Power size={14} />}

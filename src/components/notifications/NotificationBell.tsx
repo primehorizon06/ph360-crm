@@ -185,7 +185,7 @@ export function NotificationBell() {
                           <p className="text-white text-lg font-medium">
                             {reminder.reason}
                           </p>
-                          <p className="text-white/40 text-sm mt-0.5">
+                          <p className="text-on-surface-variant text-sm mt-0.5">
                             Lead: {reminder.lead.fullName}
                           </p>
                           <p className="text-cyan-400 text-sm mt-0.5">
@@ -238,7 +238,7 @@ export function NotificationBell() {
                             <p className="text-white text-lg font-medium">
                               {n.title}
                             </p>
-                            <p className="text-white/40 text-sm mt-0.5">
+                            <p className="text-on-surface-variant text-sm mt-0.5">
                               {n.body}
                             </p>
                             <p className="text-white/20 text-sm mt-0.5">

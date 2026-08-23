@@ -17,7 +17,7 @@ export function LeadDetailTabs({ activeTab, onChange }: Props) {
             className={`px-4 py-2.5 text-lg font-medium transition-colors whitespace-nowrap border-b-2 -mb-px ${
               activeTab === tab.key
                 ? "border-cyan-400 text-cyan-400"
-                : "border-transparent text-white/40 hover:text-white"
+                : "border-transparent text-on-surface-variant hover:text-white"
             }`}
           >
             {tab.label}

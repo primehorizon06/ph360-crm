@@ -121,7 +121,7 @@ export default function CompaniesPage() {
       {/* Buscador y filtros */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2 flex-1">
-          <Search size={16} className="text-white/40 shrink-0" />
+          <Search size={16} className="text-on-surface-variant shrink-0" />
           <input
             type="text"
             placeholder="Buscar franquicia..."
@@ -178,7 +178,7 @@ export default function CompaniesPage() {
                 ) : (
                   <ChevronRight
                     size={16}
-                    className="text-white/40 mt-0.5 shrink-0"
+                    className="text-on-surface-variant mt-0.5 shrink-0"
                   />
                 )}
                 <div className="min-w-0">
@@ -192,7 +192,7 @@ export default function CompaniesPage() {
                       {company.active ? "Activa" : "Inactiva"}
                     </span>
                   </div>
-                  <p className="text-white/40 text-sm mt-0.5">
+                  <p className="text-on-surface-variant text-sm mt-0.5">
                     {company._count.teams} equipos · {company._count.users}{" "}
                     usuarios
                   </p>
@@ -202,13 +202,13 @@ export default function CompaniesPage() {
               <div className="flex items-center gap-1 shrink-0">
                 <button
                   onClick={() => setCompanyModal({ open: true, company })}
-                  className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+                  className="p-1.5 rounded-lg text-on-surface-variant hover:text-white hover:bg-white/10 transition-colors"
                 >
                   <Pencil size={14} />
                 </button>
                 <button
                   onClick={() => handleDeleteCompany(company.id)}
-                  className="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                  className="p-1.5 rounded-lg text-on-surface-variant hover:text-red-400 hover:bg-red-500/10 transition-colors"
                 >
                   <Trash2 size={14} />
                 </button>
@@ -224,7 +224,7 @@ export default function CompaniesPage() {
                     className="flex items-center justify-between bg-white/5 rounded-lg px-3 py-2"
                   >
                     <div className="flex items-center gap-2">
-                      <Users size={14} className="text-white/40" />
+                      <Users size={14} className="text-on-surface-variant" />
                       <span className="text-lg text-white/70">{team.name}</span>
                       <span className="text-sm text-white/30">
                         {team._count.users} usuarios
@@ -239,13 +239,13 @@ export default function CompaniesPage() {
                             companyId: company.id,
                           })
                         }
-                        className="p-1 rounded text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+                        className="p-1 rounded text-on-surface-variant hover:text-white hover:bg-white/10 transition-colors"
                       >
                         <Pencil size={12} />
                       </button>
                       <button
                         onClick={() => handleDeleteTeam(team.id, company.id)}
-                        className="p-1 rounded text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                        className="p-1 rounded text-on-surface-variant hover:text-red-400 hover:bg-red-500/10 transition-colors"
                       >
                         <Trash2 size={12} />
                       </button>

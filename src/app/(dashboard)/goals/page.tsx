@@ -86,14 +86,14 @@ export default function GoalsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Metas quincenales</h1>
-          <p className="text-sm text-white/40 mt-0.5">
+          <p className="text-sm text-on-surface-variant mt-0.5">
             Histórico y distribución de metas por franquicia, equipo y asesor
           </p>
         </div>
 
         <div className="flex flex-wrap items-end gap-2">
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] uppercase tracking-wider text-white/40 font-medium">
+            <label className="text-[10px] uppercase tracking-wider text-on-surface-variant font-medium">
               Período
             </label>
             <DatePicker
@@ -112,7 +112,7 @@ export default function GoalsPage() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] uppercase tracking-wider text-white/40 font-medium">
+            <label className="text-[10px] uppercase tracking-wider text-on-surface-variant font-medium">
               Quincena
             </label>
             <div className="flex rounded-lg overflow-hidden border border-white/10">
@@ -123,7 +123,7 @@ export default function GoalsPage() {
                   className={`px-4 py-2 text-sm font-medium transition-colors ${
                     quincena === q
                       ? "bg-cyan-500 text-white"
-                      : "bg-white/5 text-white/40 hover:bg-white/10"
+                      : "bg-white/5 text-on-surface-variant hover:bg-white/10"
                   }`}
                 >
                   {q}
@@ -146,7 +146,7 @@ export default function GoalsPage() {
       </div>
 
       <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 flex items-center gap-2">
-        <span className="text-xs text-white/40">Período:</span>
+        <span className="text-xs text-on-surface-variant">Período:</span>
         <span className="text-sm font-medium text-white">
           {MONTHS[month - 1]} {year} · {quincena === 1 ? "1er quincena" : "2da quincena"}
         </span>

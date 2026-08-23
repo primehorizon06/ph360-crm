@@ -113,7 +113,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="text-white/40 hover:text-white transition-colors"
+            className="text-on-surface-variant hover:text-white transition-colors"
           >
             <X size={18} />
           </button>
@@ -161,7 +161,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
             },
           ].map((field) => (
             <div key={field.name}>
-              <label className="text-sm text-white/40 mb-1 block">
+              <label className="text-sm text-on-surface-variant mb-1 block">
                 {field.label}
               </label>
               <input
@@ -181,7 +181,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
 
           {/* Contraseña */}
           <div>
-            <label className="text-sm text-white/40 mb-1 block">
+            <label className="text-sm text-on-surface-variant mb-1 block">
               {user ? "Nueva contraseña (dejar vacío para no cambiar)" : "Contraseña"}
             </label>
             <div className="relative">
@@ -194,7 +194,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-white transition-colors"
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -222,7 +222,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
 
           {/* Confirmar contraseña */}
           <div>
-            <label className="text-sm text-white/40 mb-1 block">
+            <label className="text-sm text-on-surface-variant mb-1 block">
               Confirmar contraseña
             </label>
             <div className="relative">
@@ -235,7 +235,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-white transition-colors"
               >
                 {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -249,7 +249,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
 
           {/* Rol */}
           <div>
-            <label className="text-sm text-white/40 mb-1 block">Rol</label>
+            <label className="text-sm text-on-surface-variant mb-1 block">Rol</label>
             <CustomSelect
               name="role"
               value={watch("role")}
@@ -263,7 +263,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
 
           {/* Empresa */}
           <div>
-            <label className="text-sm text-white/40 mb-1 block">
+            <label className="text-sm text-on-surface-variant mb-1 block">
               Franquicia <span className="text-red-400">*</span>
             </label>
             <CustomSelect
@@ -291,7 +291,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
 
           {/* Equipo */}
           <div>
-            <label className="text-sm text-white/40 mb-1 block">
+            <label className="text-sm text-on-surface-variant mb-1 block">
               Equipo <span className="text-red-400">*</span>
             </label>
             <CustomSelect

@@ -120,7 +120,7 @@ export default function AuditPage() {
                 {["Fecha", "Acción", "Actor", "Entidad", "IP"].map((h) => (
                   <th
                     key={h}
-                    className="text-left px-4 py-3 text-sm text-white/40 font-medium uppercase tracking-wider whitespace-nowrap"
+                    className="text-left px-4 py-3 text-sm text-on-surface-variant font-medium uppercase tracking-wider whitespace-nowrap"
                   >
                     {h}
                   </th>
@@ -152,7 +152,7 @@ export default function AuditPage() {
                     {log.entityType}
                     {log.entityId ? ` #${log.entityId}` : ""}
                   </td>
-                  <td className="px-4 py-3 text-lg text-white/40">
+                  <td className="px-4 py-3 text-lg text-on-surface-variant">
                     {log.ip ?? "—"}
                   </td>
                 </tr>
@@ -177,7 +177,7 @@ export default function AuditPage() {
           >
             Anterior
           </button>
-          <span className="text-white/40 text-lg">
+          <span className="text-on-surface-variant text-lg">
             Página {data.page} de {data.totalPages}
           </span>
           <button

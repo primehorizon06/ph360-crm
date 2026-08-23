@@ -115,14 +115,14 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <p className="text-white/40 text-lg">
+        <p className="text-on-surface-variant text-lg">
           {filtered.length} de {attachments.length} adjunto
           {filtered.length !== 1 ? "s" : ""}
         </p>
         {hasFilters && (
           <button
             onClick={clearFilters}
-            className="flex items-center gap-1 text-sm text-white/40 hover:text-white/70 transition-colors"
+            className="flex items-center gap-1 text-sm text-on-surface-variant hover:text-white/70 transition-colors"
           >
             <X size={12} />
             Limpiar filtros
@@ -134,7 +134,7 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
       <div className="bg-surface border border-white/10 rounded-xl p-4 space-y-3">
         <div className="grid grid-cols-3 gap-3">
           <div className="space-y-1">
-            <label className="flex items-center gap-1.5 text-sm text-white/40">
+            <label className="flex items-center gap-1.5 text-sm text-on-surface-variant">
               <Calendar size={11} />
               Desde
             </label>
@@ -146,7 +146,7 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
             />
           </div>
           <div className="space-y-1">
-            <label className="flex items-center gap-1.5 text-sm text-white/40">
+            <label className="flex items-center gap-1.5 text-sm text-on-surface-variant">
               <Calendar size={11} />
               Hasta
             </label>
@@ -159,7 +159,7 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
             />
           </div>
           <div className="space-y-1">
-          <label className="flex items-center gap-1.5 text-sm text-white/40">
+          <label className="flex items-center gap-1.5 text-sm text-on-surface-variant">
             <User size={11} />
             Autor
           </label>

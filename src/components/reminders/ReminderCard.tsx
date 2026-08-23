@@ -23,7 +23,7 @@ export function ReminderCard({ reminder }: { reminder: Reminder }) {
           )}
         </div>
         <div className="text-right shrink-0">
-          <p className="text-sm text-white/40">
+          <p className="text-sm text-on-surface-variant">
             {date.toLocaleDateString("es-CO")}
           </p>
           <p className="text-sm text-white/30">
@@ -35,7 +35,7 @@ export function ReminderCard({ reminder }: { reminder: Reminder }) {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-3 text-sm text-white/40">
+      <div className="flex flex-wrap gap-3 text-sm text-on-surface-variant">
         <span className="flex items-center gap-1">
           <User size={11} />
           Asignado a:{" "}

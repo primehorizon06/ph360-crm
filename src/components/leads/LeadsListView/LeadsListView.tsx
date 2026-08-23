@@ -122,7 +122,7 @@ export function LeadsListView({ type }: Props) {
       {/* Filtros */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2 flex-1">
-          <Search size={16} className="text-white/40 shrink-0" />
+          <Search size={16} className="text-on-surface-variant shrink-0" />
           <input
             type="text"
             placeholder={`Buscar por nombre, teléfono, email...`}
@@ -158,7 +158,7 @@ export function LeadsListView({ type }: Props) {
                 {headers.map((h) => (
                   <th
                     key={h}
-                    className="text-left px-4 py-3 text-sm text-white/40 font-medium uppercase tracking-wider"
+                    className="text-left px-4 py-3 text-sm text-on-surface-variant font-medium uppercase tracking-wider"
                   >
                     {h}
                   </th>
@@ -256,7 +256,7 @@ export function LeadsListView({ type }: Props) {
                   <p className="text-white font-medium text-lg">
                     {lead.firstName} {lead.lastName}
                   </p>
-                  <p className="text-white/40 text-sm">{lead.phone1}</p>
+                  <p className="text-on-surface-variant text-sm">{lead.phone1}</p>
                 </div>
                 {isLead ? (
                   <span
@@ -272,7 +272,7 @@ export function LeadsListView({ type }: Props) {
                   </span>
                 ) : null}
               </div>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-white/40">
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-on-surface-variant">
                 {lead.city && <span>{lead.city}</span>}
                 {lead.company?.name && <span>{lead.company.name}</span>}
                 {lead.assignedTo?.name && <span>{lead.assignedTo.name}</span>}
@@ -302,7 +302,7 @@ export function LeadsListView({ type }: Props) {
         {/* Paginación */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-white/10">
-            <span className="text-sm text-white/40">
+            <span className="text-sm text-on-surface-variant">
               {(page - 1) * LIMIT + 1}–{Math.min(page * LIMIT, total)} de {total}
             </span>
             <div className="flex gap-2">

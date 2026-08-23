@@ -28,7 +28,7 @@ export function Header() {
 
           {/* Búsqueda */}
           <div className="hidden sm:flex items-center gap-2 bg-white/5 rounded-lg px-3 py-1.5 w-64">
-            <Search size={16} className="text-white/40" />
+            <Search size={16} className="text-on-surface-variant" />
             <input
               type="text"
               placeholder="Buscar..."
@@ -49,7 +49,7 @@ export function Header() {
               <p className="text-lg text-white font-medium leading-none">
                 {session?.user?.name}
               </p>
-              <p className="text-sm text-white/40 mt-0.5">
+              <p className="text-sm text-on-surface-variant mt-0.5">
                 {session?.user?.role}
               </p>
             </div>

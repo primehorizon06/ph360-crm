@@ -29,7 +29,7 @@ export function NoteCard({ note, onTogglePin }: NoteCardProps) {
         </div>
         <div className="flex items-start gap-2 shrink-0">
           <div className="text-right">
-            <p className="text-sm text-white/40">
+            <p className="text-sm text-on-surface-variant">
               {date.toLocaleDateString("es-CO")}
             </p>
             <p className="text-sm text-white/30">

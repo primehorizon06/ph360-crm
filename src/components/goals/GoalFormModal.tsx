@@ -241,7 +241,7 @@ export function GoalFormModal({
             {/* Franquicia: ADMIN elige, SUPERVISOR ve la suya fija */}
             {scope === "company" && (
               <div>
-                <label className="text-xs text-white/40 uppercase tracking-wider mb-1 block">
+                <label className="text-xs text-on-surface-variant uppercase tracking-wider mb-1 block">
                   Franquicia
                 </label>
                 {isAdmin ? (
@@ -278,7 +278,7 @@ export function GoalFormModal({
             {/* Para team/user: ADMIN elige franquicia primero */}
             {isAdmin && (scope === "team" || scope === "user") && (
               <div>
-                <label className="text-xs text-white/40 uppercase tracking-wider mb-1 block">
+                <label className="text-xs text-on-surface-variant uppercase tracking-wider mb-1 block">
                   Franquicia
                 </label>
                 <Controller
@@ -305,7 +305,7 @@ export function GoalFormModal({
             {/* Team selector */}
             {(scope === "team" || scope === "user") && (
               <div>
-                <label className="text-xs text-white/40 uppercase tracking-wider mb-1 block">
+                <label className="text-xs text-on-surface-variant uppercase tracking-wider mb-1 block">
                   Equipo
                 </label>
                 <Controller
@@ -333,7 +333,7 @@ export function GoalFormModal({
             {/* Agent selector */}
             {scope === "user" && (
               <div>
-                <label className="text-xs text-white/40 uppercase tracking-wider mb-1 block">
+                <label className="text-xs text-on-surface-variant uppercase tracking-wider mb-1 block">
                   Asesor
                 </label>
                 <Controller
@@ -361,7 +361,7 @@ export function GoalFormModal({
 
             {/* Amount input */}
             <div>
-              <label className="text-xs text-white/40 uppercase tracking-wider mb-1 block">
+              <label className="text-xs text-on-surface-variant uppercase tracking-wider mb-1 block">
                 Meta (USD)
               </label>
               <input

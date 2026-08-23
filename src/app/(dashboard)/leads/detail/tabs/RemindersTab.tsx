@@ -19,7 +19,7 @@ export function RemindersTab({ leadId }: { leadId: number }) {
   return (
     <div className="space-y-4">
       <div className="flex justify-between">
-        <p className="text-white/40 text-lg">
+        <p className="text-on-surface-variant text-lg">
           {reminders.length} recordatorios
         </p>
 

@@ -52,7 +52,7 @@ export function GoalTree({
                 onClick={() =>
                   setExpanded((p) => ({ ...p, [company.id]: !isExpanded }))
                 }
-                className="text-white/40 hover:text-white transition-colors"
+                className="text-on-surface-variant hover:text-white transition-colors"
               >
                 {isExpanded ? (
                   <ChevronUp size={14} />

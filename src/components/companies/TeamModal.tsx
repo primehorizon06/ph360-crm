@@ -54,7 +54,7 @@ export function TeamModal({
           </h2>
           <button
             onClick={onClose}
-            className="text-white/40 hover:text-white transition-colors"
+            className="text-on-surface-variant hover:text-white transition-colors"
           >
             <X size={18} />
           </button>
@@ -62,7 +62,7 @@ export function TeamModal({
 
         <div className="p-5 space-y-4">
           <div>
-            <label className="text-sm text-white/40 mb-1 block">
+            <label className="text-sm text-on-surface-variant mb-1 block">
               Nombre del equipo
             </label>
             <input

@@ -103,7 +103,7 @@ export function LeadModal({ onClose, onSave }: Props) {
           <h2 className="text-white font-semibold text-lg">Nuevo Lead</h2>
           <button
             onClick={onClose}
-            className="text-white/40 hover:text-white transition-colors"
+            className="text-on-surface-variant hover:text-white transition-colors"
           >
             <X size={18} />
           </button>
@@ -112,7 +112,7 @@ export function LeadModal({ onClose, onSave }: Props) {
         <div className="p-5 max-h-[70vh] overflow-y-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm text-white/40 mb-1 block">
+              <label className="text-sm text-on-surface-variant mb-1 block">
                 Teléfono 1 <span className="text-red-400">*</span>
               </label>
               <input
@@ -131,7 +131,7 @@ export function LeadModal({ onClose, onSave }: Props) {
               )}
             </div>
             <div>
-              <label className="text-sm text-white/40 mb-1 block">
+              <label className="text-sm text-on-surface-variant mb-1 block">
                 Teléfono 2
               </label>
               <input
@@ -152,7 +152,7 @@ export function LeadModal({ onClose, onSave }: Props) {
 
             {/* SSN con máscara */}
             <div>
-              <label className="text-sm text-white/40 mb-1 block">
+              <label className="text-sm text-on-surface-variant mb-1 block">
                 Seguro Social
               </label>
               <input
@@ -175,7 +175,7 @@ export function LeadModal({ onClose, onSave }: Props) {
             {LEAD_FIELDS.filter((field) => field.name !== "birthDate").map(
               (field) => (
                 <div key={field.name}>
-                  <label className="text-sm text-white/40 mb-1 block">
+                  <label className="text-sm text-on-surface-variant mb-1 block">
                     {field.label}
                     {field.required && (
                       <span className="text-red-400 ml-1">*</span>
@@ -197,7 +197,7 @@ export function LeadModal({ onClose, onSave }: Props) {
 
             {/* Fecha de nacimiento + edad calculada */}
             <div>
-              <label className="text-sm text-white/40 mb-1 block">
+              <label className="text-sm text-on-surface-variant mb-1 block">
                 Fecha de nacimiento
               </label>
               <div className="flex items-center gap-2">
@@ -237,7 +237,7 @@ export function LeadModal({ onClose, onSave }: Props) {
             {isAdmin && (
               <>
                 <div>
-                  <label className="text-sm text-white/40 mb-1 block">
+                  <label className="text-sm text-on-surface-variant mb-1 block">
                     Franquicia <span className="text-red-400">*</span>
                   </label>
                   <CustomSelect
@@ -256,7 +256,7 @@ export function LeadModal({ onClose, onSave }: Props) {
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-white/40 mb-1 block">
+                  <label className="text-sm text-on-surface-variant mb-1 block">
                     Equipo <span className="text-red-400">*</span>
                   </label>
                   <CustomSelect
@@ -274,7 +274,7 @@ export function LeadModal({ onClose, onSave }: Props) {
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-white/40 mb-1 block">
+                  <label className="text-sm text-on-surface-variant mb-1 block">
                     Agente asignado <span className="text-red-400">*</span>
                   </label>
                   <CustomSelect
@@ -298,7 +298,7 @@ export function LeadModal({ onClose, onSave }: Props) {
               control={control}
               render={({ field: { value, onChange } }) => (
                 <div>
-                  <label className="text-sm text-white/40 mb-1 block">
+                  <label className="text-sm text-on-surface-variant mb-1 block">
                     Status
                   </label>
                   <CustomSelect
