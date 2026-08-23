@@ -89,14 +89,14 @@ export function Sidebar() {
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className={`text-white/40 hover:text-white transition-colors hidden md:block ${collapsed ? "mx-auto" : ""}`}
+            className={`text-on-surface-variant hover:text-white transition-colors hidden md:block ${collapsed ? "mx-auto" : ""}`}
           >
             {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
           </button>
           {/* Cerrar en móvil */}
           <button
             onClick={() => setMobileOpen(false)}
-            className="text-white/40 hover:text-white transition-colors md:hidden ml-auto"
+            className="text-on-surface-variant hover:text-white transition-colors md:hidden ml-auto"
           >
             <ChevronLeft size={16} />
           </button>
@@ -111,7 +111,11 @@ export function Sidebar() {
             )
             .map((item) => {
               const Icon = item.icon;
-              const isActive = pathname === item.href;
+              const isActive =
+                item.href === "/"
+                  ? pathname === "/"
+                  : pathname === item.href ||
+                    pathname.startsWith(`${item.href}/`);
               return (
                 <div key={item.href} className="relative group">
                   <Link
@@ -122,7 +126,7 @@ export function Sidebar() {
                     } ${
                       isActive
                         ? "bg-cyan-500/10 text-cyan-400"
-                        : "text-white/50 hover:text-white hover:bg-white/5"
+                        : "text-white/90 hover:text-white hover:bg-white/5"
                     }`}
                   >
                     <Icon size={18} />
