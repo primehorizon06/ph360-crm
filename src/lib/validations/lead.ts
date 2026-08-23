@@ -32,7 +32,18 @@ export const leadObjectSchema = z.object({
 
 export const leadSchema = leadObjectSchema.superRefine((data, ctx) => {
   const age = data.birthDate ? calculateAge(data.birthDate) : null;
-  if (age !== null && age >= 18 && age <= 20 && !data.hasEmancipationLetter) {
+  if (age === null) return;
+
+  if (age < 18) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["birthDate"],
+      message: "El lead debe ser mayor de edad",
+    });
+    return;
+  }
+
+  if (age <= 20 && !data.hasEmancipationLetter) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["hasEmancipationLetter"],

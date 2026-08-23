@@ -34,6 +34,11 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 - **fix**(leads): corrige error de build en producción (`'.partial() cannot be used on object schemas containing refinements'`) separando `leadObjectSchema` (base) de `leadSchema` (con `superRefine` de carta de emancipación); `PATCH /api/leads/[id]` ahora usa el schema base para `.partial()`
 - **fix**(ui): corrige colores del calendario inline (`react-datepicker`): "hoy" ahora es solo borde blanco sin relleno, las cuotas seleccionadas se ven en cyan y se neutraliza el resaltado de teclado; corrige recorte del calendario en meses de 6 filas y elimina clases Tailwind arbitrarias que nunca compilaban por conflicto de escapado con el `__` de las clases BEM de la librería
+- **fix**(leads): `leadSchema` rechaza fechas de nacimiento con edad menor a 18 años ("El lead debe ser mayor de edad"), tanto en el formulario como en `POST /api/leads`; antes solo se validaba el rango 18-20 y permitía crear leads de 0 años
+
+### Changed
+
+- **style**(leads): mueve la edad calculada junto al título "Fecha de nacimiento" en lugar de al lado del input, en los formularios de crear y editar lead
 
 ### Added
 
