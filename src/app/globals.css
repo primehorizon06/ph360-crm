@@ -136,21 +136,36 @@ button {
   background-color: rgba(0, 218, 243, 0.2) !important;
 }
 
-/* Día seleccionado */
-.react-datepicker__week .react-datepicker__day--today {
-  background-color: #00daf3 !important;
-  color: black !important;
+/* Día actual: solo borde blanco, sin relleno */
+.react-datepicker__day--today {
+  background-color: transparent !important;
+  border: 1px solid #fff !important;
+  color: white !important;
+  font-weight: bold !important;
 }
 
 .react-datepicker__day--today:hover {
-  background-color: #00c4db !important;
+  background-color: rgba(0, 218, 243, 0.2) !important;
 }
 
-/* Día actual */
-.react-datepicker__day--today {
-  background-color: rgba(255, 255, 255, 0.1) !important;
-  color: white !important;
-  font-weight: bold !important;
+/* Selección por teclado (foco interno del picker): sin color propio */
+.react-datepicker__day--keyboard-selected {
+  background-color: transparent !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.react-datepicker__day--keyboard-selected:hover {
+  background-color: rgba(0, 218, 243, 0.2) !important;
+}
+
+/* Días seleccionados (cuotas agregadas al plan de pagos) */
+.react-datepicker__day--highlighted {
+  background-color: rgba(0, 218, 243, 0.2) !important;
+  color: #00daf3 !important;
+}
+
+.react-datepicker__day--highlighted:hover {
+  background-color: rgba(0, 218, 243, 0.3) !important;
 }
 
 /* Día fuera de mes */
