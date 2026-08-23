@@ -4,12 +4,12 @@ import { withAuthParams, forbidden, notFound, conflict, badRequest } from "@/lib
 import { UserRole } from "@/utils/constants/roles";
 import { canAccessLead } from "@/lib/permissions";
 import { encryptDeterministic, decrypt } from "@/lib/crypto";
-import { leadSchema } from "@/lib/validations/lead";
+import { leadObjectSchema } from "@/lib/validations/lead";
 import { logAudit, getRequestMeta } from "@/lib/audit";
 import { optionalField, optionalDate } from "@/lib/patchFields";
 import { findDuplicatePhone, findDuplicateSsn, describeDuplicateOwner } from "@/lib/leadService";
 
-const leadPatchSchema = leadSchema.partial().passthrough();
+const leadPatchSchema = leadObjectSchema.partial().passthrough();
 
 export const GET = withAuthParams<{ id: string }>(
   async (_req, _session, { id }) => {

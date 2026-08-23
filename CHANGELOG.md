@@ -23,6 +23,10 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **refactor**(products): migra la carga de productos en `ProductsTab` de `useEffect` + `fetch` a SWR y reemplaza `watch()` por `useWatch()`, eliminando los warnings de dependencia faltante y de React Compiler
 - **feat**(notes): permite fijar una sola nota por lead de forma persistente, con nuevo endpoint `PATCH /api/notes/[id]` y campo `pinned` en el modelo `Note`
 
+### Fixed
+
+- **fix**(leads): corrige error de build en producción (`'.partial() cannot be used on object schemas containing refinements'`) separando `leadObjectSchema` (base) de `leadSchema` (con `superRefine` de carta de emancipación); `PATCH /api/leads/[id]` ahora usa el schema base para `.partial()`
+
 ### Added
 
 - **refactor**(api): extrae lógica de transición de estado de aprobación a `approvalService` (`applyApprovalDecision`, `notifyCoachOfResubmit`)
