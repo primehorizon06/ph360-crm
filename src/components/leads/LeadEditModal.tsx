@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import useSWR from "swr";
@@ -24,7 +24,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<LeadFormData>({
@@ -48,10 +48,10 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
     },
   });
 
-  const ssnValue = watch("ssn") ?? "";
-  const phone1Value = watch("phone1") ?? "";
-  const phone2Value = watch("phone2") ?? "";
-  const birthDateValue = watch("birthDate") ?? "";
+  const ssnValue = useWatch({ control, name: "ssn" }) ?? "";
+  const phone1Value = useWatch({ control, name: "phone1" }) ?? "";
+  const phone2Value = useWatch({ control, name: "phone2" }) ?? "";
+  const birthDateValue = useWatch({ control, name: "birthDate" }) ?? "";
   const age = calculateAge(birthDateValue);
   const requiresEmancipationLetter = age !== null && age >= 18 && age <= 20;
 

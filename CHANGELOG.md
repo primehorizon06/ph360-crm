@@ -15,6 +15,10 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **ia**(skills): añade skill `conventional-commit` para gestión de commits atómicos y changelog
 - **feat**(leads): calcula y muestra la edad junto a la fecha de nacimiento en el formulario de lead; exige confirmar carta de emancipación cuando la edad está entre 18 y 20 años, en creación y edición
 
+### Changed
+
+- **refactor**(leads): reemplaza `watch()` por `useWatch({ control, name })` en `LeadModal` y `LeadEditModal` para evitar que React Compiler omita la memoización del componente
+
 ### Added
 
 - **refactor**(api): extrae lógica de transición de estado de aprobación a `approvalService` (`applyApprovalDecision`, `notifyCoachOfResubmit`)
