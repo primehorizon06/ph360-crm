@@ -9,6 +9,7 @@ export const GET = withAuthParams<{ id: string }>(async (_req, _session, { id })
       id: true,
       title: true,
       content: true,
+      pinned: true,
       createdAt: true,
       author: { select: { id: true, name: true } },
       attachments: {
@@ -21,7 +22,7 @@ export const GET = withAuthParams<{ id: string }>(async (_req, _session, { id })
         },
       },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: [{ pinned: "desc" }, { createdAt: "desc" }],
   });
 
   return NextResponse.json(notes);
@@ -42,6 +43,7 @@ export const POST = withAuthParams<{ id: string }>(async (req, session, { id }) 
       id: true,
       title: true,
       content: true,
+      pinned: true,
       createdAt: true,
       author: { select: { id: true, name: true } },
     },

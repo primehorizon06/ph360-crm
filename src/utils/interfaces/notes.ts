@@ -12,6 +12,7 @@ export interface Note {
   id: number;
   title: string;
   content: string;
+  pinned: boolean;
   createdAt: string;
   author: { id: number; name: string };
   attachments: NoteAttachment[];

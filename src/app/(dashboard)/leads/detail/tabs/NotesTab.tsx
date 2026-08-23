@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
 import { Plus, FileText } from "lucide-react";
@@ -20,6 +21,20 @@ export function NotesTab({ leadId }: PropsNotesTab) {
     `/api/leads/${leadId}/notes`,
     fetcher,
   );
+
+  async function handleTogglePin(note: Note) {
+    const res = await fetch(`/api/notes/${note.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pinned: !note.pinned }),
+    });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      toast.error(json.error ?? "Error al actualizar la nota");
+      return;
+    }
+    void mutate();
+  }
 
   return (
     <div className="space-y-4">
@@ -48,7 +63,7 @@ export function NotesTab({ leadId }: PropsNotesTab) {
       ) : (
         <div className="space-y-3">
           {notes.map((note) => (
-            <NoteCard key={note.id} note={note} />
+            <NoteCard key={note.id} note={note} onTogglePin={handleTogglePin} />
           ))}
         </div>
       )}

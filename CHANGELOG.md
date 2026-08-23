@@ -21,6 +21,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **refactor**(attachments): `AttachmentPreview` elimina el lightbox modal y abre imágenes y PDFs en una pestaña nueva del navegador (`target="_blank"`)
 - **fix**(products): reordena los campos del formulario de cuenta bancaria a Banco, Titular, No. de ruta, No. de cuenta y Tipo de cuenta
 - **refactor**(products): migra la carga de productos en `ProductsTab` de `useEffect` + `fetch` a SWR y reemplaza `watch()` por `useWatch()`, eliminando los warnings de dependencia faltante y de React Compiler
+- **feat**(notes): permite fijar una sola nota por lead de forma persistente, con nuevo endpoint `PATCH /api/notes/[id]` y campo `pinned` en el modelo `Note`
 
 ### Added
 

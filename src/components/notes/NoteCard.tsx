@@ -1,27 +1,58 @@
-import { FileText, Paperclip } from "lucide-react";
+import { FileText, Paperclip, Pin, PinOff } from "lucide-react";
 import { AttachmentPreview } from "./AttachmentPreview";
 import { Note } from "@/utils/interfaces/notes";
 
-export function NoteCard({ note }: { note: Note }) {
+interface NoteCardProps {
+  note: Note;
+  onTogglePin?: (note: Note) => void;
+}
+
+export function NoteCard({ note, onTogglePin }: NoteCardProps) {
   const date = new Date(note.createdAt);
 
   return (
-    <div className="bg-surface border border-white/10 rounded-xl p-4 space-y-3">
+    <div
+      className={`bg-surface border rounded-xl p-4 space-y-3 transition-colors ${
+        note.pinned ? "border-cyan-500/50 bg-cyan-500/5" : "border-white/10"
+      }`}
+    >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">
           <FileText size={14} className="text-cyan-400 shrink-0" />
           <h3 className="text-white font-medium text-lg">{note.title}</h3>
+          {note.pinned && (
+            <span className="flex items-center gap-1 text-sm text-cyan-400 bg-cyan-500/10 rounded-full px-2 py-0.5">
+              <Pin size={10} />
+              Fijada
+            </span>
+          )}
         </div>
-        <div className="text-right shrink-0">
-          <p className="text-sm text-white/40">
-            {date.toLocaleDateString("es-CO")}
-          </p>
-          <p className="text-sm text-white/30">
-            {date.toLocaleTimeString("es-CO", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </p>
+        <div className="flex items-start gap-2 shrink-0">
+          <div className="text-right">
+            <p className="text-sm text-white/40">
+              {date.toLocaleDateString("es-CO")}
+            </p>
+            <p className="text-sm text-white/30">
+              {date.toLocaleTimeString("es-CO", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </p>
+          </div>
+          {onTogglePin && (
+            <button
+              type="button"
+              onClick={() => onTogglePin(note)}
+              title={note.pinned ? "Quitar de fijadas" : "Fijar nota"}
+              className={`transition-colors ${
+                note.pinned
+                  ? "text-cyan-400 hover:text-cyan-300"
+                  : "text-white/30 hover:text-white/60"
+              }`}
+            >
+              {note.pinned ? <PinOff size={15} /> : <Pin size={15} />}
+            </button>
+          )}
         </div>
       </div>
 
