@@ -13,6 +13,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **perf**(suspense): crea `LeadDetailClient` y `CustomerDetailClient` como componentes cliente separados, envueltos en `<Suspense>` desde server wrappers en `page.tsx`
 - **perf**(suspense): extrae `SearchParamsWatcher` en login y lo envuelve en `<Suspense>` para cumplir con el patrón requerido por Next.js 15+
 - **ia**(skills): añade skill `conventional-commit` para gestión de commits atómicos y changelog
+- **feat**(leads): calcula y muestra la edad junto a la fecha de nacimiento en el formulario de lead; exige confirmar carta de emancipación cuando la edad está entre 18 y 20 años, en creación y edición
 
 ### Added
 

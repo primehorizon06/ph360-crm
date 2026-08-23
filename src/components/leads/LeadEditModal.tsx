@@ -11,7 +11,7 @@ import { useSession } from "next-auth/react";
 import { CustomSelect } from "../ui/Select";
 import { Props } from "@/utils/interfaces/leadEditModal";
 import { CUSTOMER_STATUS, LEAD_FIELDS, STATUS } from "@/utils/constants/leads";
-import { formatPhone, formatDuplicateOwner } from "@/utils/helpers/format";
+import { formatPhone, formatDuplicateOwner, calculateAge } from "@/utils/helpers/format";
 import { UserRole } from "@/utils/constants/roles";
 import { fetcher } from "@/lib/fetcher";
 
@@ -44,12 +44,16 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
       contactTime: lead.contactTime ?? "",
       status: lead.status,
       customerStatus: lead.customerStatus ?? "",
+      hasEmancipationLetter: true,
     },
   });
 
   const ssnValue = watch("ssn") ?? "";
   const phone1Value = watch("phone1") ?? "";
   const phone2Value = watch("phone2") ?? "";
+  const birthDateValue = watch("birthDate") ?? "";
+  const age = calculateAge(birthDateValue);
+  const requiresEmancipationLetter = age !== null && age >= 18 && age <= 20;
 
   const [status, setStatus] = useState(lead.status);
   const [customerStatus, setCustomerStatus] = useState(
@@ -207,26 +211,67 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
               </div>
 
               {/* Campos base compartidos */}
-              {LEAD_FIELDS.map((field) => (
-                <div key={field.name}>
-                  <label className="text-sm text-white/40 mb-1 block">
-                    {field.label}
-                    {field.required && (
-                      <span className="text-red-400 ml-1">*</span>
+              {LEAD_FIELDS.filter((field) => field.name !== "birthDate").map(
+                (field) => (
+                  <div key={field.name}>
+                    <label className="text-sm text-white/40 mb-1 block">
+                      {field.label}
+                      {field.required && (
+                        <span className="text-red-400 ml-1">*</span>
+                      )}
+                    </label>
+                    <input
+                      type={field.type}
+                      {...register(field.name as keyof LeadFormData)}
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50"
+                    />
+                    {errors[field.name as keyof LeadFormData] && (
+                      <p className="text-red-400 text-sm mt-1">
+                        {errors[field.name as keyof LeadFormData]?.message}
+                      </p>
                     )}
-                  </label>
+                  </div>
+                ),
+              )}
+
+              {/* Fecha de nacimiento + edad calculada */}
+              <div>
+                <label className="text-sm text-white/40 mb-1 block">
+                  Fecha de nacimiento
+                </label>
+                <div className="flex items-center gap-2">
                   <input
-                    type={field.type}
-                    {...register(field.name as keyof LeadFormData)}
+                    type="date"
+                    {...register("birthDate")}
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50"
                   />
-                  {errors[field.name as keyof LeadFormData] && (
-                    <p className="text-red-400 text-sm mt-1">
-                      {errors[field.name as keyof LeadFormData]?.message}
-                    </p>
+                  {age !== null && (
+                    <span className="whitespace-nowrap text-sm text-white/50">
+                      {age} {age === 1 ? "año" : "años"}
+                    </span>
                   )}
                 </div>
-              ))}
+                {errors.birthDate && (
+                  <p className="text-red-400 text-sm mt-1">
+                    {errors.birthDate.message}
+                  </p>
+                )}
+                {requiresEmancipationLetter && (
+                  <label className="mt-2 flex items-center gap-2 text-sm text-white/70">
+                    <input
+                      type="checkbox"
+                      {...register("hasEmancipationLetter")}
+                      className="h-4 w-4 rounded border-white/20 bg-white/5 accent-cyan-500"
+                    />
+                    Confirmo que el lead cuenta con carta de emancipación
+                  </label>
+                )}
+                {errors.hasEmancipationLetter && (
+                  <p className="text-red-400 text-sm mt-1">
+                    {errors.hasEmancipationLetter.message}
+                  </p>
+                )}
+              </div>
 
               {/* Estado */}
               <div>
