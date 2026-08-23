@@ -18,6 +18,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 ### Changed
 
 - **refactor**(leads): reemplaza `watch()` por `useWatch({ control, name })` en `LeadModal` y `LeadEditModal` para evitar que React Compiler omita la memoización del componente
+- **refactor**(attachments): `AttachmentPreview` elimina el lightbox modal y abre imágenes y PDFs en una pestaña nueva del navegador (`target="_blank"`)
 
 ### Added
 
