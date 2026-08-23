@@ -26,7 +26,7 @@ export function ReminderCard({ reminder }: { reminder: Reminder }) {
           <p className="text-sm text-on-surface-variant">
             {date.toLocaleDateString("es-CO")}
           </p>
-          <p className="text-sm text-white/30">
+          <p className="text-sm text-white/90">
             {date.toLocaleTimeString("es-CO", {
               hour: "2-digit",
               minute: "2-digit",

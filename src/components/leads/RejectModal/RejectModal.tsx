@@ -37,7 +37,7 @@ export function RejectModal({ onConfirm, onCancel, saving }: Props) {
           <button
             type="button"
             onClick={onCancel}
-            className="text-white/20 hover:text-white/50 transition-colors"
+            className="text-white/20 hover:text-white/90 transition-colors"
           >
             <X size={16} />
           </button>

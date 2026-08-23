@@ -131,7 +131,7 @@ export function LeadsListView({ type }: Props) {
               setSearch(e.target.value);
               setPage(1);
             }}
-            className="bg-transparent text-lg text-white/70 placeholder:text-white/30 outline-none w-full"
+            className="bg-transparent text-lg text-white/70 placeholder:text-white/90 outline-none w-full"
           />
         </div>
 
@@ -179,14 +179,14 @@ export function LeadsListView({ type }: Props) {
                     {lead.phone1}
                   </td>
                   {isAdmin && (
-                    <td className="px-4 py-3 text-lg text-white/50">
+                    <td className="px-4 py-3 text-lg text-white/90">
                       {lead.company?.name ?? "—"}
                     </td>
                   )}
-                  <td className="px-4 py-3 text-lg text-white/50">
+                  <td className="px-4 py-3 text-lg text-white/90">
                     {lead.assignedTo?.name ?? "—"}
                   </td>
-                  <td className="px-4 py-3 text-lg text-white/50">
+                  <td className="px-4 py-3 text-lg text-white/90">
                     {lead.assignedTo?.team?.name ?? "—"}
                   </td>
 
@@ -230,7 +230,7 @@ export function LeadsListView({ type }: Props) {
                     </>
                   )}
 
-                  <td className="px-4 py-3 text-sm text-white/30">
+                  <td className="px-4 py-3 text-sm text-white/90">
                     {isLead
                       ? new Date(lead.createdAt).toLocaleDateString("es-CO")
                       : lead.convertedAt
@@ -294,7 +294,7 @@ export function LeadsListView({ type }: Props) {
         </div>
 
         {leads.length === 0 && !isLoading && (
-          <div className="text-center py-12 text-white/30 text-lg">
+          <div className="text-center py-12 text-white/90 text-lg">
             No hay {label.toLowerCase()}s registrados
           </div>
         )}

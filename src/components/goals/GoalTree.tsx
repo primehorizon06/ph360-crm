@@ -80,7 +80,7 @@ export function GoalTree({
                       )}
                     </div>
                   ) : (
-                    <span className="text-xs text-white/30">Sin meta</span>
+                    <span className="text-xs text-white/90">Sin meta</span>
                   )}
                 </div>
                 {cGoal && (
@@ -95,10 +95,10 @@ export function GoalTree({
                       }
                     />
                     <div className="flex justify-between mt-0.5">
-                      <span className="text-[10px] text-white/30">
+                      <span className="text-[10px] text-white/90">
                         Equipos: {fmt(teamsSum)}
                       </span>
-                      <span className="text-[10px] text-white/30">
+                      <span className="text-[10px] text-white/90">
                         {Math.abs(teamsSum - Number(cGoal.amount)) < 0.01
                           ? "✓ Completo"
                           : `Disponible: ${fmt(Number(cGoal.amount) - teamsSum)}`}
@@ -132,7 +132,7 @@ export function GoalTree({
                             [`t${team.id}`]: !isTeamExp,
                           }))
                         }
-                        className="text-white/30 hover:text-white transition-colors"
+                        className="text-white/90 hover:text-white transition-colors"
                       >
                         {isTeamExp ? (
                           <ChevronUp size={12} />
@@ -200,7 +200,7 @@ export function GoalTree({
                           key={ag.id}
                           className="flex items-center justify-between px-4 py-2 pl-20 border-t border-white/[0.03]"
                         >
-                          <span className="text-xs text-white/50">
+                          <span className="text-xs text-white/90">
                             {ag.user?.name}
                           </span>
                           <div className="flex items-center gap-3">

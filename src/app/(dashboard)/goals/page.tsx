@@ -179,14 +179,14 @@ export default function GoalsPage() {
           )}
 
           {data.goals.length === 0 && (
-            <div className="text-center py-16 text-white/30">
+            <div className="text-center py-16 text-white/90">
               <p className="text-lg font-medium">Sin metas para este período</p>
               <p className="text-sm mt-1">Crea la primera meta con el botón &ldquo;Nueva meta&ldquo;</p>
             </div>
           )}
         </>
       ) : (
-        <p className="text-center text-white/30 py-16">Error cargando datos</p>
+        <p className="text-center text-white/90 py-16">Error cargando datos</p>
       )}
 
       <GoalFormModal

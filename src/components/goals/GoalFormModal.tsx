@@ -228,7 +228,7 @@ export function GoalFormModal({
               className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
                 scope === s
                   ? "bg-cyan-500 text-white"
-                  : "bg-white/5 text-white/50 hover:bg-white/10"
+                  : "bg-white/5 text-white/90 hover:bg-white/10"
               }`}
             >
               {scopeLabels[s]}

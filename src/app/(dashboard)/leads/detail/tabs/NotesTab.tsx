@@ -52,13 +52,13 @@ export function NotesTab({ leadId }: PropsNotesTab) {
       </div>
 
       {isLoading ? (
-        <div className="text-center py-8 text-white/30 text-lg">
+        <div className="text-center py-8 text-white/90 text-lg">
           <Loading />
         </div>
       ) : notes.length === 0 ? (
         <div className="bg-surface border border-white/10 rounded-xl p-12 flex flex-col items-center justify-center gap-2">
           <FileText size={32} className="text-white/20" />
-          <p className="text-white/30 text-lg">No hay notas aún</p>
+          <p className="text-white/90 text-lg">No hay notas aún</p>
         </div>
       ) : (
         <div className="space-y-3">

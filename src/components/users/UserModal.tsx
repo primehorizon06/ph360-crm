@@ -209,7 +209,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
                   return (
                     <li
                       key={rule.label}
-                      className={`flex items-center gap-1.5 text-sm ${met ? "text-green-400" : "text-white/30"}`}
+                      className={`flex items-center gap-1.5 text-sm ${met ? "text-green-400" : "text-white/90"}`}
                     >
                       <Check size={12} className={met ? "opacity-100" : "opacity-30"} />
                       {rule.label}
@@ -332,7 +332,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-lg text-white/50 hover:text-white transition-colors"
+            className="px-4 py-2 text-lg text-white/90 hover:text-white transition-colors"
           >
             Cancelar
           </button>

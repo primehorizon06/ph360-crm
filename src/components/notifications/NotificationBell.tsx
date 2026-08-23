@@ -248,7 +248,7 @@ export function NotificationBell() {
                         </div>
                         <button
                           onClick={(e) => markNotificationRead(n.id, e)}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity text-white/30 hover:text-white/60 shrink-0"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity text-white/90 hover:text-white/60 shrink-0"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
@@ -261,7 +261,7 @@ export function NotificationBell() {
 
             {/* Estado vacío */}
             {totalCount === 0 && (
-              <div className="p-6 text-center text-white/30 text-lg">
+              <div className="p-6 text-center text-white/90 text-lg">
                 No hay notificaciones pendientes
               </div>
             )}

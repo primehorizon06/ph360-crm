@@ -15,7 +15,7 @@ export default function DashboardError({
   }, [error]);
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 gap-4 text-white/50">
+    <div className="flex flex-col items-center justify-center py-16 gap-4 text-white/90">
       <p className="text-lg">Ocurrió un error inesperado</p>
       <button
         onClick={reset}

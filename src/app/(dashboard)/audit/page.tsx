@@ -130,7 +130,7 @@ export default function AuditPage() {
             <tbody className="divide-y divide-white/5">
               {logs.map((log) => (
                 <tr key={log.id} className="hover:bg-white/5 transition-colors">
-                  <td className="px-4 py-3 text-lg text-white/50 whitespace-nowrap">
+                  <td className="px-4 py-3 text-lg text-white/90 whitespace-nowrap">
                     {new Date(log.createdAt).toLocaleString("es")}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
@@ -143,12 +143,12 @@ export default function AuditPage() {
                   <td className="px-4 py-3 text-lg text-white/70">
                     {log.actorName ?? "—"}
                     {log.actorRole && (
-                      <span className="text-white/30 text-sm ml-1">
+                      <span className="text-white/90 text-sm ml-1">
                         ({log.actorRole})
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-lg text-white/50">
+                  <td className="px-4 py-3 text-lg text-white/90">
                     {log.entityType}
                     {log.entityId ? ` #${log.entityId}` : ""}
                   </td>
@@ -162,7 +162,7 @@ export default function AuditPage() {
         </div>
 
         {logs.length === 0 && (
-          <div className="text-center py-12 text-white/30 text-lg">
+          <div className="text-center py-12 text-white/90 text-lg">
             No hay eventos registrados
           </div>
         )}

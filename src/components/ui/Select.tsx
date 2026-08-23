@@ -193,14 +193,14 @@ export function CustomSelect({
                   aria-controls={listboxId}
                   aria-activedescendant={activeOptionId}
                   aria-autocomplete="list"
-                  className="bg-transparent text-lg text-white/70 placeholder:text-white/30 outline-none w-full"
+                  className="bg-transparent text-lg text-white/70 placeholder:text-white/90 outline-none w-full"
                 />
               </div>
             )}
 
             <div role="listbox" aria-label={ariaLabel ?? name} className="max-h-48 overflow-y-auto">
               {filteredOptions.length === 0 ? (
-                <p className="px-3 py-2 text-lg text-white/30">
+                <p className="px-3 py-2 text-lg text-white/90">
                   Sin resultados
                 </p>
               ) : (

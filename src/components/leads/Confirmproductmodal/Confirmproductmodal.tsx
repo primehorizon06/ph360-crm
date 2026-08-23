@@ -41,7 +41,7 @@ export function ConfirmProductModal({
           <button
             type="button"
             onClick={onCancel}
-            className="text-white/20 hover:text-white/50 transition-colors"
+            className="text-white/20 hover:text-white/90 transition-colors"
           >
             <X size={18} />
           </button>
@@ -57,7 +57,7 @@ export function ConfirmProductModal({
 
         {/* Método de pago */}
         <div className="bg-surface-container-lowest border border-white/10 rounded-xl p-5 space-y-2.5">
-          <p className="text-white/30 text-lg uppercase tracking-widest font-medium">
+          <p className="text-white/90 text-lg uppercase tracking-widest font-medium">
             Método de pago
           </p>
           {data.paymentType === "TARJETA" ? (
@@ -90,7 +90,7 @@ export function ConfirmProductModal({
 
         {/* Plan de pagos */}
         <div className="bg-surface-container-lowest border border-white/10 rounded-xl p-5 space-y-2.5">
-          <p className="text-white/30 text-lg uppercase tracking-widest font-medium">
+          <p className="text-white/90 text-lg uppercase tracking-widest font-medium">
             Plan de pagos
           </p>
           <div className="space-y-2 max-h-56 overflow-y-auto">
@@ -116,7 +116,7 @@ export function ConfirmProductModal({
             ))}
           </div>
           <div className="flex items-center justify-between pt-2 border-t border-white/5">
-            <span className="text-white/30 text-lg">
+            <span className="text-white/90 text-lg">
               {installments.length} cuota{installments.length !== 1 ? "s" : ""}
             </span>
             <span className="text-cyan-400 text-xl font-semibold">

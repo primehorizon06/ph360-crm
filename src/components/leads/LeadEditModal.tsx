@@ -160,7 +160,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
                     type="tel"
                     value={lead.phone1}
                     disabled
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white/30 outline-none cursor-not-allowed"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white/90 outline-none cursor-not-allowed"
                   />
                 </div>
               )}
@@ -246,7 +246,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50"
                   />
                   {age !== null && (
-                    <span className="whitespace-nowrap text-sm text-white/50">
+                    <span className="whitespace-nowrap text-sm text-white/90">
                       {age} {age === 1 ? "año" : "años"}
                     </span>
                   )}
@@ -371,7 +371,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
           <div className="flex justify-end gap-3 p-5 border-t border-white/10">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-lg text-white/50 hover:text-white transition-colors"
+              className="px-4 py-2 text-lg text-white/90 hover:text-white transition-colors"
             >
               Cancelar
             </button>

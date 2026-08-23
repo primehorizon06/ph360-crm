@@ -97,13 +97,13 @@ export function PaymentPlanPicker({ value, onChange, error, children }: Props) {
                   </span>
 
                   {/* Fecha */}
-                  <span className="text-white/50 text-lg shrink-0 whitespace-nowrap">
+                  <span className="text-white/90 text-lg shrink-0 whitespace-nowrap">
                     {formatDate(installment.date)}
                   </span>
 
                   {/* Monto */}
                   <div className="flex-1 relative">
-                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/50 text-lg">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/90 text-lg">
                       $
                     </span>
                     <input

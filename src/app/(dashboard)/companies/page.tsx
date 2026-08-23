@@ -127,7 +127,7 @@ export default function CompaniesPage() {
             placeholder="Buscar franquicia..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="bg-transparent text-lg text-white/70 placeholder:text-white/30 outline-none w-full"
+            className="bg-transparent text-lg text-white/70 placeholder:text-white/90 outline-none w-full"
           />
         </div>
         <CustomSelect
@@ -226,7 +226,7 @@ export default function CompaniesPage() {
                     <div className="flex items-center gap-2">
                       <Users size={14} className="text-on-surface-variant" />
                       <span className="text-lg text-white/70">{team.name}</span>
-                      <span className="text-sm text-white/30">
+                      <span className="text-sm text-white/90">
                         {team._count.users} usuarios
                       </span>
                     </div>
@@ -272,7 +272,7 @@ export default function CompaniesPage() {
         ))}
 
         {companies.length === 0 && (
-          <div className="text-center py-12 text-white/30 text-lg">
+          <div className="text-center py-12 text-white/90 text-lg">
             No hay franquicias registradas
           </div>
         )}

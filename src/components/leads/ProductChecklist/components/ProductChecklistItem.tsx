@@ -111,14 +111,14 @@ export function ProductChecklistItem({
               <ShoppingBag size={11} />
               {PRODUCT_LABELS[product.product as keyof typeof PRODUCT_LABELS]}
             </span>
-            <span className="text-white/30 text-sm">
+            <span className="text-white/90 text-sm">
               {checkedCount}/{ALL_STEPS_APPROVAL.length} revisados
             </span>
           </div>
           {expanded ? (
-            <ChevronUp size={14} className="text-white/30" />
+            <ChevronUp size={14} className="text-white/90" />
           ) : (
-            <ChevronDown size={14} className="text-white/30" />
+            <ChevronDown size={14} className="text-white/90" />
           )}
         </button>
 
@@ -171,7 +171,7 @@ export function ProductChecklistItem({
                   >
                     {step.label}
                     {step.situational && (
-                      <span className="ml-1.5 text-[10px] text-white/30 no-underline">
+                      <span className="ml-1.5 text-[10px] text-white/90 no-underline">
                         situacional
                       </span>
                     )}

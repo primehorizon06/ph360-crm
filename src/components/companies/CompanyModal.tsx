@@ -102,7 +102,7 @@ export function CompanyModal({ company, onClose, onSave }: Props) {
         <div className="flex justify-end gap-3 p-5 border-t border-white/10">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-lg text-white/50 hover:text-white transition-colors"
+            className="px-4 py-2 text-lg text-white/90 hover:text-white transition-colors"
           >
             Cancelar
           </button>

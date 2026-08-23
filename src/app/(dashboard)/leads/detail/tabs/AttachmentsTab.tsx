@@ -166,7 +166,7 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
           <div className="relative">
             <Search
               size={13}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-white/90 pointer-events-none"
             />
             <input
               type="text"
@@ -178,7 +178,7 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
             {authorSearch && (
               <button
                 onClick={() => setAuthorSearch("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/50 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/90 transition-colors"
               >
                 <X size={13} />
               </button>
@@ -192,14 +192,14 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
 
       {/* Uploader */}
       <div className="bg-surface border border-white/10 rounded-xl p-4 space-y-3">
-        <p className="text-white/30 text-sm font-medium uppercase tracking-widest">
+        <p className="text-white/90 text-sm font-medium uppercase tracking-widest">
           Subir archivos
         </p>
 
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 border-dashed rounded-lg px-4 py-3 text-lg text-white/50 hover:text-white transition-colors w-full"
+          className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 border-dashed rounded-lg px-4 py-3 text-lg text-white/90 hover:text-white transition-colors w-full"
         >
           <Paperclip size={16} />
           Seleccionar archivos
@@ -229,14 +229,14 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
                   <span className="text-sm text-white/60 truncate">
                     {file.name}
                   </span>
-                  <span className="text-sm text-white/30 shrink-0">
+                  <span className="text-sm text-white/90 shrink-0">
                     {(file.size / 1024).toFixed(0)} kb
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={() => removeFile(idx)}
-                  className="text-white/30 hover:text-red-400 transition-colors ml-2 shrink-0"
+                  className="text-white/90 hover:text-red-400 transition-colors ml-2 shrink-0"
                 >
                   <X size={14} />
                 </button>
@@ -268,13 +268,13 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
 
       {/* List */}
       {loading ? (
-        <div className="text-center py-8 text-white/30 text-lg">
+        <div className="text-center py-8 text-white/90 text-lg">
           <Loading />
         </div>
       ) : filtered.length === 0 ? (
         <div className="bg-surface border border-white/10 rounded-xl p-12 flex flex-col items-center justify-center gap-2">
           <Paperclip size={32} className="text-white/20" />
-          <p className="text-white/30 text-lg">
+          <p className="text-white/90 text-lg">
             {hasFilters
               ? "Sin resultados para los filtros aplicados"
               : "No hay adjuntos aún"}
@@ -289,7 +289,7 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
             >
               <AttachmentPreview attachment={att} />
               <div className="mt-auto min-w-0">
-                <span className="text-white/30 text-sm flex items-center gap-1">
+                <span className="text-white/90 text-sm flex items-center gap-1">
                   <User size={10} />
                   {att.author.name}
                 </span>

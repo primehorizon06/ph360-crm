@@ -32,7 +32,7 @@ export function NoteCard({ note, onTogglePin }: NoteCardProps) {
             <p className="text-sm text-on-surface-variant">
               {date.toLocaleDateString("es-CO")}
             </p>
-            <p className="text-sm text-white/30">
+            <p className="text-sm text-white/90">
               {date.toLocaleTimeString("es-CO", {
                 hour: "2-digit",
                 minute: "2-digit",
@@ -47,7 +47,7 @@ export function NoteCard({ note, onTogglePin }: NoteCardProps) {
               className={`transition-colors ${
                 note.pinned
                   ? "text-cyan-400 hover:text-cyan-300"
-                  : "text-white/30 hover:text-white/60"
+                  : "text-white/90 hover:text-white/60"
               }`}
             >
               {note.pinned ? <PinOff size={15} /> : <Pin size={15} />}
@@ -60,7 +60,7 @@ export function NoteCard({ note, onTogglePin }: NoteCardProps) {
 
       {note.attachments?.length > 0 && (
         <div className="space-y-2">
-          <p className="text-sm text-white/30 flex items-center gap-1">
+          <p className="text-sm text-white/90 flex items-center gap-1">
             <Paperclip size={11} />
             {note.attachments.length} adjunto
             {note.attachments.length !== 1 ? "s" : ""}
@@ -92,7 +92,7 @@ export function NoteCard({ note, onTogglePin }: NoteCardProps) {
         </div>
       )}
 
-      <p className="text-sm text-white/30">— {note.author.name}</p>
+      <p className="text-sm text-white/90">— {note.author.name}</p>
     </div>
   );
 }

@@ -56,10 +56,10 @@ export function UserTable({ users, onEdit, onToggleActive }: Props) {
                     {user.role}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-lg text-white/50">
+                <td className="px-4 py-3 text-lg text-white/90">
                   {user.company?.name ?? "—"}
                 </td>
-                <td className="px-4 py-3 text-lg text-white/50">
+                <td className="px-4 py-3 text-lg text-white/90">
                   {user.team?.name ?? "—"}
                 </td>
                 <td className="px-4 py-3">
@@ -125,7 +125,7 @@ export function UserTable({ users, onEdit, onToggleActive }: Props) {
                   </span>
                 </div>
                 {user.company?.name && (
-                  <p className="text-white/30 text-sm mt-1">
+                  <p className="text-white/90 text-sm mt-1">
                     {user.company.name}{" "}
                     {user.team?.name ? `· ${user.team.name}` : ""}
                   </p>
@@ -156,7 +156,7 @@ export function UserTable({ users, onEdit, onToggleActive }: Props) {
       </div>
 
       {users.length === 0 && (
-        <div className="text-center py-12 text-white/30 text-lg">
+        <div className="text-center py-12 text-white/90 text-lg">
           No hay usuarios registrados
         </div>
       )}

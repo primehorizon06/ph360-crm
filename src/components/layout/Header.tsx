@@ -21,7 +21,7 @@ export function Header() {
           {/* Hamburguesa móvil */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="text-white/50 hover:text-white transition-colors md:hidden"
+            className="text-white/90 hover:text-white transition-colors md:hidden"
           >
             <Menu size={20} />
           </button>
@@ -32,14 +32,14 @@ export function Header() {
             <input
               type="text"
               placeholder="Buscar..."
-              className="bg-transparent text-lg text-white/70 placeholder:text-white/30 outline-none w-full"
+              className="bg-transparent text-lg text-white/70 placeholder:text-white/90 outline-none w-full"
             />
           </div>
         </div>
 
         {/* Acciones */}
         <div className="flex items-center gap-4">
-          {/* <button className="relative text-white/50 hover:text-white transition-colors">
+          {/* <button className="relative text-white/90 hover:text-white transition-colors">
           <Bell size={20} />
           <span className="absolute -top-1 -right-1 w-2 h-2 bg-cyan-400 rounded-full"></span>
         </button> */}

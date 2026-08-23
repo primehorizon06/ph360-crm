@@ -50,7 +50,7 @@ export function AttachmentPreview({
         {attachment.name}
       </span>
       {attachment.size && (
-        <span className="text-sm text-white/30 shrink-0">
+        <span className="text-sm text-white/90 shrink-0">
           {(attachment.size / 1024).toFixed(0)}kb
         </span>
       )}

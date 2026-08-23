@@ -175,7 +175,7 @@ export default function UsersPage() {
               setSearch(e.target.value);
               setPage(1);
             }}
-            className="bg-transparent text-lg text-white/70 placeholder:text-white/30 outline-none w-full"
+            className="bg-transparent text-lg text-white/70 placeholder:text-white/90 outline-none w-full"
           />
         </div>
 

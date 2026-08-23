@@ -69,7 +69,7 @@ export function ToastHandler() {
                 toast.dismiss(t);
                 await markAsCompleted(reminder.id);
               }}
-              className="flex-1 px-3 py-2 text-lg text-white/50 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center gap-2 border-l border-white/10"
+              className="flex-1 px-3 py-2 text-lg text-white/90 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center gap-2 border-l border-white/10"
             >
               <Clock className="w-4 h-4" />
               Marcar Leído

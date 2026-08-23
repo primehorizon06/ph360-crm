@@ -126,7 +126,7 @@ export function NoteModal({ leadId, onClose, onSave }: Props) {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 border-dashed rounded-lg px-4 py-3 text-lg text-white/50 hover:text-white transition-colors w-full"
+              className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 border-dashed rounded-lg px-4 py-3 text-lg text-white/90 hover:text-white transition-colors w-full"
             >
               <Paperclip size={16} />
               Seleccionar archivos
@@ -159,14 +159,14 @@ export function NoteModal({ leadId, onClose, onSave }: Props) {
                       <span className="text-sm text-white/60 truncate">
                         {file.name}
                       </span>
-                      <span className="text-sm text-white/30 shrink-0">
+                      <span className="text-sm text-white/90 shrink-0">
                         {(file.size / 1024).toFixed(0)}kb
                       </span>
                     </div>
                     <button
                       type="button"
                       onClick={() => removeFile(idx)}
-                      className="text-white/30 hover:text-red-400 transition-colors ml-2 shrink-0"
+                      className="text-white/90 hover:text-red-400 transition-colors ml-2 shrink-0"
                     >
                       <X size={14} />
                     </button>
@@ -180,7 +180,7 @@ export function NoteModal({ leadId, onClose, onSave }: Props) {
         <div className="flex justify-end gap-3 p-5 border-t border-white/10">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-lg text-white/50 hover:text-white transition-colors"
+            className="px-4 py-2 text-lg text-white/90 hover:text-white transition-colors"
           >
             Cancelar
           </button>
