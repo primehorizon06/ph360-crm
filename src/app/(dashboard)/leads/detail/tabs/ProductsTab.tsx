@@ -444,19 +444,16 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
           {paymentType === "CUENTA" && (
             <div className="space-y-3">
               <div className="space-y-1">
-                <label className="text-lg text-white/40">
-                  Número de cuenta
-                </label>
+                <label className="text-lg text-white/40">Banco</label>
                 <input
-                  {...register("accountNumber")}
+                  {...register("accountBank")}
                   type="text"
-                  inputMode="numeric"
-                  placeholder="Número de cuenta"
+                  placeholder="Ej. Chase, Bank of America..."
                   className="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
                 />
-                {"accountNumber" in errors && errors.accountNumber && (
+                {"accountBank" in errors && errors.accountBank && (
                   <p className="text-red-400 text-lg">
-                    {errors.accountNumber.message}
+                    {errors.accountBank.message}
                   </p>
                 )}
               </div>
@@ -479,21 +476,6 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
               </div>
 
               <div className="space-y-1">
-                <label className="text-lg text-white/40">Banco</label>
-                <input
-                  {...register("accountBank")}
-                  type="text"
-                  placeholder="Ej. Chase, Bank of America..."
-                  className="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
-                />
-                {"accountBank" in errors && errors.accountBank && (
-                  <p className="text-red-400 text-lg">
-                    {errors.accountBank.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-1">
                 <label className="text-sm text-white/40">Número de ruta</label>
                 <input
                   {...register("routingNumber")}
@@ -506,6 +488,24 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                 {"routingNumber" in errors && errors.routingNumber && (
                   <p className="text-red-400 text-sm">
                     {errors.routingNumber.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-lg text-white/40">
+                  Número de cuenta
+                </label>
+                <input
+                  {...register("accountNumber")}
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="Número de cuenta"
+                  className="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
+                />
+                {"accountNumber" in errors && errors.accountNumber && (
+                  <p className="text-red-400 text-lg">
+                    {errors.accountNumber.message}
                   </p>
                 )}
               </div>
