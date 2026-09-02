@@ -8,6 +8,17 @@ const roleColors: Record<string, string> = {
   AGENT: "bg-green-500/20 text-green-400",
 };
 
+const TABLE_HEADERS = [
+  "ID",
+  "Usuario",
+  "Nombre",
+  "Rol",
+  "Empresa",
+  "Equipo",
+  "Status",
+  "Acciones",
+];
+
 interface Props {
   users: User[];
   onEdit: (user: User) => void;
@@ -22,15 +33,7 @@ export function UserTable({ users, onEdit, onToggleActive }: Props) {
         <table className="w-full">
           <thead>
             <tr className="border-b border-white/10">
-              {[
-                "Usuario",
-                "Nombre",
-                "Rol",
-                "Empresa",
-                "Equipo",
-                "Status",
-                "Acciones",
-              ].map((h) => (
+              {TABLE_HEADERS.map((h) => (
                 <th
                   key={h}
                   className="text-left px-4 py-3 text-sm text-on-surface-variant font-medium uppercase tracking-wider"
@@ -43,6 +46,9 @@ export function UserTable({ users, onEdit, onToggleActive }: Props) {
           <tbody className="divide-y divide-white/5">
             {users.map((user) => (
               <tr key={user.id} className="hover:bg-white/5 transition-colors">
+                <td className="px-4 py-3 text-lg text-white/90">
+                  {user.id}
+                </td>
                 <td className="px-4 py-3 text-lg text-white/70">
                   {user.username}
                 </td>

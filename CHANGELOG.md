@@ -18,6 +18,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **feat**(products): reorganiza el formulario de asociar producto y el plan de pagos a 2 columnas; el botón "Asociar producto" pasa a ser `children` de `PaymentPlanPicker` junto a la lista de cuotas
 - **feat**(storage): migra adjuntos de notas y avatares de disco local a Supabase Storage, con bucket privado para adjuntos (servidos solo vía `/api/attachments/[id]` con validación de permisos) y bucket público para avatares; cae a disco local si no hay credenciales configuradas (Docker local)
 - **feat**(companies): permite al ADMIN subir un logo por franquicia (`Company.logo`), reutilizando el mismo bucket público de avatares; nuevo endpoint `POST /api/companies/[id]/logo`, visible en el modal de editar franquicia y en el listado
+- **feat**(users): agrega columna ID a la tabla de usuarios (vista desktop) que ve el ADMIN
 
 ### Changed
 
