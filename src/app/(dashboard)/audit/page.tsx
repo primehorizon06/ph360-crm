@@ -67,6 +67,8 @@ function actionColor(action: string): string {
   return ACTION_COLORS[action] ?? "bg-cyan-500/20 text-cyan-400";
 }
 
+const TABLE_HEADERS = ["Fecha", "Acción", "Actor", "Entidad", "IP"];
+
 export default function AuditPage() {
   usePageTitle("Auditoría");
   const { data: session, status } = useSession();
@@ -117,7 +119,7 @@ export default function AuditPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/10">
-                {["Fecha", "Acción", "Actor", "Entidad", "IP"].map((h) => (
+                {TABLE_HEADERS.map((h) => (
                   <th
                     key={h}
                     className="text-left px-4 py-3 text-sm text-on-surface-variant font-medium uppercase tracking-wider whitespace-nowrap"
