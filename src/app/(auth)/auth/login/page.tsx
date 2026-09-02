@@ -2,7 +2,7 @@
 
 import { Suspense, useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { Loading } from "@/components/ui/Loading";
 import { toast } from "sonner";
@@ -21,7 +21,6 @@ function SearchParamsWatcher() {
 }
 
 export default function LoginPage() {
-  const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -48,8 +47,7 @@ export default function LoginPage() {
         setError("Credenciales inválidas");
         setIsLoading(false);
       } else {
-        router.push("/");
-        router.refresh();
+        window.location.href = "/";
       }
     } catch (error) {
       setError("Error al iniciar sesión");
