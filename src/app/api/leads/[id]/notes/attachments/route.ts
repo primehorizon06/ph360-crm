@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withAuthParams } from "@/lib/api";
+import { withAuthParams, notFound, forbidden } from "@/lib/api";
+import { canAccessLead } from "@/lib/permissions";
 
-export const GET = withAuthParams<{ id: string }>(async (_req, _session, { id }) => {
+export const GET = withAuthParams<{ id: string }>(async (_req, session, { id }) => {
+  const lead = await prisma.lead.findUnique({ where: { id: Number(id) } });
+  if (!lead) return notFound("Lead no encontrado");
+  if (!canAccessLead(session.user, lead)) return forbidden();
+
   const attachments = await prisma.noteAttachment.findMany({
     where: {
       note: {
@@ -32,6 +37,7 @@ export const GET = withAuthParams<{ id: string }>(async (_req, _session, { id })
 
   const flat = attachments.map(({ note, ...att }) => ({
     ...att,
+    url: `/api/attachments/${att.id}`,
     author: note.author,
   }));
 

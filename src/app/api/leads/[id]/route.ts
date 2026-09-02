@@ -12,7 +12,7 @@ import { findDuplicatePhone, findDuplicateSsn, describeDuplicateOwner } from "@/
 const leadPatchSchema = leadObjectSchema.partial().passthrough();
 
 export const GET = withAuthParams<{ id: string }>(
-  async (_req, _session, { id }) => {
+  async (_req, session, { id }) => {
     const lead = await prisma.lead.findUnique({
       where: { id: Number(id) },
       include: {
@@ -28,6 +28,8 @@ export const GET = withAuthParams<{ id: string }>(
     });
 
     if (!lead) return notFound("Lead no encontrado");
+    if (!canAccessLead(session.user, lead)) return forbidden();
+
     return NextResponse.json({ ...lead, ssn: decrypt(lead.ssn) });
   },
 );
