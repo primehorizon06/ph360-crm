@@ -106,6 +106,12 @@ RUN npx prisma generate
 ENV DATABASE_URL="postgresql://user:password@localhost:5432/db"
 ENV NEXTAUTH_SECRET="build-time-placeholder"
 ENV ENCRYPTION_KEY="NguLMTQ7VBmFIUEyFUiyt97b8OFgWK6x2LUEi8+BhA8="
+# SUPABASE_URL no es secreta (es la URL pública del proyecto, ya expuesta en
+# cada URL de avatar servida al navegador), pero next.config.ts la lee para
+# armar la Content-Security-Policy, así que también necesita un valor real en
+# build. Al pasar a producción, actualizar esta línea con la URL del proyecto
+# Supabase de producción.
+ENV SUPABASE_URL="https://iluiyfqkqojbkvrujbtn.supabase.co"
 
 # Construir Next.js
 RUN npm run build

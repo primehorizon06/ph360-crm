@@ -10,22 +10,12 @@ const sizes = {
   lg: "w-16 h-16 text-xl",
 };
 
-import Image from "next/image";
-
-const sizePx = {
-  sm: 32,
-  md: 40,
-  lg: 64,
-};
-
 export function Avatar({ name, avatar, size = "sm" }: AvatarProps) {
   if (avatar) {
     return (
-      <Image
+      <img
         src={avatar}
         alt={name ?? ""}
-        width={sizePx[size]}
-        height={sizePx[size]}
         className={`${sizes[size]} rounded-full object-cover`}
       />
     );
