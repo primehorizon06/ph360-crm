@@ -17,6 +17,7 @@ export interface CompanyGoals {
   id: number;
   name: string;
   active?: boolean;
+  logo?: string | null;
   _count: { teams: number; users: number };
   teams?: Team[];
 }

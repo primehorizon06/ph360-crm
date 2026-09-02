@@ -56,6 +56,7 @@ model Company {
   id        Int      @id @default(autoincrement())
   name      String
   active    Boolean  @default(true)
+  logo      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

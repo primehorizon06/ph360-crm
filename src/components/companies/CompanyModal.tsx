@@ -3,10 +3,11 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { X } from "lucide-react";
+import { X, Camera } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { CompanyGoals } from "@/utils/interfaces/companies";
+import { Avatar } from "@/components/ui/Avatar";
 
 const schema = z.object({
   name: z
@@ -29,6 +30,7 @@ export function CompanyModal({ company, onClose, onSave }: Props) {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -37,6 +39,19 @@ export function CompanyModal({ company, onClose, onSave }: Props) {
       active: company?.active ?? true,
     },
   });
+
+  async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !company) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    await fetch(`/api/companies/${company.id}/logo`, {
+      method: "POST",
+      body: formData,
+    });
+  }
 
   async function onSubmit(data: FormData) {
     const method = company ? "PATCH" : "POST";
@@ -73,6 +88,23 @@ export function CompanyModal({ company, onClose, onSave }: Props) {
         </div>
 
         <div className="p-5 space-y-4">
+          {company && (
+            <div className="flex justify-center">
+              <label className="cursor-pointer group relative">
+                <Avatar name={watch("name")} avatar={company.logo} size="lg" />
+                <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Camera size={16} className="text-white" />
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleLogoChange}
+                />
+              </label>
+            </div>
+          )}
+
           <div>
             <label className="text-sm text-on-surface-variant mb-1 block">Nombre</label>
             <input

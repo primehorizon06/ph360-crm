@@ -15,6 +15,7 @@ export const GET = withAuth(async (req) => {
           id: true,
           name: true,
           active: true,
+          logo: true,
           createdAt: true,
           _count: { select: { teams: true, users: true } },
         },

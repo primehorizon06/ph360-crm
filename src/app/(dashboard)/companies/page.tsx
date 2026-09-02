@@ -25,6 +25,7 @@ const TeamModal = dynamic(
 );
 import { CustomSelect } from "@/components/ui/Select";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Avatar } from "@/components/ui/Avatar";
 import { CompanyGoals, Team } from "@/utils/interfaces/companies";
 import { fetcher } from "@/lib/fetcher";
 import { toast } from "sonner";
@@ -183,6 +184,7 @@ export default function CompaniesPage() {
                 )}
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
+                    <Avatar name={company.name} avatar={company.logo} size="sm" />
                     <p className="text-white font-medium truncate">
                       {company.name}
                     </p>
