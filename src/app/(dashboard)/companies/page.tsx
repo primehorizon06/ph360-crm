@@ -32,7 +32,7 @@ import { toast } from "sonner";
 import { confirmToast } from "@/lib/confirmToast";
 
 export default function CompaniesPage() {
-  usePageTitle("Empresas y Equipos");
+  usePageTitle("Franquicias y Equipos");
   const [expanded, setExpanded] = useState<number[]>([]);
   const [companyModal, setCompanyModal] = useState<{
     open: boolean;
@@ -165,7 +165,7 @@ export default function CompaniesPage() {
             key={company.id}
             className="bg-surface border border-white/10 rounded-xl overflow-hidden"
           >
-            {/* Empresa */}
+            {/* Franquicia */}
             <div className="flex items-start justify-between px-4 py-3 gap-2">
               <button
                 onClick={() => toggleExpand(company)}

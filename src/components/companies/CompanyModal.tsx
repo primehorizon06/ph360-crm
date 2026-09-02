@@ -125,7 +125,7 @@ export function CompanyModal({ company, onClose, onSave }: Props) {
                 className="accent-cyan-500"
               />
               <label htmlFor="active" className="text-lg text-white/70">
-                Empresa activa
+                Franquicia activa
               </label>
             </div>
           )}

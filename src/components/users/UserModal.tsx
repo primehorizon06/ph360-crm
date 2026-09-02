@@ -261,7 +261,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
             )}
           </div>
 
-          {/* Empresa */}
+          {/* Franquicia */}
           <div>
             <label className="text-sm text-on-surface-variant mb-1 block">
               Franquicia <span className="text-red-400">*</span>

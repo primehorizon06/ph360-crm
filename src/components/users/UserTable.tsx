@@ -13,7 +13,7 @@ const TABLE_HEADERS = [
   "Usuario",
   "Nombre",
   "Rol",
-  "Empresa",
+  "Franquicia",
   "Equipo",
   "Status",
   "Acciones",

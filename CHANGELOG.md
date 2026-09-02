@@ -33,6 +33,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **style**(products): agranda la letra y aclara el color de la información de método de pago y del plan de pagos ya asociado en la tarjeta de producto
 - **style**(ui): reemplaza `text-white/50` (y variantes cercanas) por `text-white/90` en el resto de la app para mejorar el contraste
 - **refactor**(audit): extrae el array de headers de la tabla a la constante `TABLE_HEADERS`, mismo patrón que `roleColors` en `UserTable`
+- **style**(ui): reemplaza toda mención restante de "Empresa"/"Empresas" por "Franquicia"/"Franquicias" en columnas, checkboxes y títulos de página, para usar terminología consistente en toda la app
 
 ### Fixed
 
