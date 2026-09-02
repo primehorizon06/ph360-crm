@@ -141,6 +141,7 @@ export const authOptions: NextAuthOptions = {
           companyName: user.company?.name,
           teamId: user.teamId,
           teamName: user.team?.name,
+          avatar: user.avatar,
         };
       },
     }),
