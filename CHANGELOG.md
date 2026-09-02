@@ -16,6 +16,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **feat**(leads): calcula y muestra la edad junto a la fecha de nacimiento en el formulario de lead; exige confirmar carta de emancipación cuando la edad está entre 18 y 20 años, en creación y edición
 - **feat**(leads): añade campo "Edad" calculado en la pestaña Datos Personales del detalle de lead
 - **feat**(products): reorganiza el formulario de asociar producto y el plan de pagos a 2 columnas; el botón "Asociar producto" pasa a ser `children` de `PaymentPlanPicker` junto a la lista de cuotas
+- **feat**(storage): migra adjuntos de notas y avatares de disco local a Supabase Storage, con bucket privado para adjuntos (servidos solo vía `/api/attachments/[id]` con validación de permisos) y bucket público para avatares; cae a disco local si no hay credenciales configuradas (Docker local)
 
 ### Changed
 

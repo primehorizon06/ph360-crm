@@ -12,7 +12,15 @@ const schema = z.object({
     ),
   NEXT_PUBLIC_API_URL: z.string().url().default("http://localhost:3000"),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
-});
+  SUPABASE_URL: z.string().url().optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
+}).refine(
+  (data) => Boolean(data.SUPABASE_URL) === Boolean(data.SUPABASE_SERVICE_ROLE_KEY),
+  {
+    message: "SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY deben configurarse juntas",
+    path: ["SUPABASE_URL"],
+  },
+);
 
 const result = schema.safeParse(process.env);
 

@@ -1,5 +1,9 @@
 import type { NextConfig } from "next";
 
+const supabaseHostname = process.env.SUPABASE_URL
+  ? new URL(process.env.SUPABASE_URL).hostname
+  : undefined;
+
 const nextConfig: NextConfig = {
   output: "standalone",
   reactStrictMode: true,
@@ -10,6 +14,11 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_API_URL:
       process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000",
+  },
+  images: {
+    remotePatterns: supabaseHostname
+      ? [{ protocol: "https", hostname: supabaseHostname, pathname: "/storage/v1/object/public/**" }]
+      : [],
   },
   async headers() {
     const isDev = process.env.NODE_ENV !== "production";
@@ -30,7 +39,7 @@ const nextConfig: NextConfig = {
               // 'unsafe-eval' solo en dev: React Refresh lo necesita para el hot-reload.
               `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob:",
+              `img-src 'self' data: blob:${supabaseHostname ? ` https://${supabaseHostname}` : ""}`,
               "font-src 'self' data:",
               "connect-src 'self'",
               "frame-ancestors 'none'",

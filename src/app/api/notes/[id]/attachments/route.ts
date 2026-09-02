@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
-import { withAuthParams, badRequest } from "@/lib/api";
+import { withAuthParams, badRequest, notFound, forbidden } from "@/lib/api";
+import { canAccessLead } from "@/lib/permissions";
 import { sniffAttachmentType, MAX_ATTACHMENT_SIZE } from "@/lib/fileValidation";
+import { saveAttachmentFile, deleteAttachmentFile } from "@/lib/storage";
 
-export const POST = withAuthParams<{ id: string }>(async (req, _session, { id }) => {
+export const POST = withAuthParams<{ id: string }>(async (req, session, { id }) => {
+  const note = await prisma.note.findUnique({
+    where: { id: Number(id) },
+    select: { lead: { select: { companyId: true, teamId: true, assignedToId: true } } },
+  });
+  if (!note) return notFound("Nota no encontrada");
+  if (!canAccessLead(session.user, note.lead)) return forbidden();
+
   const formData = await req.formData();
   const files = formData.getAll("files") as File[];
 
@@ -25,22 +32,25 @@ export const POST = withAuthParams<{ id: string }>(async (req, _session, { id })
       return badRequest(`Tipo no permitido: ${file.name}. Solo JPEG, PNG, WebP o PDF`);
 
     const filename = `note-${id}-${Date.now()}-${Math.random().toString(36).slice(2)}.${detected.ext}`;
-    const uploadDir = path.join(process.cwd(), "public/uploads/notes");
+    const url = await saveAttachmentFile(filename, buffer, detected.mime);
 
-    await mkdir(uploadDir, { recursive: true });
-    await writeFile(path.join(uploadDir, filename), buffer);
+    let attachment;
+    try {
+      attachment = await prisma.noteAttachment.create({
+        data: {
+          noteId: Number(id),
+          name: file.name,
+          url,
+          mimeType: detected.mime,
+          size: file.size,
+        },
+      });
+    } catch (err) {
+      await deleteAttachmentFile(filename).catch(() => {});
+      throw err;
+    }
 
-    const attachment = await prisma.noteAttachment.create({
-      data: {
-        noteId: Number(id),
-        name: file.name,
-        url: `/uploads/notes/${filename}`,
-        mimeType: detected.mime,
-        size: file.size,
-      },
-    });
-
-    attachments.push(attachment);
+    attachments.push({ ...attachment, url: `/api/attachments/${attachment.id}` });
   }
 
   return NextResponse.json(attachments, { status: 201 });

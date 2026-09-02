@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
 import { withAuth, badRequest, forbidden } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
 import { sniffImageType, MAX_IMAGE_SIZE } from "@/lib/fileValidation";
+import { saveAvatarFile, deleteAvatarFile } from "@/lib/storage";
 
 export const POST = withAuth(async (req, session) => {
   const formData = await req.formData();
@@ -24,17 +23,17 @@ export const POST = withAuth(async (req, session) => {
   if (!detected) return badRequest("Solo se permiten imágenes JPEG, PNG o WebP");
 
   const filename = `avatar-${userId}-${Date.now()}.${detected.ext}`;
-  const uploadDir = path.join(process.cwd(), "public/uploads/avatars");
+  const avatarUrl = await saveAvatarFile(filename, buffer, detected.mime);
 
-  await mkdir(uploadDir, { recursive: true });
-  await writeFile(path.join(uploadDir, filename), buffer);
-
-  const avatarUrl = `/uploads/avatars/${filename}`;
-
-  await prisma.user.update({
-    where: { id: Number(userId) },
-    data: { avatar: avatarUrl },
-  });
+  try {
+    await prisma.user.update({
+      where: { id: Number(userId) },
+      data: { avatar: avatarUrl },
+    });
+  } catch (err) {
+    await deleteAvatarFile(filename).catch(() => {});
+    throw err;
+  }
 
   return NextResponse.json({ url: avatarUrl });
 });
