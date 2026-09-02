@@ -112,6 +112,10 @@ ENV ENCRYPTION_KEY="NguLMTQ7VBmFIUEyFUiyt97b8OFgWK6x2LUEi8+BhA8="
 # build. Al pasar a producción, actualizar esta línea con la URL del proyecto
 # Supabase de producción.
 ENV SUPABASE_URL="https://iluiyfqkqojbkvrujbtn.supabase.co"
+# Placeholder ficticio, igual que NEXTAUTH_SECRET: env.ts exige que
+# SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY estén configuradas juntas. Esta sí
+# es secreta, así que nunca uses el valor real acá; Render la inyecta en runtime.
+ENV SUPABASE_SERVICE_ROLE_KEY="build-time-placeholder"
 
 # Construir Next.js
 RUN npm run build

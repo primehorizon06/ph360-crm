@@ -38,6 +38,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **fix**(leads): `leadSchema` rechaza fechas de nacimiento con edad menor a 18 años ("El lead debe ser mayor de edad"), tanto en el formulario como en `POST /api/leads`; antes solo se validaba el rango 18-20 y permitía crear leads de 0 años
 - **fix**(leads): valida `canAccessLead` antes de exponer el detalle de un lead, sus notas y sus adjuntos, y antes de crear notas o subir adjuntos (corrige IDOR: cualquier usuario autenticado podía leer datos de leads ajenos, incluido el SSN desencriptado, solo conociendo el ID)
 - **fix**(avatar): `Avatar` usa `<img>` en vez de `next/image`, que rechazaba las URLs de Supabase Storage porque `SUPABASE_URL` no estaba disponible durante el build de Docker en Render (los placeholders de env solo cubrían `DATABASE_URL`, `NEXTAUTH_SECRET` y `ENCRYPTION_KEY`); se agrega `SUPABASE_URL` como variable de build en el `Dockerfile` para que la Content-Security-Policy también quede bien armada
+- **fix**(build): agrega placeholder de `SUPABASE_SERVICE_ROLE_KEY` en el `Dockerfile`; faltaba junto al de `SUPABASE_URL` y rompía el build (`env.ts` exige que ambas estén configuradas juntas)
 
 ### Changed
 
