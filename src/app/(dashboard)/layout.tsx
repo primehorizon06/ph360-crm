@@ -14,7 +14,20 @@ export default function DashboardLayout({
         <Sidebar />
         <DashboardContent>{children}</DashboardContent>
       </div>
-      <Toaster position="top-right" richColors closeButton theme="dark" />
+      <Toaster
+        position="top-right"
+        richColors
+        closeButton
+        theme="dark"
+        toastOptions={{
+          style: { width: "26rem", maxWidth: "90vw" },
+          classNames: {
+            title: "text-lg!",
+            description: "text-base!",
+            icon: "w-6! h-6! [&>svg]:w-6! [&>svg]:h-6!",
+          },
+        }}
+      />
     </SidebarProvider>
   );
 }

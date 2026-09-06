@@ -36,20 +36,20 @@ export function ToastHandler() {
 
     toast.custom(
       (t) => (
-        <div className="bg-surface-container-low border border-white/10 rounded-lg shadow-xl w-80 overflow-hidden">
-          <div className="p-3 border-b border-white/10 bg-gradient-to-r from-cyan-500/10 to-transparent">
+        <div className="bg-surface-container-low border border-white/10 rounded-lg shadow-xl w-full overflow-hidden">
+          <div className="p-4 border-b border-white/10 bg-gradient-to-r from-cyan-500/10 to-transparent">
             <div className="flex items-center gap-2">
-              <Bell className="w-4 h-4 text-cyan-400" />
-              <span className="text-white font-semibold text-lg">
+              <Bell className="w-6 h-6 text-cyan-400" />
+              <span className="text-white font-semibold text-2xl">
                 Nuevo Recordatorio
               </span>
-              <span className="text-on-surface-variant text-sm ml-auto">{time}</span>
+              <span className="text-on-surface-variant text-lg ml-auto">{time}</span>
             </div>
           </div>
 
-          <div className="p-3">
-            <p className="text-white text-lg font-medium">{reminder.reason}</p>
-            <p className="text-on-surface-variant text-sm mt-1">Lead: {leadName}</p>
+          <div className="p-4">
+            <p className="text-white text-2xl font-medium">{reminder.reason}</p>
+            <p className="text-on-surface-variant text-lg mt-1">Lead: {leadName}</p>
           </div>
 
           <div className="flex border-t border-white/10">
@@ -59,9 +59,9 @@ export function ToastHandler() {
                 await markAsCompleted(reminder.id);
                 window.location.href = `/leads/${reminder.leadId}?tab=reminders`;
               }}
-              className="flex-1 px-3 py-2 text-lg text-cyan-400 hover:bg-cyan-400/10 transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-3 py-3 text-xl text-cyan-400 hover:bg-cyan-400/10 transition-colors flex items-center justify-center gap-2"
             >
-              <CheckCircle className="w-4 h-4" />
+              <CheckCircle className="w-5 h-5" />
               Ver y Completar
             </button>
             <button
@@ -69,9 +69,9 @@ export function ToastHandler() {
                 toast.dismiss(t);
                 await markAsCompleted(reminder.id);
               }}
-              className="flex-1 px-3 py-2 text-lg text-white/90 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center gap-2 border-l border-white/10"
+              className="flex-1 px-3 py-3 text-xl text-white/90 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center gap-2 border-l border-white/10"
             >
-              <Clock className="w-4 h-4" />
+              <Clock className="w-5 h-5" />
               Marcar Leído
             </button>
           </div>
