@@ -19,6 +19,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
   const { data: session } = useSession();
   const role = session?.user?.role;
   const isAdmin = role === UserRole.ADMIN;
+  const isAgent = role === UserRole.AGENT;
   const isCustomer = type === "customer";
 
   const {
@@ -273,12 +274,23 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
                 )}
               </div>
 
-              {/* Estado */}
+              {/* Estado — el agente no puede cambiarlo */}
               <div>
                 <label className="text-sm text-on-surface-variant mb-1 block">
                   Status
                 </label>
-                {isCustomer ? (
+                {isAgent ? (
+                  <input
+                    type="text"
+                    value={
+                      isCustomer
+                        ? (CUSTOMER_STATUS[customerStatus] ?? "Sin estado")
+                        : STATUS[status]
+                    }
+                    disabled
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white/90 outline-none cursor-not-allowed"
+                  />
+                ) : isCustomer ? (
                   <CustomSelect
                     name="customerStatus"
                     value={CUSTOMER_STATUS[customerStatus] ?? "Seleccionar"}

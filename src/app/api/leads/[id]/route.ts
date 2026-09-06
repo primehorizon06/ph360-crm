@@ -80,6 +80,8 @@ export const PATCH = withAuthParams<{ id: string }>(
         return forbidden("No puedes asignar el lead a ese usuario");
     }
 
+    const canChangeStatus = role !== UserRole.AGENT;
+
     const baseData = {
       firstName: body.firstName,
       lastName: optionalField(body.lastName),
@@ -92,7 +94,7 @@ export const PATCH = withAuthParams<{ id: string }>(
       email: optionalField(body.email),
       birthDate: optionalDate(body.birthDate),
       contactTime: optionalField(body.contactTime),
-      status: body.status,
+      status: canChangeStatus ? body.status : undefined,
     };
 
     let data: Record<string, unknown>;
@@ -116,10 +118,7 @@ export const PATCH = withAuthParams<{ id: string }>(
         customerStatus: body.customerStatus || existing.customerStatus,
       };
     } else {
-      data = {
-        ...baseData,
-        customerStatus: body.customerStatus || existing.customerStatus,
-      };
+      data = { ...baseData };
     }
 
     data = Object.fromEntries(
