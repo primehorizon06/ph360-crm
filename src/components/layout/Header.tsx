@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Search, Menu } from "lucide-react";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import { Avatar } from "../ui/Avatar";
@@ -7,10 +9,32 @@ import { useSession } from "next-auth/react";
 import { NotificationBell } from "../notifications/NotificationBell";
 import { NotificationHandler } from "../notifications/NotificationHandler";
 import { ToastHandler } from "../notifications/ToastHandler";
+import { useHeaderSearch } from "@/hooks/useHeaderSearch";
 
 export function Header() {
   const { data: session } = useSession();
   const { collapsed, mobileOpen, setMobileOpen } = useSidebar();
+  const router = useRouter();
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const searchBoxRef = useRef<HTMLDivElement>(null);
+  const { results, loading } = useHeaderSearch(query);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (searchBoxRef.current && !searchBoxRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  function goToResult(result: (typeof results)[number]) {
+    setOpen(false);
+    setQuery("");
+    router.push(result.type === "customer" ? `/customers/${result.id}` : `/leads/${result.id}`);
+  }
 
   return (
     <>
@@ -27,13 +51,53 @@ export function Header() {
           </button>
 
           {/* Búsqueda */}
-          <div className="hidden sm:flex items-center gap-2 bg-white/5 rounded-lg px-3 py-1.5 w-64">
-            <Search size={16} className="text-on-surface-variant" />
-            <input
-              type="text"
-              placeholder="Buscar..."
-              className="bg-transparent text-lg text-white/70 placeholder:text-white/90 outline-none w-full"
-            />
+          <div ref={searchBoxRef} className="relative hidden sm:block">
+            <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-1.5 w-64">
+              <Search size={16} className="text-on-surface-variant" />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setOpen(true);
+                }}
+                onFocus={() => setOpen(true)}
+                placeholder="Buscar"
+                className="bg-transparent text-lg text-white/70 placeholder:text-white/90 outline-none w-full"
+              />
+            </div>
+
+            {open && query.trim().length >= 2 && (
+              <div className="absolute top-full mt-1 left-0 w-80 bg-surface border border-white/10 rounded-lg shadow-xl overflow-hidden z-50 max-h-80 overflow-y-auto">
+                {loading && (
+                  <p className="px-3 py-2 text-sm text-on-surface-variant">Buscando...</p>
+                )}
+                {!loading && results.length === 0 && (
+                  <p className="px-3 py-2 text-sm text-on-surface-variant">
+                    Sin resultados
+                  </p>
+                )}
+                {!loading &&
+                  results.map((result) => (
+                    <button
+                      key={`${result.type}-${result.id}`}
+                      onClick={() => goToResult(result)}
+                      className="w-full text-left px-3 py-2 hover:bg-white/10 transition-colors border-b border-white/5 last:border-b-0"
+                    >
+                      <p className="text-sm text-white font-medium">
+                        {result.firstName} {result.lastName ?? ""}
+                        <span className="ml-2 text-xs text-on-surface-variant">
+                          #{result.id} · {result.type === "customer" ? "Cliente" : "Lead"}
+                        </span>
+                      </p>
+                      <p className="text-xs text-on-surface-variant">
+                        {result.phone1}
+                        {result.city ? ` · ${result.city}` : ""}
+                      </p>
+                    </button>
+                  ))}
+              </div>
+            )}
           </div>
         </div>
 
