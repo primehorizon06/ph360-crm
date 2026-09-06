@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useReminderNotifications } from "@/hooks/useReminderNotifications";
+import { REMINDER_STATUS } from "@/utils/constants/reminders";
 import { Bell, CheckCircle, Clock } from "lucide-react";
 
 export function ToastHandler() {
@@ -14,7 +15,7 @@ export function ToastHandler() {
       const response = await fetch("/api/reminders", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: reminderId, status: "COMPLETED" }),
+        body: JSON.stringify({ id: reminderId, status: REMINDER_STATUS.COMPLETED }),
       });
 
       if (response.ok) {

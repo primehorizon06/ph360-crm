@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ReminderWhere, UpdateReminderData } from "@/utils/interfaces/reminders";
 import { withAuth, badRequest, notFound } from "@/lib/api";
+import { REMINDER_STATUS } from "@/utils/constants/reminders";
 
 export const GET = withAuth(async (req, session) => {
   const searchParams = req.nextUrl.searchParams;
@@ -83,7 +84,7 @@ export const POST = withAuth(async (req, session) => {
       reason,
       assignedToId: Number(assignedToId),
       createdById: Number(session.user.id),
-      status: "PENDING",
+      status: REMINDER_STATUS.PENDING,
     },
     select: {
       id: true,
@@ -127,7 +128,7 @@ export const PATCH = withAuth(async (req, session) => {
   if (reason) updateData.reason = reason;
   if (scheduledAt) updateData.scheduledAt = new Date(scheduledAt);
   if (assignedToId) updateData.assignedToId = Number(assignedToId);
-  if (status === "COMPLETED") updateData.lastNotifiedAt = new Date();
+  if (status === REMINDER_STATUS.COMPLETED) updateData.lastNotifiedAt = new Date();
 
   const updatedReminder = await prisma.reminder.update({
     where: { id: Number(id) },

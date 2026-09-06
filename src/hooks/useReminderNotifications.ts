@@ -1,5 +1,6 @@
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
+import { REMINDER_STATUS } from "@/utils/constants/reminders";
 
 export interface PendingReminder {
   id: number;
@@ -21,7 +22,7 @@ export interface PendingReminder {
 // Hook para notificaciones globales (todos los leads)
 export function useReminderNotifications() {
   const params = new URLSearchParams({
-    status: "PENDING",
+    status: REMINDER_STATUS.PENDING,
     past: "true",
   });
 

@@ -1,9 +1,10 @@
 import { Reminder } from "@/utils/interfaces/reminders";
+import { REMINDER_STATUS } from "@/utils/constants/reminders";
 import { Bell, User } from "lucide-react";
 
 export function ReminderCard({ reminder }: { reminder: Reminder }) {
   const date = new Date(reminder.scheduledAt);
-  const isPast = date < new Date() && reminder.status !== "COMPLETED";
+  const isPast = date < new Date() && reminder.status !== REMINDER_STATUS.COMPLETED;
 
   return (
     <div

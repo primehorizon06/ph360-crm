@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { REMINDER_STATUS } from "@/utils/constants/reminders";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,7 @@ export async function GET(req: Request) {
             prisma.reminder.count({
               where: {
                 assignedToId: userId,
-                status: "PENDING",
+                status: REMINDER_STATUS.PENDING,
                 scheduledAt: { lte: new Date() },
               },
             }),

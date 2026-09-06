@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useReminderNotifications } from "@/hooks/useReminderNotifications";
+import { REMINDER_STATUS } from "@/utils/constants/reminders";
 
 type NotificationReminder = {
   id: number;
@@ -23,7 +24,7 @@ export function NotificationHandler() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: reminderId,
-          status: "COMPLETED",
+          status: REMINDER_STATUS.COMPLETED,
         }),
       });
 
