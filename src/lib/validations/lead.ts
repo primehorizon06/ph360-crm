@@ -15,7 +15,7 @@ export const leadObjectSchema = z.object({
     .or(z.literal("")),
   ssn: z
     .string()
-    .regex(/^\d{3}-\d{2}-\d{4}$/, "Formato inválido. Ej: 123-45-6789")
+    .regex(/^\d{1,3}(-\d{1,2}(-\d{1,4})?)?$/, "Formato inválido. Ej: 123-45-6789")
     .optional()
     .or(z.literal("")),
   address: z.string().optional().or(z.literal("")),
