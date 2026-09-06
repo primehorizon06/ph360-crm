@@ -39,7 +39,11 @@ export const GET = withAuth(async (req, session) => {
     const page = Math.max(1, parseInt(searchParams.get("page") ?? "1") || 1);
     const limit = Math.min(
       LIMIT_MAX,
-      Math.max(1, parseInt(searchParams.get("limit") ?? String(LIMIT_DEFAULT)) || LIMIT_DEFAULT),
+      Math.max(
+        1,
+        parseInt(searchParams.get("limit") ?? String(LIMIT_DEFAULT)) ||
+          LIMIT_DEFAULT,
+      ),
     );
 
     const where: Prisma.UserWhereInput = {
@@ -66,10 +70,15 @@ export const GET = withAuth(async (req, session) => {
       prisma.user.count({ where }),
     ]);
 
-    return NextResponse.json({ data, total, page, limit, totalPages: Math.ceil(total / limit) });
+    return NextResponse.json({
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    });
   }
 
-  // Modo picker (sin paginar): usado por los selects de "asignar a" en leads y recordatorios.
   if (session.user.role !== UserRole.ADMIN && !teamId) return forbidden();
 
   const users = await prisma.user.findMany({
@@ -126,7 +135,11 @@ export const POST = withAuth(async (req, session) => {
 
   await logAudit({
     action: "USER_CREATED",
-    actor: { id: session.user.id, role: session.user.role, name: session.user.name },
+    actor: {
+      id: session.user.id,
+      role: session.user.role,
+      name: session.user.name,
+    },
     entityType: "User",
     entityId: user.id,
     metadata: { role, companyId: Number(companyId), teamId },

@@ -3,38 +3,47 @@
 import { useEffect, useRef } from "react";
 import { useReminderNotifications } from "@/hooks/useReminderNotifications";
 
+type NotificationReminder = {
+  id: number;
+  reason: string;
+  leadId: number;
+  lead: {
+    fullName: string;
+  };
+};
+
 export function NotificationHandler() {
   const { pendingReminders, refresh } = useReminderNotifications();
   const notifiedIds = useRef<Set<number>>(new Set());
 
   const markAsCompleted = async (reminderId: number) => {
     try {
-      const response = await fetch('/api/reminders', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          id: reminderId, 
-          status: "COMPLETED" 
+      const response = await fetch("/api/reminders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: reminderId,
+          status: "COMPLETED",
         }),
       });
-      
+
       if (response.ok) {
         console.log(`Recordatorio ${reminderId} marcado como completado`);
         // Refrescar la lista de pendientes
         refresh();
       } else {
-        console.error('Error al marcar como completado');
+        console.error("Error al marcar como completado");
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error("Error:", error);
     }
   };
 
-  const showNotification = (reminder: any) => {
+  const showNotification = (reminder: NotificationReminder) => {
     if (!("Notification" in window)) return;
-    
+
     const leadName = reminder.lead.fullName;
-    
+
     if (Notification.permission === "granted") {
       const notification = new Notification("📅 Nuevo recordatorio", {
         body: `${reminder.reason}\nLead: ${leadName}`,
@@ -50,11 +59,7 @@ export function NotificationHandler() {
       notification.onclick = async (event) => {
         event.preventDefault();
         window.focus();
-        
-        // 1. Marcar como completado ANTES de redirigir
         await markAsCompleted(reminder.id);
-        
-        // 2. Redirigir al lead con el tab de recordatorios
         window.location.href = `/leads/${reminder.leadId}?tab=reminders`;
       };
     }

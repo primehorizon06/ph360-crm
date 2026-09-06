@@ -157,12 +157,12 @@ export function NotificationBell() {
             onClick={() => setIsOpen(false)}
           />
           <div className="absolute right-0 mt-2 w-80 bg-surface-container-low border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden">
-            {/* ── Recordatorios ── */}
+            {/* ── Agendamientos ── */}
             {pendingReminders.length > 0 && (
               <>
                 <div className="p-3 border-b border-white/10 flex justify-between items-center bg-white/5">
                   <h3 className="text-white/70 text-sm font-medium uppercase tracking-widest">
-                    Recordatorios
+                    agendamientos
                   </h3>
                   <button
                     onClick={markAllRemindersCompleted}

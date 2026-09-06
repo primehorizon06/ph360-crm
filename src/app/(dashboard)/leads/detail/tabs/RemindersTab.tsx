@@ -20,7 +20,7 @@ export function RemindersTab({ leadId }: { leadId: number }) {
     <div className="space-y-4">
       <div className="flex justify-between">
         <p className="text-on-surface-variant text-lg">
-          {reminders.length} recordatorios
+          {reminders.length} agendamientos
         </p>
 
         <button
@@ -37,7 +37,7 @@ export function RemindersTab({ leadId }: { leadId: number }) {
       ) : reminders.length === 0 ? (
         <div className="text-center">
           <Bell />
-          <p>No hay recordatorios</p>
+          <p>No hay agendamientos</p>
         </div>
       ) : (
         <>
