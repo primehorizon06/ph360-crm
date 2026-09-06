@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { Bell, CheckCircle, ShoppingBag, X } from "lucide-react";
 import { useReminderNotifications } from "@/hooks/useReminderNotifications";
 import { useNotifications } from "@/hooks/useNotifications";
+import { REMINDER_STATUS } from "@/utils/constants/reminders";
+import { playNotificationSound } from "@/lib/notificationSound";
 import { useRouter } from "next/navigation";
 
 export function NotificationBell() {
@@ -32,17 +34,23 @@ export function NotificationBell() {
         reminderCount: number;
       };
       const prev = prevCounts.current;
+      const notifIncreased = notifCount > prev.notif && prev.notif >= 0;
+      const reminderIncreased = reminderCount > prev.reminder && prev.reminder >= 0;
+
+      if (notifIncreased || reminderIncreased) {
+        playNotificationSound();
+      }
 
       // Mostrar notificación del OS solo si el tab no está activo y el conteo subió
       if (document.visibilityState !== "visible" && Notification.permission === "granted") {
-        if (notifCount > prev.notif && prev.notif >= 0) {
+        if (notifIncreased) {
           const n = new Notification("Nueva aprobación pendiente", {
             body: `Tienes ${notifCount} aprobación${notifCount !== 1 ? "es" : ""} pendiente${notifCount !== 1 ? "s" : ""}`,
             icon: "/favicon.ico",
           });
           n.onclick = () => window.focus();
         }
-        if (reminderCount > prev.reminder && prev.reminder >= 0) {
+        if (reminderIncreased) {
           const n = new Notification("Recordatorio pendiente", {
             body: `Tienes ${reminderCount} recordatorio${reminderCount !== 1 ? "s" : ""} por atender`,
             icon: "/favicon.ico",
@@ -69,7 +77,7 @@ export function NotificationBell() {
     await fetch("/api/reminders", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: reminderId, status: "COMPLETED" }),
+      body: JSON.stringify({ id: reminderId, status: REMINDER_STATUS.COMPLETED }),
     });
     refreshReminders();
   };
@@ -78,7 +86,7 @@ export function NotificationBell() {
     fetch("/api/reminders", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: reminderId, status: "COMPLETED" }),
+      body: JSON.stringify({ id: reminderId, status: REMINDER_STATUS.COMPLETED }),
     }).then(() => {
       refreshReminders();
       setIsOpen(false);
@@ -92,7 +100,7 @@ export function NotificationBell() {
         fetch("/api/reminders", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: r.id, status: "COMPLETED" }),
+          body: JSON.stringify({ id: r.id, status: REMINDER_STATUS.COMPLETED }),
         }),
       ),
     ).then(() => refreshReminders());
