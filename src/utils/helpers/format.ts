@@ -26,18 +26,9 @@ export function formatTotalAmount(installments: Installment[]): string {
   });
 }
 
-export function formatDuplicateOwner(
-  info?: { agente: string; coach: string | null; equipo: string | null; franquicia: string } | null,
-): string {
+export function formatDuplicateOwner(info?: { franquicia: string } | null): string {
   if (!info) return "";
-  return [
-    `Agente: ${info.agente}`,
-    info.coach ? `Coach: ${info.coach}` : null,
-    info.equipo ? `Equipo: ${info.equipo}` : null,
-    `Franquicia: ${info.franquicia}`,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  return `Franquicia: ${info.franquicia}`;
 }
 
 export function calculateAge(birthDate: string): number | null {

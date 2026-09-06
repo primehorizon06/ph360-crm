@@ -151,7 +151,7 @@ export const PATCH = withAuthParams<{ id: string }>(
     if (body.ssn && body.ssn !== decrypt(existing.ssn)) {
       const dup = await findDuplicateSsn(leadId, encryptDeterministic(body.ssn));
       if (dup)
-        return conflict("El Seguro social ya está registrado", {
+        return conflict("El seguro social ya está registrado", {
           registeredTo: describeDuplicateOwner(dup),
         });
     }

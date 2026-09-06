@@ -139,7 +139,7 @@ export const POST = withAuth(async (req, session) => {
   if (encryptedSsn) {
     const existingSsn = await findDuplicateSsn(null, encryptedSsn);
     if (existingSsn)
-      return conflict("La Seguro social ya está registrada", {
+      return conflict("El seguro social ya está registrado", {
         registeredTo: describeDuplicateOwner(existingSsn),
       });
   }
