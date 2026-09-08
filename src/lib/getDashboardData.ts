@@ -171,6 +171,7 @@ export async function getDashboardData(
     customerStatusRaw,
     productosRaw,
     pendingApprovals,
+    pendingConversionsRaw,
     leadsRaw,
     companies,
   ] = await Promise.all([
@@ -229,6 +230,26 @@ export async function getDashboardData(
     prisma.productApproval.count({
       where: { status: "PENDING", lead: leadFilter },
     }),
+    (user.role === UserRole.COACH || user.role === UserRole.SUPERVISOR)
+      ? prisma.lead.findMany({
+          where: { ...leadFilter, conversionStatus: "PENDING" },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            conversionRequestedAt: true,
+          },
+          orderBy: { conversionRequestedAt: "asc" },
+          take: 10,
+        })
+      : Promise.resolve(
+          [] as {
+            id: number;
+            firstName: string;
+            lastName: string | null;
+            conversionRequestedAt: Date | null;
+          }[],
+        ),
     prisma.lead.findMany({
       where: { ...leadFilter, createdAt: dateRange },
       select: { createdAt: true },
@@ -479,6 +500,11 @@ export async function getDashboardData(
       count: c,
     })),
     recaudoPorFranquicia,
+    pendingConversions: pendingConversionsRaw.map((l) => ({
+      id: l.id,
+      name: `${l.firstName} ${l.lastName ?? ""}`.trim(),
+      requestedAt: (l.conversionRequestedAt ?? new Date()).toISOString(),
+    })),
     meta: {
       year,
       month,

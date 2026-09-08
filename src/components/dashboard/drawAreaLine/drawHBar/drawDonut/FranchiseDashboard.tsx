@@ -8,6 +8,7 @@ import {
 } from "@/utils/interfaces/dashboard";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { ChartCard, SkeletonCard, SkeletonChart } from "@/components/dashboard/ChartCard";
+import { PendingConversionsCard } from "@/components/dashboard/PendingConversionsCard";
 import { fmt } from "@/utils/helpers/format";
 import {
   AreaChart,
@@ -93,6 +94,11 @@ export function FranchiseDashboard({ data, loading, quincena, companyName }: Fra
           variant={kpis.caida > 0 ? "danger" : "default"}
         />
       </div>
+
+      {/* ── Pendientes de aprobación (COACH / SUPERVISOR) ── */}
+      {(data.meta.role === "COACH" || data.meta.role === "SUPERVISOR") && (
+        <PendingConversionsCard leads={data.pendingConversions} />
+      )}
 
       {/* ── Cumplimiento de meta ── */}
       {data.goalAmount !== null ? (

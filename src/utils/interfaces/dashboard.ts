@@ -30,6 +30,7 @@ export interface DashboardData {
   revenuePorDia: { day: number; amount: number }[];
   leadsPerDay: { day: number; count: number }[];
   recaudoPorFranquicia: { companyId: number; name: string; recaudo: number }[];
+  pendingConversions: { id: number; name: string; requestedAt: string }[];
   meta: {
     year: number;
     month: number;

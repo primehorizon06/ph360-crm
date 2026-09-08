@@ -19,6 +19,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **feat**(storage): migra adjuntos de notas y avatares de disco local a Supabase Storage, con bucket privado para adjuntos (servidos solo vía `/api/attachments/[id]` con validación de permisos) y bucket público para avatares; cae a disco local si no hay credenciales configuradas (Docker local)
 - **feat**(companies): permite al ADMIN subir un logo por franquicia (`Company.logo`), reutilizando el mismo bucket público de avatares; nuevo endpoint `POST /api/companies/[id]/logo`, visible en el modal de editar franquicia y en el listado
 - **feat**(users): agrega columna ID a la tabla de usuarios (vista desktop) que ve el ADMIN
+- **feat**(dashboard): agrega card de leads pendientes de aprobación (`conversionStatus` PENDING) en el dashboard de COACH y SUPERVISOR, con acceso directo al tab de productos del lead
 
 ### Changed
 
@@ -45,6 +46,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **fix**(build): agrega placeholder de `SUPABASE_SERVICE_ROLE_KEY` en el `Dockerfile`; faltaba junto al de `SUPABASE_URL` y rompía el build (`env.ts` exige que ambas estén configuradas juntas)
 - **fix**(auth): el login usa `window.location.href` en vez de `router.push` tras un inicio de sesión exitoso, para que el navegador detecte una navegación real y pueda ofrecer guardar la contraseña
 - **fix**(auth): `authorize()` nunca incluía `avatar` en el objeto de usuario devuelto a NextAuth, así que el avatar jamás llegaba al JWT/sesión sin importar cuántas veces se reingresara
+- **fix**(notifications): el sonido de notificación no sonaba por la política de autoplay del navegador (el `AudioContext` queda `suspended` sin gesto del usuario); se desbloquea en el primer click/tecla de la página con `primeNotificationSound()`
 
 ### Changed
 
