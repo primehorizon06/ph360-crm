@@ -1,6 +1,7 @@
 type AudioContextCtor = typeof AudioContext;
 
 let audioCtx: AudioContext | null = null;
+let primed = false;
 
 function getAudioContextCtor(): AudioContextCtor | undefined {
   if (typeof window === "undefined") return undefined;
@@ -11,15 +12,33 @@ function getAudioContextCtor(): AudioContextCtor | undefined {
   return w.AudioContext ?? w.webkitAudioContext;
 }
 
+function ensureContext(): AudioContext | null {
+  const Ctx = getAudioContextCtor();
+  if (!Ctx) return null;
+  if (!audioCtx) audioCtx = new Ctx();
+  return audioCtx;
+}
+
+// Los navegadores crean el AudioContext en estado "suspended" hasta que hay un
+// gesto real del usuario en la página; una notificación llega por SSE sin ese
+// gesto, así que la desbloqueamos apenas ocurra el primer click/tecla/touch.
+export function primeNotificationSound() {
+  if (primed || typeof window === "undefined") return;
+  primed = true;
+  const unlock = () => {
+    const ctx = ensureContext();
+    if (ctx?.state === "suspended") void ctx.resume();
+  };
+  window.addEventListener("pointerdown", unlock, { once: true });
+  window.addEventListener("keydown", unlock, { once: true });
+}
+
 // Beep sintetizado (dos tonos) en vez de un archivo de audio, para no depender
 // de un asset binario ni de licencias.
 export function playNotificationSound() {
   try {
-    const Ctx = getAudioContextCtor();
-    if (!Ctx) return;
-
-    if (!audioCtx) audioCtx = new Ctx();
-    const ctx = audioCtx;
+    const ctx = ensureContext();
+    if (!ctx) return;
     if (ctx.state === "suspended") void ctx.resume();
 
     const now = ctx.currentTime;

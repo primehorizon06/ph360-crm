@@ -5,7 +5,7 @@ import { Bell, CheckCircle, ShoppingBag, X } from "lucide-react";
 import { useReminderNotifications } from "@/hooks/useReminderNotifications";
 import { useNotifications } from "@/hooks/useNotifications";
 import { REMINDER_STATUS } from "@/utils/constants/reminders";
-import { playNotificationSound } from "@/lib/notificationSound";
+import { playNotificationSound, primeNotificationSound } from "@/lib/notificationSound";
 import { useRouter } from "next/navigation";
 
 export function NotificationBell() {
@@ -23,6 +23,7 @@ export function NotificationBell() {
     if (typeof Notification !== "undefined" && Notification.permission === "default") {
       void Notification.requestPermission();
     }
+    primeNotificationSound();
   }, []);
 
   useEffect(() => {
