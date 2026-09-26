@@ -17,6 +17,7 @@
     "docker:studio": "docker-compose exec nextjs-dev npx prisma studio",
     "docker:seed": "docker-compose exec nextjs-dev npx prisma db seed",
     "docker:shell": "docker-compose exec nextjs-dev sh",
+    "docker:install": "docker-compose exec nextjs-dev npm install",
     "prepare": "husky",
     "changelog": "node scripts/changelog.mjs"
   },

@@ -40,6 +40,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **style**(ui): reemplaza toda mención restante de "Empresa"/"Empresas" por "Franquicia"/"Franquicias" en columnas, checkboxes y títulos de página, para usar terminología consistente en toda la app
 - **chore**(husky): valida commits convencionales y actualiza el changelog automáticamente
 - **refactor**(leads): centraliza el formato del SSN en formatSsn
+- **chore**(husky): valida migraciones de Prisma, bloquea secretos y avisa cambios al traer código
 
 ### Fixed
 
