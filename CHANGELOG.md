@@ -54,6 +54,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **fix**(notifications): el sonido de notificación no sonaba por la política de autoplay del navegador (el `AudioContext` queda `suspended` sin gesto del usuario); se desbloquea en el primer click/tecla de la página con `primeNotificationSound()`
 - **fix**(search): encuentra teléfonos y SSN sin importar el formato
 - **fix**(search): evita error 500 al buscar números fuera del rango de ID
+- **fix**(husky): ejecuta los hooks con el Node de WSL también desde Git Bash
 
 ### Changed
 
