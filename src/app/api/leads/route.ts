@@ -7,7 +7,12 @@ import { encryptDeterministic } from "@/lib/crypto";
 import { leadSchema } from "@/lib/validations/lead";
 import { UserRole } from "@/utils/constants/roles";
 import { logAudit, getRequestMeta } from "@/lib/audit";
-import { findDuplicatePhone, findDuplicateSsn, describeDuplicateOwner } from "@/lib/leadService";
+import {
+  findDuplicatePhone,
+  findDuplicateSsn,
+  describeDuplicateOwner,
+  findLeadIdsByPhoneDigits,
+} from "@/lib/leadService";
 
 const LIMIT_DEFAULT = 50;
 const LIMIT_MAX = 200;
@@ -38,6 +43,7 @@ export const GET = withAuth(async (req, session) => {
   }
 
   if (search) {
+    const phoneIds = await findLeadIdsByPhoneDigits(search);
     where = {
       ...where,
       OR: [
@@ -45,6 +51,7 @@ export const GET = withAuth(async (req, session) => {
         { lastName: { contains: search, mode: "insensitive" } },
         { phone1: { contains: search } },
         { email: { contains: search, mode: "insensitive" } },
+        ...(phoneIds.length ? [{ id: { in: phoneIds } }] : []),
       ],
     };
   }
@@ -69,7 +76,9 @@ export const GET = withAuth(async (req, session) => {
     },
     company: { select: { name: true } },
     convertedAt: true,
-    products: { select: { id: true, product: true } },
+    products: {
+      select: { id: true, catalog: { select: { id: true, name: true, color: true } } },
+    },
   };
 
   const [data, total] = await Promise.all([

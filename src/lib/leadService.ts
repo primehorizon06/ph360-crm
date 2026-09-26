@@ -37,8 +37,46 @@ export function describeDuplicateOwner(dup: DuplicateOwner) {
 export async function findLeadProduct(leadId: number, productId: number) {
   const [lead, product] = await Promise.all([
     prisma.lead.findUnique({ where: { id: leadId } }),
-    prisma.product.findUnique({ where: { id: productId } }),
+    prisma.product.findUnique({
+      where: { id: productId },
+      include: { catalog: true },
+    }),
   ]);
   if (!lead || !product || product.leadId !== leadId) return null;
   return { lead, product };
+}
+
+export function parseInstallments(raw: unknown) {
+  if (!Array.isArray(raw) || raw.length === 0) return null;
+  const installments = raw.map(
+    (i: { number: number; date: string; amount: string | number }) => ({
+      number: Number(i.number),
+      date: new Date(i.date),
+      amount: Number(i.amount),
+    }),
+  );
+  const valid = installments.every(
+    (i) =>
+      Number.isInteger(i.number) &&
+      !Number.isNaN(i.date.getTime()) &&
+      Number.isFinite(i.amount) &&
+      i.amount > 0,
+  );
+  return valid ? installments : null;
+}
+
+const MIN_PHONE_DIGITS = 4;
+
+export async function findLeadIdsByPhoneDigits(query: string): Promise<number[]> {
+  if (!/^[\d\s()+\-.]+$/.test(query)) return [];
+  const digits = query.replace(/\D/g, "");
+  if (digits.length < MIN_PHONE_DIGITS) return [];
+
+  const pattern = `%${digits}%`;
+  const rows = await prisma.$queryRaw<{ id: number }[]>`
+    SELECT id FROM "Lead"
+    WHERE regexp_replace(phone1, '[^0-9]', '', 'g') LIKE ${pattern}
+       OR regexp_replace(coalesce(phone2, ''), '[^0-9]', '', 'g') LIKE ${pattern}
+  `;
+  return rows.map((r) => r.id);
 }

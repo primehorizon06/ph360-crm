@@ -51,6 +51,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **fix**(auth): el login usa `window.location.href` en vez de `router.push` tras un inicio de sesión exitoso, para que el navegador detecte una navegación real y pueda ofrecer guardar la contraseña
 - **fix**(auth): `authorize()` nunca incluía `avatar` en el objeto de usuario devuelto a NextAuth, así que el avatar jamás llegaba al JWT/sesión sin importar cuántas veces se reingresara
 - **fix**(notifications): el sonido de notificación no sonaba por la política de autoplay del navegador (el `AudioContext` queda `suspended` sin gesto del usuario); se desbloquea en el primer click/tecla de la página con `primeNotificationSound()`
+- **fix**(search): encuentra teléfonos y SSN sin importar el formato
 
 ### Changed
 
