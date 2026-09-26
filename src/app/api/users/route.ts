@@ -79,7 +79,19 @@ export const GET = withAuth(async (req, session) => {
     });
   }
 
-  if (session.user.role !== UserRole.ADMIN && !teamId) return forbidden();
+  if (session.user.role !== UserRole.ADMIN) {
+    if (!teamId) return forbidden();
+
+    // SUPERVISOR: cualquier equipo de su franquicia. COACH/AGENT: solo el suyo.
+    const canSeeTeam =
+      session.user.role === UserRole.SUPERVISOR
+        ? !!(await prisma.team.findFirst({
+            where: { id: Number(teamId), companyId: Number(session.user.companyId) },
+            select: { id: true },
+          }))
+        : Number(teamId) === Number(session.user.teamId);
+    if (!canSeeTeam) return forbidden();
+  }
 
   const users = await prisma.user.findMany({
     where: {

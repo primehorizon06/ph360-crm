@@ -58,6 +58,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **fix**(husky): ejecuta los hooks con el Node de WSL también desde Git Bash
 - **fix**(reminders): valida el acceso al lead y el responsable al crear o reasignar recordatorios
 - **fix**(notifications): impide marcar como leídas notificaciones de otros usuarios
+- **fix**(users): restringe el listado de usuarios por equipo según el rol
 
 ### Changed
 
