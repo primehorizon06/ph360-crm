@@ -43,3 +43,6 @@ next-env.d.ts
 
 /src/generated/prisma
 
+
+# Metadatos de Windows al copiar archivos a WSL
+*:Zone.Identifier
