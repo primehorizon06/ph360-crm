@@ -16,7 +16,9 @@
     "docker:migrate": "docker-compose exec nextjs-dev npx prisma migrate dev",
     "docker:studio": "docker-compose exec nextjs-dev npx prisma studio",
     "docker:seed": "docker-compose exec nextjs-dev npx prisma db seed",
-    "docker:shell": "docker-compose exec nextjs-dev sh"
+    "docker:shell": "docker-compose exec nextjs-dev sh",
+    "prepare": "husky",
+    "changelog": "node scripts/changelog.mjs"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
@@ -49,6 +51,7 @@
     "dotenv": "^16.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
+    "husky": "^9.1.7",
     "prisma": "^5.22.0",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
