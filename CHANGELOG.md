@@ -20,6 +20,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **feat**(companies): permite al ADMIN subir un logo por franquicia (`Company.logo`), reutilizando el mismo bucket público de avatares; nuevo endpoint `POST /api/companies/[id]/logo`, visible en el modal de editar franquicia y en el listado
 - **feat**(users): agrega columna ID a la tabla de usuarios (vista desktop) que ve el ADMIN
 - **feat**(dashboard): agrega card de leads pendientes de aprobación (`conversionStatus` PENDING) en el dashboard de COACH y SUPERVISOR, con acceso directo al tab de productos del lead
+- **feat**(ui): agrega componente Switch reutilizable
 
 ### Changed
 
