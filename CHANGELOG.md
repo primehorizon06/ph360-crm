@@ -24,6 +24,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **feat**(products): permite administrar el catálogo de productos
 - **feat**(leads): muestra el ID en las tablas de leads y clientes
 - **feat**(auth): muestra el logo en la pantalla de login
+- **feat**(ui): agrega favicon de la aplicación
 
 ### Changed
 
