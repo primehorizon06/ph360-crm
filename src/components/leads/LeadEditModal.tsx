@@ -11,7 +11,7 @@ import { useSession } from "next-auth/react";
 import { CustomSelect } from "../ui/Select";
 import { Props } from "@/utils/interfaces/leadEditModal";
 import { CUSTOMER_STATUS, LEAD_FIELDS, STATUS } from "@/utils/constants/leads";
-import { formatPhone, formatDuplicateOwner, calculateAge } from "@/utils/helpers/format";
+import { formatPhone, formatSsn, formatDuplicateOwner, calculateAge } from "@/utils/helpers/format";
 import { UserRole } from "@/utils/constants/roles";
 import { fetcher } from "@/lib/fetcher";
 
@@ -78,13 +78,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
   );
 
   function handleSsnChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const digits = e.target.value.replace(/\D/g, "").slice(0, 9);
-    let masked = digits;
-    if (digits.length > 5)
-      masked = `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5)}`;
-    else if (digits.length > 3)
-      masked = `${digits.slice(0, 3)}-${digits.slice(3)}`;
-    setValue("ssn", masked, { shouldValidate: true });
+    setValue("ssn", formatSsn(e.target.value), { shouldValidate: true });
   }
 
   async function onSubmit(data: LeadFormData) {

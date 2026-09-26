@@ -10,7 +10,7 @@ import { leadSchema, LeadFormData } from "@/lib/validations/lead";
 import { X } from "lucide-react";
 import { LEAD_FIELDS, STATUS } from "@/utils/constants/leads";
 import { CustomSelect } from "../ui/Select";
-import { formatPhone, formatDuplicateOwner, calculateAge } from "@/utils/helpers/format";
+import { formatPhone, formatSsn, formatDuplicateOwner, calculateAge } from "@/utils/helpers/format";
 import { UserRole } from "@/utils/constants/roles";
 import { fetcher } from "@/lib/fetcher";
 
@@ -62,13 +62,7 @@ export function LeadModal({ onClose, onSave }: Props) {
   );
 
   function handleSsnChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const digits = e.target.value.replace(/\D/g, "").slice(0, 9);
-    let masked = digits;
-    if (digits.length > 5)
-      masked = `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5)}`;
-    else if (digits.length > 3)
-      masked = `${digits.slice(0, 3)}-${digits.slice(3)}`;
-    setValue("ssn", masked, { shouldValidate: true });
+    setValue("ssn", formatSsn(e.target.value), { shouldValidate: true });
   }
 
   async function onSubmit(data: LeadFormData) {
