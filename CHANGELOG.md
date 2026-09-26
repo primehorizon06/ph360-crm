@@ -57,6 +57,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **fix**(search): evita error 500 al buscar números fuera del rango de ID
 - **fix**(husky): ejecuta los hooks con el Node de WSL también desde Git Bash
 - **fix**(reminders): valida el acceso al lead y el responsable al crear o reasignar recordatorios
+- **fix**(notifications): impide marcar como leídas notificaciones de otros usuarios
 
 ### Changed
 

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withAuth, badRequest } from "@/lib/api";
+import { withAuth, badRequest, notFound } from "@/lib/api";
 
 export const GET = withAuth(async (_req, session) => {
   const notifications = await prisma.notification.findMany({
@@ -51,10 +51,11 @@ export const PATCH = withAuth(async (req, session) => {
 
   if (!id) return badRequest("ID requerido");
 
-  const updated = await prisma.notification.update({
-    where: { id: Number(id) },
+  const { count } = await prisma.notification.updateMany({
+    where: { id: Number(id), userId: Number(session.user.id) },
     data: { read: true },
   });
+  if (count === 0) return notFound("Notificación no encontrada");
 
-  return NextResponse.json(updated);
+  return NextResponse.json({ ok: true });
 });
