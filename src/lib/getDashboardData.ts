@@ -223,9 +223,9 @@ export async function getDashboardData(
       _count: { customerStatus: true },
     }),
     prisma.product.groupBy({
-      by: ["product"],
+      by: ["catalogId"],
       where: { createdAt: dateRange, lead: leadFilter },
-      _count: { product: true },
+      _count: { catalogId: true },
     }),
     prisma.productApproval.count({
       where: { status: "PENDING", lead: leadFilter },
@@ -462,6 +462,15 @@ export async function getDashboardData(
     );
   }
 
+  const catalogNames = new Map(
+    (
+      await prisma.productCatalog.findMany({
+        where: { id: { in: productosRaw.map((r) => r.catalogId) } },
+        select: { id: true, name: true },
+      })
+    ).map((c) => [c.id, c.name]),
+  );
+
   return {
     companies,
     kpis: {
@@ -487,8 +496,8 @@ export async function getDashboardData(
       count: r._count.customerStatus,
     })),
     productos: productosRaw.map((r) => ({
-      type: r.product,
-      count: r._count.product,
+      type: catalogNames.get(r.catalogId) ?? String(r.catalogId),
+      count: r._count.catalogId,
     })),
     agentRanking,
     revenuePorDia: Object.entries(revMap).map(([d, a]) => ({

@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Plus,
   ShieldCheck,
+  Package,
 } from "lucide-react";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import { LeadModal } from "../leads/LeadModal";
@@ -39,6 +40,12 @@ const navItems: {
     label: "Franquicias",
     icon: Building2,
     href: "/companies",
+    roles: [UserRole.ADMIN],
+  },
+  {
+    label: "Productos",
+    icon: Package,
+    href: "/products",
     roles: [UserRole.ADMIN],
   },
   {

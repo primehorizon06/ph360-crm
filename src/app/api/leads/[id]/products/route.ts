@@ -4,6 +4,8 @@ import { withAuthParams, badRequest, forbidden, notFound } from "@/lib/api";
 import { canAccessLead } from "@/lib/permissions";
 import { encryptRandom, decrypt } from "@/lib/crypto";
 import { productSchema } from "@/lib/validations/product";
+import { checkPlanTotal } from "@/lib/validations/productCatalog";
+import { parseInstallments } from "@/lib/leadService";
 import { logAudit, getRequestMeta } from "@/lib/audit";
 import { notifyLeadReviewers } from "@/lib/approvalService";
 
@@ -21,6 +23,7 @@ export const GET = withAuthParams<{ id: string }>(
           include: { installments: { orderBy: { number: "asc" } } },
         },
         approval: true,
+        catalog: { select: { id: true, name: true, color: true } },
       },
       orderBy: { createdAt: "asc" },
     });
@@ -50,20 +53,35 @@ export const POST = withAuthParams<{ id: string }>(
     if (!canAccessLead(session.user, lead)) return forbidden();
 
     const body = await req.json();
-    const { product, paymentMethod } = body;
+    const { catalogId, paymentMethod } = body;
 
-    if (!product || !paymentMethod?.type)
+    if (!catalogId || !paymentMethod?.type)
       return badRequest("Producto y método de pago son requeridos");
 
     // productSchema espera un objeto plano (paymentType + campos), no el
-    // { product, paymentMethod: { type, ... } } que envía el cliente.
+    // { catalogId, paymentMethod: { type, ... } } que envía el cliente.
     const parsed = productSchema.safeParse({
-      product,
+      catalogId: String(catalogId),
       paymentType: paymentMethod.type,
       ...paymentMethod,
     });
     if (!parsed.success)
       return badRequest(parsed.error.issues[0]?.message ?? "Datos inválidos");
+
+    const catalog = await prisma.productCatalog.findUnique({
+      where: { id: Number(catalogId) },
+    });
+    if (!catalog || !catalog.active)
+      return badRequest("El producto no existe o está inactivo");
+
+    const installments = parseInstallments(body.installments);
+    if (!installments) return badRequest("Se requiere al menos una cuota válida");
+
+    const planError = checkPlanTotal(
+      installments.reduce((acc, i) => acc + i.amount, 0),
+      catalog,
+    );
+    if (planError) return badRequest(planError);
 
     const existingCount = await prisma.product.count({
       where: { leadId },
@@ -73,7 +91,8 @@ export const POST = withAuthParams<{ id: string }>(
     const leadProduct = await prisma.product.create({
       data: {
         leadId,
-        product,
+        catalogId: catalog.id,
+        paymentPlan: { create: { installments: { create: installments } } },
         paymentMethod: {
           create: {
             type: paymentMethod.type,
@@ -89,7 +108,13 @@ export const POST = withAuthParams<{ id: string }>(
           },
         },
       },
-      include: { paymentMethod: true },
+      include: {
+        paymentMethod: true,
+        paymentPlan: {
+          include: { installments: { orderBy: { number: "asc" } } },
+        },
+        catalog: { select: { id: true, name: true, color: true } },
+      },
     });
 
     await prisma.productApproval.create({
@@ -124,7 +149,7 @@ export const POST = withAuthParams<{ id: string }>(
       actor: { id: session.user.id, role: session.user.role, name: session.user.name },
       entityType: "Product",
       entityId: leadProduct.id,
-      metadata: { leadId, product, paymentType: paymentMethod.type },
+      metadata: { leadId, catalogId: catalog.id, product: catalog.name, paymentType: paymentMethod.type },
       ...getRequestMeta(req),
     });
 

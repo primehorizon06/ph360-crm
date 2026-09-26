@@ -23,13 +23,14 @@ import {
   DataPicker,
   PaymentMethodType,
   Product,
+  ProductCatalogItem,
   Props,
 } from "@/utils/interfaces/products";
 import {
-  PRODUCT_COLORS,
-  PRODUCT_LABELS,
-  PRODUCTS,
+  formatProductRange,
+  productColorClass,
 } from "@/utils/constants/products";
+import { checkPlanTotal } from "@/lib/validations/productCatalog";
 import { CustomSelect } from "@/components/ui/Select";
 import { Installment } from "@/utils/interfaces/paymentPlanPicker";
 import { PaymentPlanPicker } from "@/components/leads/PaymentPlanPicker/PaymentPlanPicker";
@@ -148,6 +149,11 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
     isLoading: loading,
     mutate: reloadProducts,
   } = useSWR<Product[]>(`/api/leads/${leadId}/products`, fetcher);
+  const { data: catalog = [] } = useSWR<ProductCatalogItem[]>(
+    "/api/product-catalog",
+    fetcher,
+  );
+  const activeCatalog = catalog.filter((c) => c.active);
   const [showForm, setShowForm] = useState(false);
   const [installments, setInstallments] = useState<Installment[]>([]);
   const [saving, setSaving] = useState(false);
@@ -167,7 +173,8 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
   });
 
   const paymentType = useWatch({ control, name: "paymentType" });
-  const product = useWatch({ control, name: "product" });
+  const catalogId = useWatch({ control, name: "catalogId" });
+  const selectedCatalog = activeCatalog.find((c) => String(c.id) === catalogId);
 
   function resetForm() {
     reset({ paymentType: "TARJETA" });
@@ -187,6 +194,14 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
     if (hasEmptyAmounts) {
       setError("root", { message: "Todas las cuotas deben tener un monto mayor a 0" });
       return;
+    }
+    if (selectedCatalog) {
+      const total = installments.reduce((acc, i) => acc + parseFloat(i.amount), 0);
+      const rangeError = checkPlanTotal(total, selectedCatalog);
+      if (rangeError) {
+        setError("root", { message: rangeError });
+        return;
+      }
     }
     clearErrors("root");
     setPendingData(data);
@@ -217,20 +232,9 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
     const res = await fetch(`/api/leads/${leadId}/products`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ product: pendingData.product, paymentMethod }),
-    });
-
-    if (!res.ok) {
-      setSaving(false);
-      return;
-    }
-
-    const newProduct = await res.json();
-
-    await fetch(`/api/leads/${leadId}/products/${newProduct.id}/payment-plan`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        catalogId: Number(pendingData.catalogId),
+        paymentMethod,
         installments: installments.map((i) => ({
           number: i.number,
           date: i.date.toISOString(),
@@ -240,6 +244,13 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
     });
 
     setSaving(false);
+
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      toast.error(json.error ?? "Error al asociar el producto");
+      return;
+    }
+
     setPendingData(null);
     toast.success("Producto asociado exitosamente");
     resetForm();
@@ -298,24 +309,29 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
             <label className="text-lg text-on-surface-variant">Producto</label>
             <Controller
               control={control}
-              name="product"
+              name="catalogId"
               render={({ field }) => (
                 <CustomSelect
-                  name="product"
+                  name="catalogId"
                   value={field.value ?? ""}
                   onChange={field.onChange}
-                  options={PRODUCTS}
-                  labels={PRODUCTS.map((p) => PRODUCT_LABELS[p])}
+                  options={activeCatalog.map((c) => String(c.id))}
+                  labels={activeCatalog.map((c) => c.name)}
                   searchable={false}
                 />
               )}
             />
-            {errors.product && (
-              <p className="text-red-400 text-lg">{errors.product.message}</p>
+            {errors.catalogId && (
+              <p className="text-red-400 text-lg">{errors.catalogId.message}</p>
+            )}
+            {selectedCatalog && (
+              <p className="text-on-surface-variant text-sm">
+                Total del plan: {formatProductRange(selectedCatalog)}
+              </p>
             )}
           </div>
 
-          {product && (
+          {catalogId && (
             <div className="space-y-1">
               <label className="text-lg text-on-surface-variant">Método de pago</label>
               <Controller
@@ -590,10 +606,10 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
 
                 <div className="flex items-start justify-between gap-2">
                   <span
-                    className={`inline-flex items-center gap-1.5 text-sm font-medium px-2.5 py-1 rounded-full border ${PRODUCT_COLORS[lp.product]}`}
+                    className={`inline-flex items-center gap-1.5 text-sm font-medium px-2.5 py-1 rounded-full border ${productColorClass(lp.catalog.color)}`}
                   >
                     <ShoppingBag size={11} />
-                    {PRODUCT_LABELS[lp.product]}
+                    {lp.catalog.name}
                   </span>
                   {lp.paymentPlan && lp.paymentPlan.installments.length > 0 && (
                     <span className="text-cyan-400 font-semibold text-lg shrink-0">
@@ -710,9 +726,10 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
         </div>
       )}
 
-      {pendingData && (
+      {pendingData && selectedCatalog && (
         <ConfirmProductModal
           data={pendingData}
+          catalog={selectedCatalog}
           installments={installments}
           saving={saving}
           onConfirm={confirmSave}

@@ -32,6 +32,10 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(new URL("/", req.url));
   }
 
+  if (path.startsWith("/products") && role !== UserRole.ADMIN) {
+    return NextResponse.redirect(new URL("/", req.url));
+  }
+
   if (
     path.startsWith("/teams") &&
     !([UserRole.ADMIN, UserRole.SUPERVISOR] as UserRole[]).includes(role)

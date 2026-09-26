@@ -60,13 +60,6 @@ export const MONTHS = [
   "Diciembre",
 ];
 
-export const PRODUCT_LABELS: Record<string, string> = {
-  ALERTA_ANUAL: "Alerta anual",
-  ALERTA_TRIMESTRAL: "Alerta trimestral",
-  REPARACION_CREDITO: "Reparación crédito",
-  FORTALECIMIENTO_FINANCIERO: "Fort. financiero",
-};
-
 export const CUSTOMER_STATUS_LABELS: Record<string, string> = {
   CONTRACT_SENT: "Contrato enviado",
   PENDING_PAYMENT_AGREEMENT: "Acuerdo pago",

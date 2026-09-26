@@ -3,11 +3,13 @@
 import { CreditCard, Building2, X, Loader2, ShoppingBag } from "lucide-react";
 import { ProductFormData } from "@/lib/validations/product";
 import { Installment } from "@/utils/interfaces/paymentPlanPicker";
-import { PRODUCT_COLORS, PRODUCT_LABELS } from "@/utils/constants/products";
+import { productColorClass } from "@/utils/constants/products";
+import { ProductCatalogRef } from "@/utils/interfaces/products";
 import { formatAmount } from "@/utils/helpers/format";
 
 interface Props {
   data: ProductFormData;
+  catalog: ProductCatalogRef;
   installments: Installment[];
   saving: boolean;
   onConfirm: () => void;
@@ -16,6 +18,7 @@ interface Props {
 
 export function ConfirmProductModal({
   data,
+  catalog,
   installments,
   saving,
   onConfirm,
@@ -49,10 +52,10 @@ export function ConfirmProductModal({
 
         {/* Badge producto */}
         <span
-          className={`inline-flex items-center gap-1.5 text-lg font-medium px-3 py-1 rounded-full border ${PRODUCT_COLORS[data.product]}`}
+          className={`inline-flex items-center gap-1.5 text-lg font-medium px-3 py-1 rounded-full border ${productColorClass(catalog.color)}`}
         >
           <ShoppingBag size={13} />
-          {PRODUCT_LABELS[data.product]}
+          {catalog.name}
         </span>
 
         {/* Método de pago */}

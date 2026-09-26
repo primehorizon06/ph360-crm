@@ -1,4 +1,5 @@
-import type { CustomerStatus, LeadStatus, ProductType, TypeCustomer } from "@prisma/client";
+import type { CustomerStatus, LeadStatus, TypeCustomer } from "@prisma/client";
+import type { ProductCatalogRef } from "./products";
 
 export interface Lead {
   id: number;
@@ -21,7 +22,7 @@ export interface Lead {
   company: { name: string };
   createdAt: string;
   updatedAt: string;
-  products?: { id: number; product: ProductType }[];
+  products?: { id: number; catalog: ProductCatalogRef }[];
   customerStatus?: CustomerStatus | null;
   convertedAt?: string | null;
   assignedTo: {

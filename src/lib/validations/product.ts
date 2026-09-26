@@ -1,17 +1,7 @@
 import z from "zod";
 
 const tarjetaSchema = z.object({
-  product: z.enum(
-    [
-      "ALERTA_ANUAL",
-      "ALERTA_TRIMESTRAL",
-      "REPARACION_CREDITO",
-      "FORTALECIMIENTO_FINANCIERO",
-    ],
-    {
-      error: "Selecciona un producto",
-    },
-  ),
+  catalogId: z.string({ error: "Selecciona un producto" }).min(1, "Selecciona un producto"),
   paymentType: z.literal("TARJETA"),
   cardType: z.enum(["DEBITO", "CREDITO"], {
     error: "Selecciona débito o crédito",
@@ -25,17 +15,7 @@ const tarjetaSchema = z.object({
 });
 
 const cuentaSchema = z.object({
-  product: z.enum(
-    [
-      "ALERTA_ANUAL",
-      "ALERTA_TRIMESTRAL",
-      "REPARACION_CREDITO",
-      "FORTALECIMIENTO_FINANCIERO",
-    ],
-    {
-      error: "Selecciona un producto",
-    },
-  ),
+  catalogId: z.string({ error: "Selecciona un producto" }).min(1, "Selecciona un producto"),
   paymentType: z.literal("CUENTA"),
   accountNumber: z.string().min(1, "Ingresa el número de cuenta"),
   accountHolder: z.string().min(1, "Ingresa el titular de la cuenta"),

@@ -9,7 +9,6 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import { RejectModal } from "../../RejectModal/RejectModal";
-import { PRODUCT_LABELS } from "@/utils/constants/products";
 import { Product } from "@/utils/interfaces/products";
 import { useState } from "react";
 import {
@@ -109,7 +108,7 @@ export function ProductChecklistItem({
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 text-sm font-medium px-2.5 py-1 rounded-full border text-amber-400 bg-amber-500/10 border-amber-500/20">
               <ShoppingBag size={11} />
-              {PRODUCT_LABELS[product.product as keyof typeof PRODUCT_LABELS]}
+              {product.catalog.name}
             </span>
             <span className="text-white/90 text-sm">
               {checkedCount}/{ALL_STEPS_APPROVAL.length} revisados

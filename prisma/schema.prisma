@@ -240,13 +240,6 @@ model Reminder {
 
 // ─── ENUMS (agregar) ─────────────────────────────────────────────────────────
 
-enum ProductType {
-  ALERTA_ANUAL
-  ALERTA_TRIMESTRAL
-  REPARACION_CREDITO
-  FORTALECIMIENTO_FINANCIERO
-}
-
 enum PaymentMethodType {
   TARJETA
   CUENTA
@@ -255,6 +248,19 @@ enum PaymentMethodType {
 enum CardType {
   DEBITO
   CREDITO
+}
+
+model ProductCatalog {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  minValue  Decimal  @db.Decimal(10, 2)
+  maxValue  Decimal? @db.Decimal(10, 2)
+  active    Boolean  @default(true)
+  color     String   @default("cyan")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[]
 }
 
 // ─── PRODUCTO DEL LEAD ───────────────────────────────────────────────────────
@@ -267,14 +273,17 @@ enum ProductStatus {
 model Product {
   id        Int              @id @default(autoincrement())
   leadId    Int
-  product   ProductType
+  catalogId Int
   createdAt DateTime         @default(now())
   status    ProductStatus    @default(ACTIVE)
   approval  ProductApproval?
 
   lead          Lead           @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  catalog       ProductCatalog @relation(fields: [catalogId], references: [id])
   paymentMethod PaymentMethod?
   paymentPlan   PaymentPlan?
+
+  @@index([catalogId])
 }
 
 enum AccountType {
@@ -416,6 +425,8 @@ enum AuditAction {
   PRODUCT_CREATED
   PRODUCT_APPROVED
   PRODUCT_REJECTED
+  PRODUCT_CATALOG_CREATED
+  PRODUCT_CATALOG_UPDATED
   COMPANY_CREATED
   COMPANY_UPDATED
   COMPANY_DELETED

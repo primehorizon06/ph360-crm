@@ -5,10 +5,21 @@ import type {
   InstallmentStatus,
   PaymentMethodType,
   ProductStatus,
-  ProductType,
 } from "@prisma/client";
 
-export type { CardType, PaymentMethodType, ProductType };
+export type { CardType, PaymentMethodType };
+
+export interface ProductCatalogItem {
+  id: number;
+  name: string;
+  minValue: string;
+  maxValue: string | null;
+  active: boolean;
+  color: string;
+  _count?: { products: number };
+}
+
+export type ProductCatalogRef = Pick<ProductCatalogItem, "id" | "name" | "color">;
 
 export interface PaymentMethod {
   type: PaymentMethodType;
@@ -36,7 +47,8 @@ export interface ProductApproval {
 
 export interface Product {
   id: number;
-  product: ProductType;
+  catalogId: number;
+  catalog: ProductCatalogRef;
   createdAt: string;
   paymentMethod: PaymentMethod & { id: number };
   paymentPlan?: {
