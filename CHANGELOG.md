@@ -45,6 +45,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **refactor**(leads): centraliza el formato del SSN en formatSsn
 - **chore**(husky): valida migraciones de Prisma, bloquea secretos y avisa cambios al traer código
 - **chore**(git): ignora los archivos Zone.Identifier de Windows
+- **chore**(git): deja de versionar los archivos subidos por usuarios
 
 ### Fixed
 

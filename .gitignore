@@ -46,3 +46,9 @@ next-env.d.ts
 
 # Metadatos de Windows al copiar archivos a WSL
 *:Zone.Identifier
+
+# Archivos subidos por usuarios (datos de clientes)
+/public/uploads/
+
+# Informes locales del skill /revisar
+/docs/auditorias/
