@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ReminderWhere, UpdateReminderData } from "@/utils/interfaces/reminders";
-import { withAuth, badRequest, notFound } from "@/lib/api";
+import { withAuth, badRequest, notFound, forbidden } from "@/lib/api";
 import { REMINDER_STATUS } from "@/utils/constants/reminders";
+import { canAccessLead } from "@/lib/permissions";
+import { isValidReminderAssignee } from "@/lib/leadService";
 
 export const GET = withAuth(async (req, session) => {
   const searchParams = req.nextUrl.searchParams;
@@ -77,6 +79,13 @@ export const POST = withAuth(async (req, session) => {
   if (!scheduledAt || !reason || !assignedToId || !leadId)
     return badRequest("Todos los campos son requeridos");
 
+  const lead = await prisma.lead.findUnique({ where: { id: Number(leadId) } });
+  if (!lead) return notFound("Lead no encontrado");
+  if (!canAccessLead(session.user, lead)) return forbidden();
+
+  if (!(await isValidReminderAssignee(Number(assignedToId), lead.companyId)))
+    return badRequest("El responsable no pertenece a la franquicia del lead");
+
   const reminder = await prisma.reminder.create({
     data: {
       leadId: Number(leadId),
@@ -119,9 +128,16 @@ export const PATCH = withAuth(async (req, session) => {
       id: Number(id),
       assignedToId: Number(session.user.id),
     },
+    include: { lead: { select: { companyId: true } } },
   });
 
   if (!existingReminder) return notFound("Recordatorio no encontrado");
+
+  if (
+    assignedToId &&
+    !(await isValidReminderAssignee(Number(assignedToId), existingReminder.lead.companyId))
+  )
+    return badRequest("El responsable no pertenece a la franquicia del lead");
 
   const updateData: UpdateReminderData = {};
   if (status) updateData.status = status;

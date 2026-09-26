@@ -46,6 +46,17 @@ export async function findLeadProduct(leadId: number, productId: number) {
   return { lead, product };
 }
 
+// El responsable de un recordatorio debe ser un usuario activo de la misma
+// franquicia del lead; así un recordatorio no expone el lead fuera de ella.
+export async function isValidReminderAssignee(assigneeId: number, leadCompanyId: number) {
+  if (!Number.isInteger(assigneeId)) return false;
+  const assignee = await prisma.user.findFirst({
+    where: { id: assigneeId, companyId: leadCompanyId, active: true },
+    select: { id: true },
+  });
+  return !!assignee;
+}
+
 export function parseInstallments(raw: unknown) {
   if (!Array.isArray(raw) || raw.length === 0) return null;
   const installments = raw.map(
