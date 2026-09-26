@@ -5,7 +5,9 @@ import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { Loading } from "@/components/ui/Loading";
+import logo from "@/assets/logo.svg";
 import { toast } from "sonner";
+import Image from "next/image";
 
 function SearchParamsWatcher() {
   const searchParams = useSearchParams();
@@ -65,6 +67,13 @@ export default function LoginPage() {
       </Suspense>
       <div className="elative z-10 w-full max-w-[420px] px-6">
         <div className="text-center mb-10">
+          <Image
+            src={logo}
+            className="mx-auto"
+            width={176}
+            height={86}
+            alt="PH360 CRM"
+          />
           <h1 className="font-headline font-extrabold text-3xl tracking-tighter text-on-surface mb-1">
             PH360 CRM
           </h1>
