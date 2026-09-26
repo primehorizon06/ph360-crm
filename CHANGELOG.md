@@ -52,6 +52,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **fix**(auth): `authorize()` nunca incluía `avatar` en el objeto de usuario devuelto a NextAuth, así que el avatar jamás llegaba al JWT/sesión sin importar cuántas veces se reingresara
 - **fix**(notifications): el sonido de notificación no sonaba por la política de autoplay del navegador (el `AudioContext` queda `suspended` sin gesto del usuario); se desbloquea en el primer click/tecla de la página con `primeNotificationSound()`
 - **fix**(search): encuentra teléfonos y SSN sin importar el formato
+- **fix**(search): evita error 500 al buscar números fuera del rango de ID
 
 ### Changed
 

@@ -4,8 +4,11 @@ import { withAuth, forbidden } from "@/lib/api";
 import { buildScopeFilter } from "@/lib/permissions";
 import { Prisma } from "@prisma/client";
 import { encryptDeterministic } from "@/lib/crypto";
+import { findLeadIdsByPhoneDigits } from "@/lib/leadService";
+import { formatSsn } from "@/utils/helpers/format";
 
 const RESULTS_LIMIT = 10;
+const MAX_INT4 = 2_147_483_647;
 
 export const GET = withAuth(async (req, session) => {
   const url = new URL(req.url);
@@ -26,8 +29,16 @@ export const GET = withAuth(async (req, session) => {
     { ssn: encryptDeterministic(query) },
   ];
 
+  const ssnFormatted = formatSsn(query);
+  if (/^[\d\s-]+$/.test(query) && ssnFormatted !== query) {
+    orConditions.push({ ssn: encryptDeterministic(ssnFormatted) });
+  }
+
+  const phoneIds = await findLeadIdsByPhoneDigits(query);
+  if (phoneIds.length) orConditions.push({ id: { in: phoneIds } });
+
   const idQuery = Number(query);
-  if (Number.isInteger(idQuery) && idQuery > 0) {
+  if (Number.isInteger(idQuery) && idQuery > 0 && idQuery <= MAX_INT4) {
     orConditions.push({ id: idQuery });
   }
 
