@@ -16,8 +16,7 @@ import {
   STATUS_COLORS,
 } from "@/utils/constants/leads";
 import { CustomSelect } from "@/components/ui/Select";
-import { PRODUCT_COLORS, PRODUCT_LABELS } from "@/utils/constants/products";
-import { ProductType } from "@/utils/interfaces/products";
+import { productColorClass } from "@/utils/constants/products";
 import { UserRole } from "@/utils/constants/roles";
 import { fetcher } from "@/lib/fetcher";
 
@@ -72,6 +71,7 @@ export function LeadsListView({ type }: Props) {
 
   const headers = useMemo(
     () => [
+      "ID",
       "Nombre",
       "Teléfono",
       ...(isAdmin ? ["Franquicia"] : []),
@@ -172,6 +172,9 @@ export function LeadsListView({ type }: Props) {
                   onClick={() => router.push(`${basePath}/${lead.id}`)}
                   className="hover:bg-white/5 transition-colors cursor-pointer"
                 >
+                  <td className="px-4 py-3 text-lg text-white/90">
+                    {lead.id}
+                  </td>
                   <td className="px-4 py-3 text-lg text-white font-medium">
                     {lead.firstName} {lead.lastName}
                   </td>
@@ -206,9 +209,9 @@ export function LeadsListView({ type }: Props) {
                             lead.products.map((p) => (
                               <span
                                 key={p.id}
-                                className={`text-sm px-2 py-0.5 rounded-full border font-medium whitespace-nowrap ${PRODUCT_COLORS[p.product as ProductType]}`}
+                                className={`text-sm px-2 py-0.5 rounded-full border font-medium whitespace-nowrap ${productColorClass(p.catalog.color)}`}
                               >
-                                {PRODUCT_LABELS[p.product as ProductType]}
+                                {p.catalog.name}
                               </span>
                             ))
                           ) : (
@@ -256,7 +259,9 @@ export function LeadsListView({ type }: Props) {
                   <p className="text-white font-medium text-lg">
                     {lead.firstName} {lead.lastName}
                   </p>
-                  <p className="text-on-surface-variant text-sm">{lead.phone1}</p>
+                  <p className="text-on-surface-variant text-sm">
+                    #{lead.id} · {lead.phone1}
+                  </p>
                 </div>
                 {isLead ? (
                   <span
@@ -284,7 +289,7 @@ export function LeadsListView({ type }: Props) {
                       key={p.id}
                       className="text-sm px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
                     >
-                      {p.product.replace(/_/g, " ")}
+                      {p.catalog.name}
                     </span>
                   ))}
                 </div>

@@ -22,6 +22,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **feat**(dashboard): agrega card de leads pendientes de aprobación (`conversionStatus` PENDING) en el dashboard de COACH y SUPERVISOR, con acceso directo al tab de productos del lead
 - **feat**(ui): agrega componente Switch reutilizable
 - **feat**(products): permite administrar el catálogo de productos
+- **feat**(leads): muestra el ID en las tablas de leads y clientes
 
 ### Changed
 
