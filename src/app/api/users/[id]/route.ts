@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { withAuthParams, forbidden, conflict, badRequest } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
 import { userSchema } from "@/lib/validations/user";
+import { isGlobalRole } from "@/lib/permissions";
 import { logAudit, getRequestMeta } from "@/lib/audit";
 import { optionalField, optionalNumber } from "@/lib/patchFields";
 
@@ -27,8 +28,9 @@ export const PATCH = withAuthParams<{ id: string }>(
         email: optionalField(email),
         role,
         active,
-        companyId: Number(companyId),
-        teamId: optionalNumber(teamId),
+        // ADMIN y Customer Service Holding no pertenecen a ninguna franquicia ni equipo.
+        companyId: isGlobalRole(role) ? null : Number(companyId),
+        teamId: isGlobalRole(role) ? null : optionalNumber(teamId),
       }).filter(([, value]) => value !== undefined),
     );
 

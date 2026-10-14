@@ -13,12 +13,16 @@ import { Props } from "@/utils/interfaces/leadEditModal";
 import { CUSTOMER_STATUS, LEAD_FIELDS, STATUS } from "@/utils/constants/leads";
 import { formatPhone, formatSsn, formatDuplicateOwner, calculateAge } from "@/utils/helpers/format";
 import { UserRole } from "@/utils/constants/roles";
+import { canEditMainPhone, canTransferLead } from "@/lib/permissions";
 import { fetcher } from "@/lib/fetcher";
 
 export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
   const { data: session } = useSession();
   const role = session?.user?.role;
-  const isAdmin = role === UserRole.ADMIN;
+  const canEditPhone1 = canEditMainPhone(role ?? "");
+  const canTransfer = canTransferLead(role ?? "");
+  const canReassign =
+    canTransfer || role === UserRole.SUPERVISOR || role === UserRole.COACH;
   const isAgent = role === UserRole.AGENT;
   const isCustomer = type === "customer";
 
@@ -65,7 +69,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
   const [assignedToId, setAssignedToId] = useState(String(lead.assignedTo.id));
 
   const { data: companies = [] } = useSWR<{ id: number; name: string }[]>(
-    isAdmin ? "/api/companies?simple=true" : null,
+    canTransfer ? "/api/companies?simple=true" : null,
     fetcher,
   );
   const { data: teams = [] } = useSWR<{ id: number; name: string }[]>(
@@ -121,8 +125,8 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="p-5 max-h-[70vh] overflow-y-auto space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* phone1 — editable solo para admin, readonly para el resto */}
-              {isAdmin ? (
+              {/* phone1 — editable solo para admin y Customer Service Holding */}
+              {canEditPhone1 ? (
                 <div>
                   <label className="text-sm text-on-surface-variant mb-1 block">
                     Teléfono 1 <span className="text-red-400">*</span>
@@ -303,8 +307,8 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
                 )}
               </div>
 
-              {/* Franquicia — solo ADMIN */}
-              {isAdmin && (
+              {/* Franquicia — admin y Customer Service Holding (traslados) */}
+              {canTransfer && (
                 <div>
                   <label className="text-sm text-on-surface-variant mb-1 block">
                     Franquicia
@@ -327,9 +331,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
               )}
 
               {/* Equipo */}
-              {(isAdmin ||
-                role === UserRole.SUPERVISOR ||
-                role === UserRole.COACH) && (
+              {canReassign && (
                 <div>
                   <label className="text-sm text-on-surface-variant mb-1 block">
                     Equipo
@@ -351,9 +353,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
               )}
 
               {/* Agente */}
-              {(isAdmin ||
-                role === UserRole.SUPERVISOR ||
-                role === UserRole.COACH) && (
+              {canReassign && (
                 <div>
                   <label className="text-sm text-on-surface-variant mb-1 block">
                     Agente asignado

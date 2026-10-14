@@ -5,6 +5,7 @@ import { Prisma, Role } from "@prisma/client";
 import { withAuth, forbidden, badRequest, conflict } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
 import { createUserSchema } from "@/lib/validations/user";
+import { isGlobalCustomerService, isGlobalRole } from "@/lib/permissions";
 import { logAudit, getRequestMeta } from "@/lib/audit";
 
 const LIMIT_DEFAULT = 50;
@@ -82,9 +83,11 @@ export const GET = withAuth(async (req, session) => {
   if (session.user.role !== UserRole.ADMIN) {
     if (!teamId) return forbidden();
 
+    // Customer Service global: cualquier equipo (asigna al trasladar leads).
     // SUPERVISOR: cualquier equipo de su franquicia. COACH/AGENT: solo el suyo.
-    const canSeeTeam =
-      session.user.role === UserRole.SUPERVISOR
+    const canSeeTeam = isGlobalCustomerService(session.user.role)
+      ? true
+      : session.user.role === UserRole.SUPERVISOR
         ? !!(await prisma.team.findFirst({
             where: { id: Number(teamId), companyId: Number(session.user.companyId) },
             select: { id: true },
@@ -121,7 +124,10 @@ export const POST = withAuth(async (req, session) => {
 
   // createUserSchema exige password no vacío vía refine (Zod no lo refleja en el tipo)
   const hashed = await bcrypt.hash(password as string, 10);
-  const teamId = parsed.data.teamId ? Number(parsed.data.teamId) : null;
+  // ADMIN y Customer Service Holding no pertenecen a ninguna franquicia ni equipo.
+  const isGlobal = isGlobalRole(role);
+  const teamId = !isGlobal && parsed.data.teamId ? Number(parsed.data.teamId) : null;
+  const userCompanyId = isGlobal ? null : Number(companyId);
 
   const user = await prisma.user.create({
     data: {
@@ -130,7 +136,7 @@ export const POST = withAuth(async (req, session) => {
       email: email || null,
       password: hashed,
       role,
-      companyId: Number(companyId),
+      companyId: userCompanyId,
       teamId,
     },
     select: {
@@ -154,7 +160,7 @@ export const POST = withAuth(async (req, session) => {
     },
     entityType: "User",
     entityId: user.id,
-    metadata: { role, companyId: Number(companyId), teamId },
+    metadata: { role, companyId: userCompanyId, teamId },
     ...getRequestMeta(req),
   });
 

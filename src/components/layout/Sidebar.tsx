@@ -19,6 +19,7 @@ import {
 import { useSidebar } from "@/components/layout/SidebarContext";
 import { LeadModal } from "../leads/LeadModal";
 import { UserRole } from "@/utils/constants/roles";
+import { canCreateLead } from "@/lib/permissions";
 
 const navItems: {
   label: string;
@@ -150,6 +151,7 @@ export function Sidebar() {
             })}
         </nav>
 
+        {canCreateLead(session?.user?.role ?? "") && (
         <div className="px-3 pb-3">
           <div className="relative group">
             <button
@@ -166,6 +168,7 @@ export function Sidebar() {
             )}
           </div>
         </div>
+        )}
 
         {/* Footer */}
         <div className="p-3 border-t border-white/10">

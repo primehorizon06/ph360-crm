@@ -128,7 +128,10 @@ export async function getDashboardData(
   if (user.role === UserRole.ADMIN) {
     if (params.companyId && params.companyId !== "all")
       scopedCompanyId = parseInt(params.companyId);
-  } else if (user.role === UserRole.SUPERVISOR) {
+  } else if (
+    user.role === UserRole.SUPERVISOR ||
+    user.role === UserRole.CUSTOMER_SERVICE
+  ) {
     scopedCompanyId = user.companyId;
   } else if (user.role === UserRole.COACH) {
     scopedCompanyId = user.companyId;

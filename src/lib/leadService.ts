@@ -1,3 +1,4 @@
+import { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 const DUPLICATE_OWNER_SELECT = {
@@ -46,12 +47,28 @@ export async function findLeadProduct(leadId: number, productId: number) {
   return { lead, product };
 }
 
+export async function isProductApproved(productId: number) {
+  const approval = await prisma.productApproval.findUnique({
+    where: { productId },
+    select: { status: true },
+  });
+  return approval?.status === "APPROVED";
+}
+
 // El responsable de un recordatorio debe ser un usuario activo de la misma
-// franquicia del lead; así un recordatorio no expone el lead fuera de ella.
+// franquicia del lead, o un rol global (ADMIN o Customer Service Holding, que
+// ya ven todas); así un recordatorio no expone el lead fuera de quienes pueden verlo.
 export async function isValidReminderAssignee(assigneeId: number, leadCompanyId: number) {
   if (!Number.isInteger(assigneeId)) return false;
   const assignee = await prisma.user.findFirst({
-    where: { id: assigneeId, companyId: leadCompanyId, active: true },
+    where: {
+      id: assigneeId,
+      active: true,
+      OR: [
+        { companyId: leadCompanyId },
+        { role: { in: [Role.ADMIN, Role.CUSTOMER_SERVICE_HOLDING] } },
+      ],
+    },
     select: { id: true },
   });
   return !!assignee;

@@ -11,24 +11,23 @@ async function main() {
   });
 
   // ─── EQUIPO ───────────────────────────────────────────────────────────────
-  const team = await prisma.team.upsert({
+  await prisma.team.upsert({
     where: { id: 1 },
     update: { name: "Equipo Alfa" },
     create: { name: "Equipo Alfa", companyId: company.id },
   });
 
   // ─── USERS ────────────────────────────────────────────────────────────────
+  // ADMIN no pertenece a ninguna franquicia ni equipo.
   await prisma.user.upsert({
     where: { email: "admin@crm.com" },
-    update: { teamId: team.id },
+    update: { companyId: null, teamId: null },
     create: {
       username: "admin",
       name: "Administrador",
       email: "admin@crm.com",
       password: "$2a$12$E09WuJa0HxohXduerw0qeerKqOodekgADtHyoNAJdpaNna1BI92BG",
       role: Role.ADMIN,
-      companyId: company.id,
-      teamId: team.id,
     },
   });
 

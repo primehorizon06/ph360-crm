@@ -18,6 +18,7 @@ import {
 import { CustomSelect } from "@/components/ui/Select";
 import { productColorClass } from "@/utils/constants/products";
 import { UserRole } from "@/utils/constants/roles";
+import { canCreateLead } from "@/lib/permissions";
 import { fetcher } from "@/lib/fetcher";
 
 const LIMIT = 50;
@@ -109,7 +110,7 @@ export function LeadsListView({ type }: Props) {
         title={isLead ? "Leads" : "Clientes"}
         description={`${total} ${label.toLowerCase()}${total !== 1 ? "s" : ""}`}
         action={
-          isLead
+          isLead && canCreateLead(session?.user?.role ?? "")
             ? {
                 label: `Nuevo ${label}`,
                 icon: Plus,

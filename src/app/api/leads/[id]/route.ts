@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuthParams, forbidden, notFound, conflict, badRequest } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
-import { canAccessLead } from "@/lib/permissions";
+import {
+  canAccessLead,
+  canEditLead,
+  isGlobalCustomerService,
+} from "@/lib/permissions";
 import { encryptDeterministic, decrypt } from "@/lib/crypto";
 import { leadObjectSchema } from "@/lib/validations/lead";
 import { logAudit, getRequestMeta } from "@/lib/audit";
@@ -50,6 +54,7 @@ export const PATCH = withAuthParams<{ id: string }>(
     if (!existing) return notFound("Lead no encontrado");
 
     if (!canAccessLead(user, existing)) return forbidden();
+    if (!canEditLead(role)) return forbidden();
 
     if (role !== UserRole.ADMIN && existing.ssn && !body.ssn) {
       return forbidden(
@@ -78,6 +83,37 @@ export const PATCH = withAuthParams<{ id: string }>(
           : target.teamId === user.teamId);
       if (!inScope)
         return forbidden("No puedes asignar el lead a ese usuario");
+    }
+
+    // Customer Service Holding traslada leads entre franquicias; a diferencia de
+    // ADMIN, se valida que el asesor pertenezca al equipo y la franquicia.
+    const transfer = isGlobalCustomerService(role)
+      ? {
+          companyId: body.companyId ? Number(body.companyId) : existing.companyId,
+          teamId: body.teamId ? Number(body.teamId) : existing.teamId,
+          assignedToId: body.assignedToId
+            ? Number(body.assignedToId)
+            : existing.assignedToId,
+        }
+      : null;
+
+    if (
+      transfer &&
+      (transfer.companyId !== existing.companyId ||
+        transfer.teamId !== existing.teamId ||
+        transfer.assignedToId !== existing.assignedToId)
+    ) {
+      const assignee = await prisma.user.findFirst({
+        where: {
+          id: transfer.assignedToId,
+          teamId: transfer.teamId,
+          companyId: transfer.companyId,
+          active: true,
+        },
+        select: { id: true },
+      });
+      if (!assignee)
+        return badRequest("El asesor no pertenece al equipo y franquicia seleccionados");
     }
 
     const canChangeStatus = role !== UserRole.AGENT;
@@ -116,6 +152,13 @@ export const PATCH = withAuthParams<{ id: string }>(
           ? Number(body.assignedToId)
           : existing.assignedToId,
         customerStatus: body.customerStatus || existing.customerStatus,
+      };
+    } else if (isGlobalCustomerService(role)) {
+      data = {
+        ...baseData,
+        customerStatus: body.customerStatus || existing.customerStatus,
+        phone1: body.phone1,
+        ...transfer,
       };
     } else {
       data = { ...baseData };
@@ -182,6 +225,22 @@ export const PATCH = withAuthParams<{ id: string }>(
       metadata: { changedFields },
       ...getRequestMeta(req),
     });
+
+    if (lead.companyId !== existing.companyId) {
+      await logAudit({
+        action: "LEAD_TRANSFERRED",
+        actor: { id: user.id, role: user.role, name: user.name },
+        entityType: "Lead",
+        entityId: lead.id,
+        metadata: {
+          fromCompanyId: existing.companyId,
+          toCompanyId: lead.companyId,
+          toTeamId: lead.teamId,
+          toAssignedToId: lead.assignedToId,
+        },
+        ...getRequestMeta(req),
+      });
+    }
 
     return NextResponse.json({ ...lead, ssn: decrypt(lead.ssn) });
   },

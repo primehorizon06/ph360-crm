@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuthParams, badRequest, forbidden, notFound } from "@/lib/api";
-import { canAccessLead } from "@/lib/permissions";
+import { canAccessLead, isCustomerService } from "@/lib/permissions";
 import { findLeadProduct, parseInstallments } from "@/lib/leadService";
 import { checkPlanTotal } from "@/lib/validations/productCatalog";
 
@@ -10,6 +10,16 @@ export const PUT = withAuthParams<{ id: string; productId: string }>(
     const match = await findLeadProduct(Number(id), Number(productId));
     if (!match) return notFound("Producto no encontrado");
     if (!canAccessLead(session.user, match.lead)) return forbidden();
+    if (isCustomerService(session.user.role)) return forbidden();
+
+    // Reemplazar el plan completo borra las cuotas y su historial; con el
+    // producto aprobado, las cuotas se editan una por una (/api/installments).
+    const approval = await prisma.productApproval.findUnique({
+      where: { productId: Number(productId) },
+      select: { status: true },
+    });
+    if (approval?.status === "APPROVED")
+      return forbidden("El plan de un producto aprobado se edita cuota por cuota");
 
     const installments = parseInstallments((await req.json()).installments);
     if (!installments) return badRequest("Se requiere al menos una cuota válida");

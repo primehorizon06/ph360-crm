@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth, forbidden, badRequest, conflict } from "@/lib/api";
-import { buildScopeFilter } from "@/lib/permissions";
+import { buildScopeFilter, canCreateLead } from "@/lib/permissions";
 import { CustomerStatus, LeadStatus, Prisma } from "@prisma/client";
 import { encryptDeterministic } from "@/lib/crypto";
 import { leadSchema } from "@/lib/validations/lead";
@@ -97,6 +97,7 @@ export const GET = withAuth(async (req, session) => {
 
 export const POST = withAuth(async (req, session) => {
   const user = session.user;
+  if (!canCreateLead(user.role)) return forbidden();
   const rawBody = await req.json();
 
   const parsed = leadSchema.safeParse(rawBody);

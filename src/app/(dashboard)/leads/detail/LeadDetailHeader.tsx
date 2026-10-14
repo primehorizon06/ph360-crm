@@ -9,7 +9,7 @@ import {
   STATUS_COLORS,
 } from "@/utils/constants/leads";
 import { CopyButton } from "@/components/ui/CopyButton";
-import { canSuspendLead } from "@/lib/permissions";
+import { canEditLead, canSuspendLead } from "@/lib/permissions";
 
 interface Props {
   lead: Lead;
@@ -85,13 +85,15 @@ export function LeadDetailHeader({ lead, role, onSuspend, onEdit }: Props) {
                 Suspender
               </button>
             )}
-            <button
-              onClick={onEdit}
-              className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-black font-medium px-4 py-2 rounded-lg text-lg transition-colors"
-            >
-              <Pencil size={14} />
-              Editar
-            </button>
+            {canEditLead(role ?? "") && (
+              <button
+                onClick={onEdit}
+                className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-black font-medium px-4 py-2 rounded-lg text-lg transition-colors"
+              >
+                <Pencil size={14} />
+                Editar
+              </button>
+            )}
           </div>
         </div>
       </div>

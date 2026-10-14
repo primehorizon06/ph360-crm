@@ -33,7 +33,12 @@ export function ReminderModal({ leadId, onClose, onSave }: ReminderModalProps) {
   const agentsKey = session?.user?.teamId
     ? `/api/users?teamId=${session.user.teamId}`
     : null;
-  const { data: agents = [] } = useSWR<Agent[]>(agentsKey, fetcher);
+  const { data: teamMembers = [] } = useSWR<Agent[]>(agentsKey, fetcher);
+  // Sin equipo (p. ej. Customer Service), el recordatorio se asigna a sí mismo.
+  const agents: Agent[] =
+    agentsKey || !session?.user
+      ? teamMembers
+      : [{ id: Number(session.user.id), name: session.user.name ?? "", role: session.user.role }];
 
   const {
     handleSubmit,

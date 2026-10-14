@@ -20,6 +20,8 @@ enum Role {
   SUPERVISOR
   COACH
   AGENT
+  CUSTOMER_SERVICE // de franquicia: ve su franquicia, no gestiona pagos
+  CUSTOMER_SERVICE_HOLDING // global: productos, cuentas, cuotas, teléfono principal y traslados
 }
 
 enum LeadStatus {
@@ -380,6 +382,7 @@ model Notification {
 
 enum InstallmentStatus {
   PENDING
+  SUSPENDED
   PAID
   FAILED
   CANCELLED
@@ -427,6 +430,11 @@ enum AuditAction {
   PRODUCT_REJECTED
   PRODUCT_CATALOG_CREATED
   PRODUCT_CATALOG_UPDATED
+  PRODUCT_UPDATED
+  PAYMENT_METHOD_UPDATED
+  INSTALLMENT_CREATED
+  INSTALLMENT_UPDATED
+  LEAD_TRANSFERRED
   COMPANY_CREATED
   COMPANY_UPDATED
   COMPANY_DELETED
@@ -442,7 +450,7 @@ enum AuditAction {
 // valor de campos sensibles (ssn, cuentas bancarias, contraseñas) — solo el
 // hecho de que cambiaron, en `metadata`.
 model AuditLog {
-  id         Int          @id @default(autoincrement())
+  id         Int         @id @default(autoincrement())
   action     AuditAction
   actorId    Int?
   actorRole  Role?
@@ -452,7 +460,7 @@ model AuditLog {
   metadata   Json?
   ip         String?
   userAgent  String?
-  createdAt  DateTime     @default(now())
+  createdAt  DateTime    @default(now())
 
   @@index([action])
   @@index([entityType, entityId])

@@ -1,4 +1,5 @@
 import { UserRole } from "@/utils/constants/roles";
+import { isGlobalRole } from "@/lib/permissions";
 import { z } from "zod";
 
 export const PASSWORD_MIN_LENGTH = 10;
@@ -37,8 +38,10 @@ const baseSchema = z
       UserRole.SUPERVISOR,
       UserRole.COACH,
       UserRole.AGENT,
+      UserRole.CUSTOMER_SERVICE,
+      UserRole.CUSTOMER_SERVICE_HOLDING,
     ]),
-    companyId: z.string().min(1, "La franquicia es requerida"),
+    companyId: z.string().optional().or(z.literal("")),
     teamId: z.string().optional().or(z.literal("")),
     active: z.boolean(),
   })
@@ -56,6 +59,14 @@ const baseSchema = z
         path: ["confirmPassword"],
         code: "custom",
         message: "Las contraseñas no coinciden",
+      });
+    }
+
+    if (!isGlobalRole(data.role) && !data.companyId) {
+      ctx.addIssue({
+        path: ["companyId"],
+        code: "custom",
+        message: "La franquicia es requerida",
       });
     }
 

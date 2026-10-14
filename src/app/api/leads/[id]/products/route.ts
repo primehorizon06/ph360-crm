@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuthParams, badRequest, forbidden, notFound } from "@/lib/api";
-import { canAccessLead } from "@/lib/permissions";
+import { canAccessLead, canCreateProduct } from "@/lib/permissions";
 import { encryptRandom, decrypt } from "@/lib/crypto";
 import { productSchema } from "@/lib/validations/product";
 import { checkPlanTotal } from "@/lib/validations/productCatalog";
@@ -51,6 +51,7 @@ export const POST = withAuthParams<{ id: string }>(
     const lead = await prisma.lead.findUnique({ where: { id: leadId } });
     if (!lead) return notFound("Lead no encontrado");
     if (!canAccessLead(session.user, lead)) return forbidden();
+    if (!canCreateProduct(session.user.role)) return forbidden();
 
     const body = await req.json();
     const { catalogId, paymentMethod } = body;

@@ -15,8 +15,9 @@ import {
 import { X, Camera, Eye, EyeOff, Check } from "lucide-react";
 import { Avatar } from "../ui/Avatar";
 import { CustomSelect } from "../ui/Select";
-import { roles, UserRole } from "@/utils/constants/roles";
+import { roleLabel, roles, UserRole } from "@/utils/constants/roles";
 import { fetcher } from "@/lib/fetcher";
+import { isGlobalRole } from "@/lib/permissions";
 
 interface Props {
   user: User | null;
@@ -53,9 +54,14 @@ export function UserModal({ user, onClose, onSave }: Props) {
   const role = watch("role");
   const passwordValue = watch("password");
 
+  const isGlobal = isGlobalRole(role);
+
   useEffect(() => {
     if (role !== UserRole.AGENT && role !== UserRole.COACH) {
       setValue("teamId", "");
+    }
+    if (isGlobalRole(role)) {
+      setValue("companyId", "");
     }
   }, [role, setValue]);
 
@@ -252,16 +258,18 @@ export function UserModal({ user, onClose, onSave }: Props) {
             <label className="text-sm text-on-surface-variant mb-1 block">Rol</label>
             <CustomSelect
               name="role"
-              value={watch("role")}
+              value={roleLabel(watch("role"))}
               onChange={(val) => setValue("role", val as UserFormData["role"])}
               options={roles}
+              labels={roles.map(roleLabel)}
             />
             {errors.role && (
               <p className="text-red-400 text-sm mt-1">{errors.role.message}</p>
             )}
           </div>
 
-          {/* Franquicia */}
+          {/* Franquicia — ADMIN y Customer Service Holding no pertenecen a ninguna */}
+          {!isGlobal && (
           <div>
             <label className="text-sm text-on-surface-variant mb-1 block">
               Franquicia <span className="text-red-400">*</span>
@@ -288,6 +296,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
               </p>
             )}
           </div>
+          )}
 
           {/* Equipo */}
           <div>

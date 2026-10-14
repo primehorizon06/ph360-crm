@@ -26,6 +26,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **feat**(auth): muestra el logo en la pantalla de login
 - **feat**(ui): agrega favicon de la aplicación
 - **ia**(skills): añade skill revisar para auditar el código
+- **feat**(roles): add Customer Service roles and make admin a global role
 
 ### Changed
 
