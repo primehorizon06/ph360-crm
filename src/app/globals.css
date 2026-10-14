@@ -48,6 +48,19 @@
   --color-on-background: #e1e1ef;
   --color-on-tertiary-container: #008696;
   --color-on-primary-container: #767792;
+
+  /* Estados (el rojo de "fallido" usa --color-error) */
+  --color-success: #4ade80; /* activo, pagado */
+  --color-warning: #fbbf24; /* pendiente */
+  --color-attention: #fb923c; /* suspendido */
+
+  /* Roles de usuario */
+  --color-role-admin: #c084fc;
+  --color-role-supervisor: #60a5fa;
+  --color-role-coach: #fbbf24;
+  --color-role-agent: #4ade80;
+  --color-role-customer-service: #22d3ee;
+  --color-role-customer-service-holding: #f472b6;
 }
 
 .btn-satin {

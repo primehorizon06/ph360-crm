@@ -47,6 +47,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **chore**(git): ignora los archivos Zone.Identifier de Windows
 - **chore**(git): deja de versionar los archivos subidos por usuarios
 - **chore**(prisma): apply migrations with migrate deploy instead of migrate dev
+- **style**(ui): add semantic status and role color tokens
 
 ### Fixed
 
