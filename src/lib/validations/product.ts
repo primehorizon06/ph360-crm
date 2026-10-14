@@ -35,3 +35,15 @@ export const productSchema = z.discriminatedUnion("paymentType", [
 ]);
 
 export type ProductFormData = z.infer<typeof productSchema>;
+
+// Edición del método de pago de un producto existente: el tipo (tarjeta o
+// cuenta) no cambia, solo sus datos.
+export const cardDetailsSchema = tarjetaSchema.omit({ catalogId: true, paymentType: true });
+export const accountDetailsSchema = cuentaSchema.omit({ catalogId: true, paymentType: true });
+
+export type CardDetailsFormData = z.infer<typeof cardDetailsSchema>;
+export type AccountDetailsFormData = z.infer<typeof accountDetailsSchema>;
+
+export const productStatusSchema = z.object({
+  status: z.enum(["ACTIVE", "SUSPENDED"], { error: "Estado inválido" }),
+});

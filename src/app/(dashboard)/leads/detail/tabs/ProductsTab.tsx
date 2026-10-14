@@ -15,6 +15,7 @@ import {
   RotateCcw,
   ChevronDown,
   ChevronUp,
+  Pencil,
 } from "lucide-react";
 import { Loading } from "@/components/ui/Loading";
 import { ProductFormData, productSchema } from "@/lib/validations/product";
@@ -38,15 +39,23 @@ import { formatAmount, formatDate } from "@/utils/helpers/format";
 import { fetcher } from "@/lib/fetcher";
 import { ConfirmProductModal } from "@/components/leads/Confirmproductmodal/Confirmproductmodal";
 import { useSession } from "next-auth/react";
-import { canResubmitProduct } from "@/lib/permissions";
+import {
+  canCreateProduct,
+  canManagePayments,
+  canResubmitProduct,
+} from "@/lib/permissions";
+import { isManualInstallmentStatus } from "@/lib/validations/installment";
+import { PaymentMethodEditModal } from "@/components/leads/ProductPayments/PaymentMethodEditModal";
+import { InstallmentModal } from "@/components/leads/ProductPayments/InstallmentModal";
 
 // ─── Installment status helpers ───────────────────────────────────────────────
 
 const STATUS_STYLES: Record<string, string> = {
-  PAID: "bg-emerald-500/10 text-emerald-400",
-  FAILED: "bg-red-500/10 text-red-400",
-  CANCELLED: "bg-white/10 text-white/90",
-  PENDING: "bg-amber-500/10 text-amber-400",
+  PAID: "bg-success/10 text-success",
+  FAILED: "bg-error/10 text-error",
+  CANCELLED: "bg-surface-variant text-on-surface-variant",
+  PENDING: "bg-warning/10 text-warning",
+  SUSPENDED: "bg-attention/10 text-attention",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -54,6 +63,7 @@ const STATUS_LABELS: Record<string, string> = {
   FAILED: "Fallido",
   CANCELLED: "Cancelado",
   PENDING: "Pendiente",
+  SUSPENDED: "Suspendido",
 };
 
 // ─── InstallmentRow component ─────────────────────────────────────────────────
@@ -67,17 +77,26 @@ interface InstallmentItem {
   paidAt?: string | null;
 }
 
-function InstallmentRow({ inst, idx }: { inst: InstallmentItem; idx: number }) {
+function InstallmentRow({
+  inst,
+  idx,
+  onEdit,
+}: {
+  inst: InstallmentItem;
+  idx: number;
+  onEdit?: () => void;
+}) {
   const [expanded, setExpanded] = useState(false);
   const isPaid = inst.status === "PAID";
 
   return (
     <div>
       {/* Fila principal */}
+      <div className="flex items-center gap-1">
       <button
         type="button"
         onClick={() => isPaid && setExpanded((p) => !p)}
-        className={`w-full flex items-center justify-between px-2 py-1.5 rounded-md transition-colors ${
+        className={`flex-1 min-w-0 flex items-center justify-between px-2 py-1.5 rounded-md transition-colors ${
           idx % 2 === 0 ? "bg-white/5" : ""
         } ${isPaid ? "cursor-pointer hover:bg-white/10" : "cursor-default"}`}
       >
@@ -108,10 +127,21 @@ function InstallmentRow({ inst, idx }: { inst: InstallmentItem; idx: number }) {
             ))}
         </div>
       </button>
+      {onEdit && (
+        <button
+          type="button"
+          onClick={onEdit}
+          aria-label={`Editar cuota ${inst.number}`}
+          className="shrink-0 p-1.5 rounded-md text-on-surface-variant hover:text-cyan-400 hover:bg-white/5 transition-colors"
+        >
+          <Pencil size={13} />
+        </button>
+      )}
+      </div>
 
       {/* Detalle expandible — solo si está pagada */}
       {isPaid && expanded && (
-        <div className="mx-2 mb-1.5 px-3 py-2.5 bg-emerald-500/5 border border-emerald-500/15 rounded-lg space-y-1.5">
+        <div className="mx-2 mb-1.5 px-3 py-2.5 bg-success/5 border border-success/15 rounded-lg space-y-1.5">
           <div className="flex items-center justify-between text-md">
             <span className="text-white/90">ID cuota</span>
             <span className="text-on-surface-variant font-mono">#{inst.id}</span>
@@ -122,13 +152,13 @@ function InstallmentRow({ inst, idx }: { inst: InstallmentItem; idx: number }) {
           </div>
           <div className="flex items-center justify-between text-md">
             <span className="text-white/90">Fecha de pago</span>
-            <span className="text-emerald-400">
+            <span className="text-success">
               {inst.paidAt ? formatDate(inst.paidAt) : "—"}
             </span>
           </div>
-          <div className="flex items-center justify-between text-md border-t border-emerald-500/10 pt-1.5 mt-1">
+          <div className="flex items-center justify-between text-md border-t border-success/10 pt-1.5 mt-1">
             <span className="text-white/90 font-medium">Monto pagado</span>
-            <span className="text-emerald-400 font-semibold">
+            <span className="text-success font-semibold">
               $ {formatAmount(Number(inst.amount))}
             </span>
           </div>
@@ -159,6 +189,13 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
   const [saving, setSaving] = useState(false);
   const [pendingData, setPendingData] = useState<ProductFormData | null>(null);
   const [resubmitting, setResubmitting] = useState<number | null>(null);
+  const [editingMethod, setEditingMethod] = useState<Product | null>(null);
+  const [installmentModal, setInstallmentModal] = useState<{
+    productId: number;
+    installment?: InstallmentItem;
+  } | null>(null);
+  const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
+  const managesPayments = canManagePayments(role ?? "");
 
   const {
     register,
@@ -271,6 +308,25 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
     onProductCreated?.();
   }
 
+  async function handleToggleStatus(product: Product) {
+    const status = product.status === "ACTIVE" ? "SUSPENDED" : "ACTIVE";
+    setUpdatingStatus(product.id);
+    const res = await fetch(`/api/leads/${leadId}/products/${product.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    setUpdatingStatus(null);
+
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      toast.error(json.error ?? "Error al cambiar el estado del producto");
+      return;
+    }
+    toast.success(status === "ACTIVE" ? "Producto reactivado" : "Producto suspendido");
+    reloadProducts();
+  }
+
   return (
     <div className="space-y-4">
       
@@ -278,7 +334,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
         <p className="text-on-surface-variant text-lg">
           {products.length} producto{products.length !== 1 ? "s" : ""}
         </p>
-        {!showForm && (
+        {!showForm && canCreateProduct(role ?? "") && (
           <button
             onClick={() => setShowForm(true)}
             className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-black font-medium px-4 py-2 rounded-lg text-lg transition-colors"
@@ -595,6 +651,8 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
               lp.paymentPlan?.installments.filter((i) => i.status === "PAID")
                 .length ?? 0;
             const isRejected = lp.approval?.status === "REJECTED";
+            const isApproved = lp.approval?.status === "APPROVED";
+            const managesPlan = managesPayments && isApproved;
 
             return (
               <div
@@ -617,6 +675,28 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                     </span>
                   )}
                 </div>
+
+                {isApproved && (lp.status === "SUSPENDED" || managesPlan) && (
+                  <div className="flex items-center justify-between gap-2">
+                    {lp.status === "SUSPENDED" ? (
+                      <span className="text-sm px-2 py-0.5 rounded-full font-medium bg-attention/10 text-attention">
+                        Producto suspendido
+                      </span>
+                    ) : (
+                      <span />
+                    )}
+                    {managesPlan && (
+                      <button
+                        type="button"
+                        onClick={() => handleToggleStatus(lp)}
+                        disabled={updatingStatus === lp.id}
+                        className="text-sm text-on-surface-variant hover:text-white transition-colors disabled:opacity-50"
+                      >
+                        {lp.status === "ACTIVE" ? "Suspender producto" : "Reactivar producto"}
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {lp.paymentMethod && (
                   <div className="flex items-center gap-4">
@@ -667,6 +747,16 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                         </>
                       )}
                     </div>
+                    {managesPayments && (
+                      <button
+                        type="button"
+                        onClick={() => setEditingMethod(lp)}
+                        aria-label="Editar método de pago"
+                        className="ml-auto self-start shrink-0 p-1.5 rounded-md text-on-surface-variant hover:text-cyan-400 hover:bg-white/5 transition-colors"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                    )}
                   </div>
                 )}
 
@@ -678,15 +768,35 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                         {lp.paymentPlan.installments.length !== 1 ? "s" : ""}
                       </p>
                       {paidCount > 0 && (
-                        <p className="text-emerald-400 text-[15px]">
+                        <p className="text-success text-[15px]">
                           {paidCount} pagada{paidCount !== 1 ? "s" : ""}
                         </p>
                       )}
                     </div>
                     {lp.paymentPlan.installments.map((inst, idx) => (
-                      <InstallmentRow key={inst.id} inst={inst} idx={idx} />
+                      <InstallmentRow
+                        key={inst.id}
+                        inst={inst}
+                        idx={idx}
+                        onEdit={
+                          managesPlan && isManualInstallmentStatus(inst.status)
+                            ? () => setInstallmentModal({ productId: lp.id, installment: inst })
+                            : undefined
+                        }
+                      />
                     ))}
                   </div>
+                )}
+
+                {managesPlan && (
+                  <button
+                    type="button"
+                    onClick={() => setInstallmentModal({ productId: lp.id })}
+                    className="flex items-center justify-center gap-2 w-full py-1.5 rounded-lg border border-white/10 text-on-surface-variant hover:text-white hover:bg-white/5 text-sm transition-colors"
+                  >
+                    <Plus size={13} />
+                    Agregar cuota
+                  </button>
                 )}
 
                 {isRejected && (
@@ -734,6 +844,37 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
           saving={saving}
           onConfirm={confirmSave}
           onCancel={() => setPendingData(null)}
+        />
+      )}
+
+      {editingMethod?.paymentMethod && (
+        <PaymentMethodEditModal
+          leadId={leadId}
+          productId={editingMethod.id}
+          method={editingMethod.paymentMethod}
+          onClose={() => setEditingMethod(null)}
+          onSaved={() => {
+            setEditingMethod(null);
+            reloadProducts();
+          }}
+        />
+      )}
+
+      {installmentModal && (
+        <InstallmentModal
+          leadId={leadId}
+          productId={installmentModal.productId}
+          installment={
+            installmentModal.installment &&
+            isManualInstallmentStatus(installmentModal.installment.status)
+              ? { ...installmentModal.installment, status: installmentModal.installment.status }
+              : undefined
+          }
+          onClose={() => setInstallmentModal(null)}
+          onSaved={() => {
+            setInstallmentModal(null);
+            reloadProducts();
+          }}
         />
       )}
     </div>

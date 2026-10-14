@@ -27,6 +27,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **feat**(ui): agrega favicon de la aplicación
 - **ia**(skills): añade skill revisar para auditar el código
 - **feat**(roles): add Customer Service roles and make admin a global role
+- **feat**(products): let Customer Service Holding manage payment data and installments
 
 ### Changed
 
