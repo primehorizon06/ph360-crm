@@ -28,6 +28,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **ia**(skills): añade skill revisar para auditar el código
 - **feat**(roles): add Customer Service roles and make admin a global role
 - **feat**(products): let Customer Service Holding manage payment data and installments
+- **feat**(users): show role labels and toggle user status with a switch
 
 ### Changed
 

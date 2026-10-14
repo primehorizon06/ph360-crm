@@ -10,6 +10,7 @@ import { NotificationBell } from "../notifications/NotificationBell";
 import { NotificationHandler } from "../notifications/NotificationHandler";
 import { ToastHandler } from "../notifications/ToastHandler";
 import { useHeaderSearch } from "@/hooks/useHeaderSearch";
+import { roleLabel } from "@/utils/constants/roles";
 
 export function Header() {
   const { data: session } = useSession();
@@ -114,7 +115,7 @@ export function Header() {
                 {session?.user?.name}
               </p>
               <p className="text-sm text-on-surface-variant mt-0.5">
-                {session?.user?.role}
+                {roleLabel(session?.user?.role)}
               </p>
             </div>
             <Avatar

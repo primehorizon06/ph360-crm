@@ -8,7 +8,7 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import { Loading } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { CustomSelect } from "@/components/ui/Select";
-import { UserRole } from "@/utils/constants/roles";
+import { roleLabel, UserRole } from "@/utils/constants/roles";
 import { fetcher } from "@/lib/fetcher";
 
 interface AuditLog {
@@ -148,7 +148,7 @@ export default function AuditPage() {
                     {log.actorName ?? "—"}
                     {log.actorRole && (
                       <span className="text-white/90 text-sm ml-1">
-                        ({log.actorRole})
+                        ({roleLabel(log.actorRole)})
                       </span>
                     )}
                   </td>

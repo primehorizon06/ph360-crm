@@ -1,12 +1,8 @@
 import { User } from "@/app/(dashboard)/users/page";
-import { Pencil, Power, PowerOff } from "lucide-react";
-
-const roleColors: Record<string, string> = {
-  ADMIN: "bg-purple-500/20 text-purple-400",
-  SUPERVISOR: "bg-blue-500/20 text-blue-400",
-  COACH: "bg-amber-500/20 text-amber-400",
-  AGENT: "bg-green-500/20 text-green-400",
-};
+import { Pencil } from "lucide-react";
+import { Switch } from "@/components/ui/Switch";
+import { ROLE_COLORS, roleLabel } from "@/utils/constants/roles";
+import { Role } from "@prisma/client";
 
 const TABLE_HEADERS = [
   "ID",
@@ -57,9 +53,9 @@ export function UserTable({ users, onEdit, onToggleActive }: Props) {
                 </td>
                 <td className="px-4 py-3">
                   <span
-                    className={`text-sm px-2 py-1 rounded-full font-medium ${roleColors[user.role]}`}
+                    className={`text-sm px-2 py-1 rounded-full font-medium ${ROLE_COLORS[user.role as Role] ?? "bg-white/10 text-white/90"}`}
                   >
-                    {user.role}
+                    {roleLabel(user.role)}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-lg text-white/90">
@@ -69,11 +65,12 @@ export function UserTable({ users, onEdit, onToggleActive }: Props) {
                   {user.team?.name ?? "—"}
                 </td>
                 <td className="px-4 py-3">
-                  <span
-                    className={`text-sm px-2 py-1 rounded-full font-medium ${user.active ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}
-                  >
-                    {user.active ? "Activo" : "Inactivo"}
-                  </span>
+                  <Switch
+                    checked={user.active}
+                    onChange={() => onToggleActive(user)}
+                    label={user.active ? "Activo" : "Inactivo"}
+                    aria-label={`${user.active ? "Desactivar" : "Activar"} a ${user.name}`}
+                  />
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
@@ -82,17 +79,6 @@ export function UserTable({ users, onEdit, onToggleActive }: Props) {
                       className="p-1.5 rounded-lg text-on-surface-variant hover:text-white hover:bg-white/10 transition-colors"
                     >
                       <Pencil size={14} />
-                    </button>
-                    <button
-                      onClick={() => onToggleActive(user)}
-                      title={user.active ? "Desactivar" : "Activar"}
-                      className={`p-1.5 rounded-lg transition-colors ${
-                        user.active
-                          ? "text-on-surface-variant hover:text-red-400 hover:bg-red-500/10"
-                          : "text-on-surface-variant hover:text-green-400 hover:bg-green-500/10"
-                      }`}
-                    >
-                      {user.active ? <PowerOff size={14} /> : <Power size={14} />}
                     </button>
                   </div>
                 </td>
@@ -120,14 +106,9 @@ export function UserTable({ users, onEdit, onToggleActive }: Props) {
                 <p className="text-on-surface-variant text-sm">{user.username}</p>
                 <div className="flex flex-wrap items-center gap-2 mt-1.5">
                   <span
-                    className={`text-sm px-2 py-0.5 rounded-full font-medium ${roleColors[user.role]}`}
+                    className={`text-sm px-2 py-0.5 rounded-full font-medium ${ROLE_COLORS[user.role as Role] ?? "bg-white/10 text-white/90"}`}
                   >
-                    {user.role}
-                  </span>
-                  <span
-                    className={`text-sm px-2 py-0.5 rounded-full font-medium ${user.active ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}
-                  >
-                    {user.active ? "Activo" : "Inactivo"}
+                    {roleLabel(user.role)}
                   </span>
                 </div>
                 {user.company?.name && (
@@ -145,17 +126,11 @@ export function UserTable({ users, onEdit, onToggleActive }: Props) {
               >
                 <Pencil size={14} />
               </button>
-              <button
-                onClick={() => onToggleActive(user)}
-                title={user.active ? "Desactivar" : "Activar"}
-                className={`p-1.5 rounded-lg transition-colors ${
-                  user.active
-                    ? "text-on-surface-variant hover:text-red-400 hover:bg-red-500/10"
-                    : "text-on-surface-variant hover:text-green-400 hover:bg-green-500/10"
-                }`}
-              >
-                {user.active ? <PowerOff size={14} /> : <Power size={14} />}
-              </button>
+              <Switch
+                checked={user.active}
+                onChange={() => onToggleActive(user)}
+                aria-label={`${user.active ? "Desactivar" : "Activar"} a ${user.name}`}
+              />
             </div>
           </div>
         ))}
