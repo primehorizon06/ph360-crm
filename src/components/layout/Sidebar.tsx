@@ -15,6 +15,7 @@ import {
   Plus,
   ShieldCheck,
   Package,
+  Wallet,
 } from "lucide-react";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import { LeadModal } from "../leads/LeadModal";
@@ -30,6 +31,12 @@ const navItems: {
   { label: "Dashboard", icon: LayoutDashboard, href: "/" },
   { label: "Leads", icon: Users, href: "/leads" },
   { label: "Clientes", icon: Users, href: "/customers" },
+  {
+    label: "Cobros",
+    icon: Wallet,
+    href: "/collections",
+    roles: [UserRole.ADMIN, UserRole.CUSTOMER_SERVICE_HOLDING],
+  },
   { label: "Usuarios", icon: UserCog, href: "/users", roles: [UserRole.ADMIN] },
   {
     label: "Metas",

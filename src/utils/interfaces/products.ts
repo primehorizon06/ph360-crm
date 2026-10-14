@@ -32,6 +32,19 @@ export interface PaymentMethod {
   accountBank?: string;
   routingNumber?: string;
   accountType?: AccountType;
+  soarAccountId?: string | null;
+  soarSyncError?: string | null;
+}
+
+export interface ChargeAttemptItem {
+  id: number;
+  processor: "SOAR_ACH" | "AUTHNET_CARD";
+  status: "PROCESSING" | "SUCCEEDED" | "FAILED" | "VOIDED" | "CHARGEBACK";
+  failureCode: string | null;
+  failureReason: string | null;
+  cardLast4: string | null;
+  createdAt: string;
+  chargedBy: { name: string };
 }
 
 export interface ProductApproval {
@@ -52,7 +65,16 @@ export interface Product {
   createdAt: string;
   paymentMethod: PaymentMethod & { id: number };
   paymentPlan?: {
-    installments: { id: number; number: number; date: string; amount: number; status: InstallmentStatus }[];
+    installments: {
+      id: number;
+      number: number;
+      date: string;
+      amount: number;
+      status: InstallmentStatus;
+      paidAt?: string | null;
+      suspendReason?: string | null;
+      attempts?: ChargeAttemptItem[];
+    }[];
   };
   status: ProductStatus;
   approval: ProductApproval | null;

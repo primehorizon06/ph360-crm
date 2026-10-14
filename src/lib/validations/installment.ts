@@ -35,6 +35,29 @@ export const installmentCreateSchema = z.object({
   amount: amountField,
 });
 
+// Cola de cobros: suspender (sin autorización del cliente) y reprogramar.
+const suspendReasonField = z
+  .string()
+  .trim()
+  .min(3, "Escribe el motivo de la suspensión")
+  .max(500, "Máximo 500 caracteres");
+
+export const suspendSchema = z.object({ reason: suspendReasonField });
+export type SuspendFormData = z.infer<typeof suspendSchema>;
+
+export const rescheduleFormSchema = z.object({
+  date: z.string().min(1, "La fecha es requerida"),
+});
+export type RescheduleFormData = z.infer<typeof rescheduleFormSchema>;
+export const rescheduleSchema = z.object({ date: dateField });
+
+// Cobro ACH con SEC TEL: cada débito necesita la autorización del cliente por
+// teléfono para ese monto y esa fecha.
+export const chargeSchema = z.object({
+  authorized: z.boolean().refine((v) => v, "Confirma que el cliente autorizó el débito"),
+});
+export type ChargeFormData = z.infer<typeof chargeSchema>;
+
 export const installmentUpdateSchema = z
   .object({
     date: dateField.optional(),

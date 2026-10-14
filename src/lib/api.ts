@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession, Session } from "next-auth";
 import { Prisma } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
+import { UserFacingError } from "@/lib/errors";
 
 export const unauthorized = () =>
   NextResponse.json({ error: "No autorizado" }, { status: 401 });
@@ -26,6 +27,9 @@ export async function getAuthSession() {
 }
 
 function handleRouteError(error: unknown): NextResponse {
+  if (error instanceof UserFacingError)
+    return NextResponse.json({ error: error.message }, { status: error.status });
+
   console.error(error);
 
   if (error instanceof Prisma.PrismaClientKnownRequestError) {

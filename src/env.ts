@@ -14,11 +14,22 @@ const schema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   SUPABASE_URL: z.string().url().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
+  // SOAR (ACH). Sin token, en desarrollo se usa un cliente simulado; en
+  // producción los cobros quedan deshabilitados (ver src/lib/payments/soar.ts).
+  SOAR_API_URL: z.string().url().optional(),
+  SOAR_API_TOKEN: z.string().min(1).optional(),
+  SOAR_ACH_DBA_ID: z.string().min(1).optional(),
 }).refine(
   (data) => Boolean(data.SUPABASE_URL) === Boolean(data.SUPABASE_SERVICE_ROLE_KEY),
   {
     message: "SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY deben configurarse juntas",
     path: ["SUPABASE_URL"],
+  },
+).refine(
+  (data) => !data.SOAR_API_TOKEN || (data.SOAR_API_URL && data.SOAR_ACH_DBA_ID),
+  {
+    message: "Con SOAR_API_TOKEN también se requieren SOAR_API_URL y SOAR_ACH_DBA_ID",
+    path: ["SOAR_API_TOKEN"],
   },
 );
 

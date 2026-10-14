@@ -1,11 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuthParams, forbidden, badRequest, notFound } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
 import { canAccessLead } from "@/lib/permissions";
 import { findLeadProduct } from "@/lib/leadService";
 import { applyApprovalDecision, notifyReviewersOfResubmit } from "@/lib/approvalService";
-import { logAudit, getRequestMeta } from "@/lib/audit";
+import { logAudit, getRequestMeta, auditActor } from "@/lib/audit";
+import { getSoarClient } from "@/lib/payments/soar";
+import { ensureSoarAccount, ChargeError } from "@/lib/payments/charges";
 
 export const PATCH = withAuthParams<{ id: string; productId: string }>(
   async (req, session, { id, productId }) => {
@@ -73,6 +75,34 @@ export const PATCH = withAuthParams<{ id: string; productId: string }>(
       isFirstProduct: approval.isFirstProduct,
       note,
     });
+
+    // Al aprobar, el cliente y su cuenta se crean en SOAR después de responder,
+    // para que un SOAR lento no demore la aprobación. Un fallo no la revierte:
+    // queda en soarSyncError y se reintenta desde el producto (/soar-sync).
+    if (action === "APPROVE" && getSoarClient()) {
+      const actor = auditActor(session.user);
+      const requestMeta = getRequestMeta(req);
+      after(async () => {
+        const method = await prisma.paymentMethod.findUnique({
+          where: { productId: Number(productId) },
+          select: { type: true },
+        });
+        if (method?.type !== "CUENTA") return;
+        try {
+          await ensureSoarAccount(Number(productId));
+          await logAudit({
+            action: "SOAR_CUSTOMER_SYNCED",
+            actor,
+            entityType: "Product",
+            entityId: Number(productId),
+            metadata: { leadId: Number(id), trigger: "approval" },
+            ...requestMeta,
+          });
+        } catch (err) {
+          if (!(err instanceof ChargeError)) console.error(err);
+        }
+      });
+    }
 
     await logAudit({
       action: action === "APPROVE" ? "PRODUCT_APPROVED" : "PRODUCT_REJECTED",

@@ -20,7 +20,26 @@ export const GET = withAuthParams<{ id: string }>(
       include: {
         paymentMethod: true,
         paymentPlan: {
-          include: { installments: { orderBy: { number: "asc" } } },
+          include: {
+            installments: {
+              orderBy: { number: "asc" },
+              include: {
+                attempts: {
+                  orderBy: { id: "desc" },
+                  select: {
+                    id: true,
+                    processor: true,
+                    status: true,
+                    failureCode: true,
+                    failureReason: true,
+                    cardLast4: true,
+                    createdAt: true,
+                    chargedBy: { select: { name: true } },
+                  },
+                },
+              },
+            },
+          },
         },
         approval: true,
         catalog: { select: { id: true, name: true, color: true } },
@@ -98,7 +117,11 @@ export const POST = withAuthParams<{ id: string }>(
           create: {
             type: paymentMethod.type,
             cardType: paymentMethod.cardType ?? null,
-            lastFour: paymentMethod.lastFour ?? null,
+            // En cuentas se guardan los últimos 4 dígitos para mostrarlos sin descifrar.
+            lastFour:
+              paymentMethod.type === "CUENTA"
+                ? (paymentMethod.accountNumber?.slice(-4) ?? null)
+                : (paymentMethod.lastFour ?? null),
             holderName: paymentMethod.holderName ?? null,
             bank: paymentMethod.bank ?? null,
             accountNumber: encryptRandom(paymentMethod.accountNumber ?? null),

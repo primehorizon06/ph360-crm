@@ -49,6 +49,11 @@
   --color-on-tertiary-container: #008696;
   --color-on-primary-container: #767792;
 
+  /* Botón de acción principal (el acento de texto y bordes usa --color-tertiary) */
+  --color-action: #06b6d4;
+  --color-action-hover: #22d3ee;
+  --color-on-action: #000000;
+
   /* Estados (el rojo de "fallido" usa --color-error) */
   --color-success: #4ade80; /* activo, pagado */
   --color-warning: #fbbf24; /* pendiente */

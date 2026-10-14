@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import type { NextRequest } from "next/server";
 import { UserRole } from "./utils/constants/roles";
+import { canManagePayments } from "./lib/permissions";
 
 export async function proxy(req: NextRequest) {
   console.log("proxy corriendo:", req.nextUrl.pathname);
@@ -29,6 +30,10 @@ export async function proxy(req: NextRequest) {
   }
 
   if (path.startsWith("/audit") && role !== UserRole.ADMIN) {
+    return NextResponse.redirect(new URL("/", req.url));
+  }
+
+  if (path.startsWith("/collections") && !canManagePayments(role)) {
     return NextResponse.redirect(new URL("/", req.url));
   }
 

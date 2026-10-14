@@ -3,7 +3,7 @@
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { X, Loader2 } from "lucide-react";
+import { Modal, ModalFooter, modalInputClass } from "@/components/ui/Modal";
 import { CustomSelect } from "@/components/ui/Select";
 import {
   installmentFormSchema,
@@ -11,6 +11,7 @@ import {
   MANUAL_INSTALLMENT_STATUSES,
   ManualInstallmentStatus,
 } from "@/lib/validations/installment";
+import { fromInputDate, toInputDate } from "@/utils/helpers/dateInput";
 
 const STATUS_LABELS: Record<ManualInstallmentStatus, string> = {
   PENDING: "Pendiente",
@@ -26,21 +27,6 @@ interface Props {
   onClose: () => void;
   onSaved: () => void;
 }
-
-// Las fechas del plan se guardan como medianoche local (igual que el selector
-// del plan de pagos), así que se convierten en hora local, no en UTC.
-function toInputDate(iso: string): string {
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
-
-function fromInputDate(value: string): string {
-  return new Date(`${value}T00:00:00`).toISOString();
-}
-
-const inputClass =
-  "w-full bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all";
 
 export function InstallmentModal({ leadId, productId, installment, onClose, onSaved }: Props) {
   const isEdit = !!installment;
@@ -88,27 +74,12 @@ export function InstallmentModal({ leadId, productId, installment, onClose, onSa
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-surface border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-white/80 font-medium">
-            {isEdit ? `Editar cuota ${installment.number}` : "Agregar cuota"}
-          </h3>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-white/20 hover:text-white/90 transition-colors"
-          >
-            <X size={16} />
-          </button>
-        </div>
-
+    <Modal title={isEdit ? `Editar cuota ${installment.number}` : "Agregar cuota"} onClose={onClose}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
           <div className="space-y-1">
             <label className="text-lg text-on-surface-variant">Fecha</label>
-            <input {...register("date")} type="date" className={inputClass} />
-            {errors.date && <p className="text-red-400 text-sm">{errors.date.message}</p>}
+            <input {...register("date")} type="date" className={modalInputClass} />
+            {errors.date && <p className="text-error text-sm">{errors.date.message}</p>}
           </div>
 
           <div className="space-y-1">
@@ -119,9 +90,9 @@ export function InstallmentModal({ leadId, productId, installment, onClose, onSa
               inputMode="decimal"
               step="0.01"
               min="0"
-              className={inputClass}
+              className={modalInputClass}
             />
-            {errors.amount && <p className="text-red-400 text-sm">{errors.amount.message}</p>}
+            {errors.amount && <p className="text-error text-sm">{errors.amount.message}</p>}
           </div>
 
           {isEdit && (
@@ -143,25 +114,8 @@ export function InstallmentModal({ leadId, productId, installment, onClose, onSa
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-lg text-white/90 hover:text-white transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex items-center gap-2 px-4 py-2 text-lg bg-cyan-500 hover:bg-cyan-400 text-black font-medium rounded-lg transition-colors disabled:opacity-50"
-            >
-              {isSubmitting && <Loader2 size={14} className="animate-spin" />}
-              {isSubmitting ? "Guardando..." : "Guardar"}
-            </button>
-          </div>
+          <ModalFooter onClose={onClose} saving={isSubmitting} />
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 }

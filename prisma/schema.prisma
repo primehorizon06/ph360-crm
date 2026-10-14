@@ -98,15 +98,16 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  company           Company?       @relation(fields: [companyId], references: [id])
-  team              Team?          @relation(fields: [teamId], references: [id])
+  company           Company?        @relation(fields: [companyId], references: [id])
+  team              Team?           @relation(fields: [teamId], references: [id])
   leads             Lead[]
   notes             Note[]
-  remindersAssigned Reminder[]     @relation("ReminderAssignedTo")
-  remindersCreated  Reminder[]     @relation("ReminderCreatedBy")
+  remindersAssigned Reminder[]      @relation("ReminderAssignedTo")
+  remindersCreated  Reminder[]      @relation("ReminderCreatedBy")
   notifications     Notification[]
-  goals             Goal[]         @relation("GoalUser")
-  goalsCreated      Goal[]         @relation("GoalCreatedBy")
+  goals             Goal[]          @relation("GoalUser")
+  goalsCreated      Goal[]          @relation("GoalCreatedBy")
+  chargeAttempts    ChargeAttempt[]
 }
 
 // ─── PERMISOS ─────────────────────────────────────────────────────────────────
@@ -166,6 +167,7 @@ model Lead {
   productApprovals      ProductApproval[]
   customerStatus        CustomerStatus?
   convertedAt           DateTime?
+  soarCustomerId        String?           @unique // cliente ACH en SOAR (identifier = id del lead)
 
   company       Company        @relation(fields: [companyId], references: [id])
   team          Team           @relation(fields: [teamId], references: [id])
@@ -306,6 +308,8 @@ model PaymentMethod {
   accountBank   String?
   routingNumber String?
   accountType   AccountType?
+  soarAccountId String? // cuenta del cliente en SOAR; se borra si cambian cuenta o ruta
+  soarSyncError String? // último error al crear el cliente o la cuenta en SOAR
 
   leadProduct Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
@@ -328,9 +332,77 @@ model Installment {
   amount        Decimal           @db.Decimal(10, 2)
   status        InstallmentStatus @default(PENDING)
   paidAt        DateTime?
+  suspendedAt   DateTime?
+  suspendReason String?
+  attempts      ChargeAttempt[]
 
   @@index([paidAt])
   @@index([status])
+  @@index([status, date])
+}
+
+// ─── COBROS ──────────────────────────────────────────────────────────────────
+
+enum Processor {
+  SOAR_ACH
+  AUTHNET_CARD
+}
+
+enum ChargeAttemptStatus {
+  PROCESSING // creado en el procesador, todavía no liquidado
+  SUCCEEDED // liquidado (Settled / settledSuccessfully)
+  FAILED // devuelto o rechazado, o error al crearlo
+  VOIDED // anulado antes de liquidarse
+  CHARGEBACK // contracargo de tarjeta
+}
+
+// Cada intento de cobro de una cuota (débito ACH o pago con tarjeta). Una
+// cuota puede tener varios: un débito devuelto, otro reprogramado, una tarjeta.
+// El estado de la cuota se calcula a partir del último intento.
+model ChargeAttempt {
+  id            Int                 @id @default(autoincrement())
+  installmentId Int
+  processor     Processor
+  externalId    String? // id del débito en SOAR o transId de Authorize.net
+  amount        Decimal             @db.Decimal(10, 2)
+  status        ChargeAttemptStatus
+  rawStatus     String? // estado tal como lo informa el procesador
+  failureCode   String? // código de devolución ACH (R01…) o motivo de rechazo
+  failureReason String?
+  cardLast4     String?
+  cardBrand     String?
+  chargedById   Int
+  settledAt     DateTime?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  installment Installment    @relation(fields: [installmentId], references: [id], onDelete: Cascade)
+  chargedBy   User           @relation(fields: [chargedById], references: [id])
+  events      PaymentEvent[]
+
+  @@unique([processor, externalId])
+  @@index([installmentId])
+  @@index([status])
+}
+
+// Registro crudo de lo que informan los procesadores (webhooks y
+// conciliación). Sirve para no procesar dos veces el mismo evento y para
+// revisar qué llegó.
+model PaymentEvent {
+  id          Int       @id @default(autoincrement())
+  attemptId   Int?
+  processor   Processor
+  eventId     String? // id del evento en el procesador (idempotencia)
+  eventType   String
+  externalId  String?
+  payload     Json
+  processedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  attempt ChargeAttempt? @relation(fields: [attemptId], references: [id], onDelete: SetNull)
+
+  @@unique([processor, eventId])
+  @@index([externalId])
 }
 
 enum ConversionStatus {
@@ -383,6 +455,8 @@ model Notification {
 enum InstallmentStatus {
   PENDING
   SUSPENDED
+  PROCESSING
+  CHARGEBACK
   PAID
   FAILED
   CANCELLED
@@ -434,6 +508,11 @@ enum AuditAction {
   PAYMENT_METHOD_UPDATED
   INSTALLMENT_CREATED
   INSTALLMENT_UPDATED
+  INSTALLMENT_SUSPENDED
+  INSTALLMENT_RESCHEDULED
+  CHARGE_CREATED
+  CHARGE_VOIDED
+  SOAR_CUSTOMER_SYNCED
   LEAD_TRANSFERRED
   COMPANY_CREATED
   COMPANY_UPDATED

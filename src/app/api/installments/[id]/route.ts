@@ -1,40 +1,26 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { withAuthParams, badRequest, forbidden, notFound } from "@/lib/api";
 import { canAccessLead, canManagePayments } from "@/lib/permissions";
-import { isProductApproved } from "@/lib/leadService";
+import { findInstallmentContext, updateInstallmentIfStatus } from "@/lib/leadService";
 import {
   installmentUpdateSchema,
   isManualInstallmentStatus,
 } from "@/lib/validations/installment";
-import { logAudit, getRequestMeta } from "@/lib/audit";
+import { statusFields } from "@/lib/collections";
+import { logAudit, getRequestMeta, auditActor } from "@/lib/audit";
 
 // Edita monto, fecha o estado de una cuota. Solo cuotas sin cobro de por medio
 // (pendientes, suspendidas o anuladas): las pagadas o fallidas las determina el
 // procesador de pagos y no se tocan a mano.
 export const PATCH = withAuthParams<{ id: string }>(async (req, session, { id }) => {
-  const existing = await prisma.installment.findUnique({
-    where: { id: Number(id) },
-    include: {
-      paymentPlan: {
-        select: {
-          productId: true,
-          product: {
-            select: {
-              lead: { select: { id: true, companyId: true, teamId: true, assignedToId: true } },
-            },
-          },
-        },
-      },
-    },
-  });
-  if (!existing) return notFound("Cuota no encontrada");
+  const ctx = await findInstallmentContext(Number(id));
+  if (!ctx) return notFound("Cuota no encontrada");
+  const { installment: existing, lead, productId } = ctx;
 
-  const lead = existing.paymentPlan.product.lead;
   if (!canAccessLead(session.user, lead)) return forbidden();
   if (!canManagePayments(session.user.role)) return forbidden();
 
-  if (!(await isProductApproved(existing.paymentPlan.productId)))
+  if (!ctx.productApproved)
     return badRequest("Solo se pueden editar cuotas de un producto aprobado");
 
   if (!isManualInstallmentStatus(existing.status))
@@ -56,21 +42,20 @@ export const PATCH = withAuthParams<{ id: string }>(async (req, session, { id })
 
   if (Object.keys(changes).length === 0) return badRequest("No hay cambios para guardar");
 
-  const installment = await prisma.installment.update({
-    where: { id: existing.id },
-    data: {
-      ...(changes.date ? { date } : {}),
-      ...(changes.amount ? { amount } : {}),
-      ...(changes.status ? { status } : {}),
-    },
+  // El motivo de suspensión solo se registra desde la acción "Suspender" de la
+  // cola de cobros.
+  const installment = await updateInstallmentIfStatus(existing.id, existing.status, {
+    ...(changes.date ? { date } : {}),
+    ...(changes.amount ? { amount } : {}),
+    ...(changes.status && status ? statusFields(status) : {}),
   });
 
   await logAudit({
     action: "INSTALLMENT_UPDATED",
-    actor: { id: session.user.id, role: session.user.role, name: session.user.name },
+    actor: auditActor(session.user),
     entityType: "Installment",
     entityId: installment.id,
-    metadata: { leadId: lead.id, productId: existing.paymentPlan.productId, changes },
+    metadata: { leadId: lead.id, productId, changes },
     ...getRequestMeta(req),
   });
 

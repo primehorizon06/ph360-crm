@@ -8,6 +8,7 @@ import { encryptRandom, decrypt } from "@/lib/crypto";
 import { logAudit, getRequestMeta } from "@/lib/audit";
 
 const ENCRYPTED_FIELDS = ["accountNumber", "routingNumber"] as const;
+const SOAR_ACCOUNT_FIELDS = ["accountNumber", "routingNumber", "accountType", "accountHolder"] as const;
 
 // Datos del método de pago de un producto. El tipo (tarjeta o cuenta) no
 // cambia; solo sus datos. Número de cuenta y de ruta se guardan cifrados.
@@ -54,9 +55,21 @@ export const PATCH = withAuthParams<{ id: string; productId: string }>(
       ]),
     );
 
+    // Si cambia la cuenta, la registrada en SOAR deja de servir: el próximo
+    // cobro (o /soar-sync) registra la nueva.
+    const accountChanged = changedFields.some((f) =>
+      (SOAR_ACCOUNT_FIELDS as readonly string[]).includes(f),
+    );
+
     const updated = await prisma.paymentMethod.update({
       where: { id: existing.id },
-      data,
+      data: {
+        ...data,
+        ...(changedFields.includes("accountNumber")
+          ? { lastFour: plain.accountNumber.slice(-4) }
+          : {}),
+        ...(accountChanged ? { soarAccountId: null, soarSyncError: null } : {}),
+      },
     });
 
     await logAudit({

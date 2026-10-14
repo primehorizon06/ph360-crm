@@ -29,6 +29,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **feat**(roles): add Customer Service roles and make admin a global role
 - **feat**(products): let Customer Service Holding manage payment data and installments
 - **feat**(users): show role labels and toggle user status with a switch
+- **feat**(collections): add Customer Service collections queue and SOAR ACH charges
 
 ### Changed
 

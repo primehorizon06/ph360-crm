@@ -23,6 +23,7 @@ import {
   CardType,
   DataPicker,
   PaymentMethodType,
+  ChargeAttemptItem,
   Product,
   ProductCatalogItem,
   Props,
@@ -45,6 +46,7 @@ import {
   canResubmitProduct,
 } from "@/lib/permissions";
 import { isManualInstallmentStatus } from "@/lib/validations/installment";
+import { postAction } from "@/lib/postAction";
 import { PaymentMethodEditModal } from "@/components/leads/ProductPayments/PaymentMethodEditModal";
 import { InstallmentModal } from "@/components/leads/ProductPayments/InstallmentModal";
 
@@ -56,6 +58,8 @@ const STATUS_STYLES: Record<string, string> = {
   CANCELLED: "bg-surface-variant text-on-surface-variant",
   PENDING: "bg-warning/10 text-warning",
   SUSPENDED: "bg-attention/10 text-attention",
+  PROCESSING: "bg-tertiary/10 text-tertiary",
+  CHARGEBACK: "bg-error/10 text-error",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -64,6 +68,24 @@ const STATUS_LABELS: Record<string, string> = {
   CANCELLED: "Cancelado",
   PENDING: "Pendiente",
   SUSPENDED: "Suspendido",
+  PROCESSING: "En proceso",
+  CHARGEBACK: "Contracargo",
+};
+
+const ATTEMPT_LABELS: Record<ChargeAttemptItem["status"], string> = {
+  PROCESSING: "En proceso",
+  SUCCEEDED: "Pagado",
+  FAILED: "Devuelto",
+  VOIDED: "Anulado",
+  CHARGEBACK: "Contracargo",
+};
+
+const ATTEMPT_STYLES: Record<ChargeAttemptItem["status"], string> = {
+  PROCESSING: "text-tertiary",
+  SUCCEEDED: "text-success",
+  FAILED: "text-error",
+  VOIDED: "text-on-surface-variant",
+  CHARGEBACK: "text-error",
 };
 
 // ─── InstallmentRow component ─────────────────────────────────────────────────
@@ -75,6 +97,8 @@ interface InstallmentItem {
   amount: number;
   status: string;
   paidAt?: string | null;
+  suspendReason?: string | null;
+  attempts?: ChargeAttemptItem[];
 }
 
 function InstallmentRow({
@@ -88,6 +112,8 @@ function InstallmentRow({
 }) {
   const [expanded, setExpanded] = useState(false);
   const isPaid = inst.status === "PAID";
+  const attempts = inst.attempts ?? [];
+  const hasDetail = isPaid || attempts.length > 0 || !!inst.suspendReason;
 
   return (
     <div>
@@ -95,10 +121,10 @@ function InstallmentRow({
       <div className="flex items-center gap-1">
       <button
         type="button"
-        onClick={() => isPaid && setExpanded((p) => !p)}
+        onClick={() => hasDetail && setExpanded((p) => !p)}
         className={`flex-1 min-w-0 flex items-center justify-between px-2 py-1.5 rounded-md transition-colors ${
           idx % 2 === 0 ? "bg-white/5" : ""
-        } ${isPaid ? "cursor-pointer hover:bg-white/10" : "cursor-default"}`}
+        } ${hasDetail ? "cursor-pointer hover:bg-white/10" : "cursor-default"}`}
       >
         <div className="flex items-center gap-2">
           <span className="w-5 h-5 rounded-full bg-white/5 flex items-center justify-center text-md text-white/90 shrink-0">
@@ -119,7 +145,7 @@ function InstallmentRow({
           <span className="text-white text-sm">
             $ {formatAmount(Number(inst.amount))}
           </span>
-          {isPaid &&
+          {hasDetail &&
             (expanded ? (
               <ChevronUp size={12} className="text-white/90" />
             ) : (
@@ -164,6 +190,36 @@ function InstallmentRow({
           </div>
         </div>
       )}
+
+      {/* Motivo de suspensión e historial de intentos de cobro */}
+      {expanded && (inst.suspendReason || attempts.length > 0) && (
+        <div className="mx-2 mb-1.5 px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg space-y-1.5">
+          {inst.suspendReason && (
+            <p className="text-md text-white/90">
+              <span className="text-attention">Suspendida:</span> {inst.suspendReason}
+            </p>
+          )}
+          {attempts.map((a) => (
+            <div key={a.id} className="flex items-start justify-between gap-2 text-md">
+              <div className="min-w-0">
+                <p className="text-white/90">
+                  {a.processor === "SOAR_ACH" ? "Débito ACH" : `Tarjeta ···· ${a.cardLast4 ?? "—"}`}{" "}
+                  · {formatDate(a.createdAt)} · {a.chargedBy.name}
+                </p>
+                {a.failureReason && (
+                  <p className="text-sm text-error">
+                    {a.failureCode ? `${a.failureCode} · ` : ""}
+                    {a.failureReason}
+                  </p>
+                )}
+              </div>
+              <span className={`shrink-0 font-medium ${ATTEMPT_STYLES[a.status]}`}>
+                {ATTEMPT_LABELS[a.status]}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -195,6 +251,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
     installment?: InstallmentItem;
   } | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
+  const [syncingProduct, setSyncingProduct] = useState<number | null>(null);
   const managesPayments = canManagePayments(role ?? "");
 
   const {
@@ -306,6 +363,16 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
     toast.success("Producto reenviado para aprobación");
     reloadProducts();
     onProductCreated?.();
+  }
+
+  async function handleSoarSync(productId: number) {
+    setSyncingProduct(productId);
+    await postAction(`/api/leads/${leadId}/products/${productId}/soar-sync`, undefined, {
+      success: "Cliente sincronizado con SOAR",
+      error: "No se pudo sincronizar con SOAR",
+    });
+    setSyncingProduct(null);
+    reloadProducts();
   }
 
   async function handleToggleStatus(product: Product) {
@@ -759,6 +826,29 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                     )}
                   </div>
                 )}
+
+                {isApproved &&
+                  lp.paymentMethod?.type === "CUENTA" &&
+                  !lp.paymentMethod.soarAccountId &&
+                  lp.paymentMethod.soarSyncError && (
+                    <div className="rounded-lg border border-attention/30 bg-attention/10 px-3 py-2 space-y-1.5">
+                      <p className="text-sm text-attention font-medium">
+                        Pendiente de sincronizar con SOAR
+                      </p>
+                      <p className="text-sm text-white/90">{lp.paymentMethod.soarSyncError}</p>
+                      {managesPayments && (
+                        <button
+                          type="button"
+                          onClick={() => handleSoarSync(lp.id)}
+                          disabled={syncingProduct === lp.id}
+                          className="flex items-center gap-1.5 text-sm text-attention hover:text-white transition-colors disabled:opacity-50"
+                        >
+                          <RotateCcw size={12} className={syncingProduct === lp.id ? "animate-spin" : ""} />
+                          Reintentar
+                        </button>
+                      )}
+                    </div>
+                  )}
 
                 {lp.paymentPlan && lp.paymentPlan.installments.length > 0 && (
                   <div className="border-t border-white/5 pt-2 space-y-0.5">

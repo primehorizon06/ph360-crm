@@ -18,6 +18,11 @@ interface LogAuditParams {
   userAgent?: string | null;
 }
 
+/** Actor de auditoría a partir del usuario de la sesión. */
+export function auditActor(user: AuditActor): AuditActor {
+  return { id: user.id, role: user.role, name: user.name };
+}
+
 // Para usar en API routes (withAuth), donde req es un NextRequest real.
 export function getRequestMeta(req: NextRequest): { ip: string | null; userAgent: string | null } {
   const forwarded = req.headers.get("x-forwarded-for");

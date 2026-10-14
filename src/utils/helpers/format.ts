@@ -1,5 +1,9 @@
 import { Installment } from "../interfaces/paymentPlanPicker";
 
+export function formatFullName(person: { firstName: string; lastName?: string | null }): string {
+  return `${person.firstName} ${person.lastName ?? ""}`.trim();
+}
+
 export function formatDate(iso: string | Date): string {
   const date = new Date(iso);
   const day = date.getDate().toString().padStart(2, "0");
