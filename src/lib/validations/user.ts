@@ -1,5 +1,5 @@
 import { UserRole } from "@/utils/constants/roles";
-import { isGlobalRole } from "@/lib/permissions";
+import { isGlobalRole, roleRequiresTeam } from "@/lib/permissions";
 import { z } from "zod";
 
 export const PASSWORD_MIN_LENGTH = 10;
@@ -70,9 +70,7 @@ const baseSchema = z
       });
     }
 
-    const requiresTeam = ([UserRole.AGENT, UserRole.COACH] as UserRole[]).includes(data.role);
-
-    if (requiresTeam && !data.teamId) {
+    if (roleRequiresTeam(data.role) && !data.teamId) {
       ctx.addIssue({
         path: ["teamId"],
         code: "custom",

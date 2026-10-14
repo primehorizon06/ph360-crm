@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { UserRole } from "@/utils/constants/roles";
 
 export interface ScopeUser {
@@ -46,8 +46,15 @@ export function isCustomerService(role: string): boolean {
   return role === UserRole.CUSTOMER_SERVICE || isGlobalCustomerService(role);
 }
 
+/** Roles que pertenecen a una franquicia y a un equipo (el equipo es obligatorio). */
+export function roleRequiresTeam(role: string): boolean {
+  return role === UserRole.AGENT || role === UserRole.COACH;
+}
+
+// Un lead se crea en la franquicia y el equipo de quien lo crea, así que solo
+// pueden crearlo los roles que tienen ambos.
 export function canCreateLead(role: string): boolean {
-  return !isCustomerService(role);
+  return roleRequiresTeam(role);
 }
 
 export function canCreateProduct(role: string): boolean {

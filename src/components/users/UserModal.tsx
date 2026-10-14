@@ -17,7 +17,7 @@ import { Avatar } from "../ui/Avatar";
 import { CustomSelect } from "../ui/Select";
 import { roleLabel, roles, UserRole } from "@/utils/constants/roles";
 import { fetcher } from "@/lib/fetcher";
-import { isGlobalRole } from "@/lib/permissions";
+import { isGlobalRole, roleRequiresTeam } from "@/lib/permissions";
 
 interface Props {
   user: User | null;
@@ -57,7 +57,7 @@ export function UserModal({ user, onClose, onSave }: Props) {
   const isGlobal = isGlobalRole(role);
 
   useEffect(() => {
-    if (role !== UserRole.AGENT && role !== UserRole.COACH) {
+    if (!roleRequiresTeam(role)) {
       setValue("teamId", "");
     }
     if (isGlobalRole(role)) {

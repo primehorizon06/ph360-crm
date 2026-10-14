@@ -5,13 +5,12 @@ import { buildScopeFilter, canCreateLead } from "@/lib/permissions";
 import { CustomerStatus, LeadStatus, Prisma } from "@prisma/client";
 import { encryptDeterministic } from "@/lib/crypto";
 import { leadSchema } from "@/lib/validations/lead";
-import { UserRole } from "@/utils/constants/roles";
 import { logAudit, getRequestMeta } from "@/lib/audit";
 import {
   findDuplicatePhone,
   findDuplicateSsn,
   describeDuplicateOwner,
-  findLeadIdsByPhoneDigits,
+  buildLeadSearchFilter,
 } from "@/lib/leadService";
 
 const LIMIT_DEFAULT = 50;
@@ -43,17 +42,7 @@ export const GET = withAuth(async (req, session) => {
   }
 
   if (search) {
-    const phoneIds = await findLeadIdsByPhoneDigits(search);
-    where = {
-      ...where,
-      OR: [
-        { firstName: { contains: search, mode: "insensitive" } },
-        { lastName: { contains: search, mode: "insensitive" } },
-        { phone1: { contains: search } },
-        { email: { contains: search, mode: "insensitive" } },
-        ...(phoneIds.length ? [{ id: { in: phoneIds } }] : []),
-      ],
-    };
+    where = { ...where, ...(await buildLeadSearchFilter(search, { matchEmail: true })) };
   }
 
   const select: Prisma.LeadSelect = {
@@ -119,24 +108,12 @@ export const POST = withAuth(async (req, session) => {
     contactTime,
   } = parsed.data;
 
-  let companyId: number;
-  let teamId: number;
-  let assignedToId: number;
-
-  if (user.role === UserRole.ADMIN) {
-    companyId = Number(rawBody.companyId);
-    teamId = Number(rawBody.teamId);
-    assignedToId = Number(rawBody.assignedToId);
-    if (!companyId || !teamId || !assignedToId)
-      return badRequest("Selecciona franquicia, equipo y agente asignado");
-  } else {
-    if (!user.companyId || !user.id) return badRequest("Campos requeridos faltantes");
-    if (!user.teamId)
-      return badRequest("Tu usuario no tiene un equipo asignado. Contacta a un administrador.");
-    companyId = Number(user.companyId);
-    teamId = Number(user.teamId);
-    assignedToId = Number(user.id);
-  }
+  // El lead queda en la franquicia y el equipo de quien lo crea, asignado a él.
+  if (!user.companyId || !user.teamId)
+    return badRequest("Tu usuario no tiene franquicia o equipo asignado. Contacta a un administrador.");
+  const companyId = Number(user.companyId);
+  const teamId = Number(user.teamId);
+  const assignedToId = Number(user.id);
 
   const existingPhone = await findDuplicatePhone(null, phone1);
   if (existingPhone)
