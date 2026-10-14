@@ -14,7 +14,7 @@ sleep 5
 
 # Ejecutar migraciones
 echo "📦 Ejecutando migraciones de Prisma..."
-docker-compose run --rm prisma-migrate npx prisma migrate dev
+docker-compose run --rm prisma-migrate npx prisma migrate deploy
 
 # Generar Prisma Client
 echo "🔧 Generando Prisma Client..."

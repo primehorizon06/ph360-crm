@@ -19,12 +19,13 @@ npm run lint             # ESLint check
 # Docker (preferred for full stack)
 npm run docker:up        # Start all services (app + postgres)
 npm run docker:down      # Stop services
-npm run docker:migrate   # Run Prisma migrations inside container
+npm run docker:migrate   # Apply pending migrations inside container (migrate deploy, never resets)
+npm run docker:migrate:create -- --name <desc>  # Create a new migration (migrate dev --create-only); answer "No" if it offers a reset
 npm run docker:seed      # Seed database
 npm run docker:studio    # Open Prisma Studio
 
 # Database (local)
-npx prisma migrate dev   # Apply migrations + regenerate client
+npx prisma migrate deploy   # Apply migrations (never use `migrate dev` to apply: it can reset the DB)
 npx prisma generate      # Regenerate Prisma client after schema changes
 npx prisma studio        # Browse database
 ```

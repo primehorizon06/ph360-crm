@@ -75,7 +75,7 @@ function checkPrisma(staged) {
       [
         `Cambiaste ${SCHEMA} pero no hay una migración nueva en el commit.`,
         "  Créala en el contenedor y agrégala:",
-        "    docker-compose exec nextjs-dev npx prisma migrate dev --name <descripcion>",
+        "    npm run docker:migrate:create -- --name <descripcion>",
         "    git add prisma/migrations",
       ].join("\n"),
     );

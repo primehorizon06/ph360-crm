@@ -84,7 +84,7 @@ Antes de comenzar, asegúrate de tener instalados:
 
 2. **Ejecuta las migraciones:**
    ```bash
-   npx prisma migrate dev
+   npx prisma migrate deploy
    ```
 
 3. **Genera el cliente de Prisma:**
@@ -136,7 +136,8 @@ npm run docker:up        # Levanta servicios de Docker
 npm run docker:down      # Detiene servicios de Docker
 npm run docker:build     # Construye imágenes de Docker
 npm run docker:logs      # Muestra logs de Docker
-npm run docker:migrate   # Ejecuta migraciones de Prisma
+npm run docker:migrate   # Aplica migraciones pendientes (migrate deploy, nunca borra datos)
+npm run docker:migrate:create -- --name <desc>  # Crea una migración nueva (si ofrece reiniciar la base, responder "No")
 npm run docker:studio    # Abre Prisma Studio
 npm run docker:seed      # Ejecuta seeder de datos
 npm run docker:shell     # Accede al shell del contenedor
