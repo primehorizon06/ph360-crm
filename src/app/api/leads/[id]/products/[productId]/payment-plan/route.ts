@@ -4,6 +4,7 @@ import { withAuthParams, badRequest, forbidden, notFound } from "@/lib/api";
 import { canAccessLead, isCustomerService } from "@/lib/permissions";
 import { findLeadProduct, parseInstallments } from "@/lib/leadService";
 import { checkPlanTotal } from "@/lib/validations/productCatalog";
+import { isWeekendDate, WEEKEND_DATE_ERROR } from "@/lib/businessDays";
 
 export const PUT = withAuthParams<{ id: string; productId: string }>(
   async (req, session, { id, productId }) => {
@@ -23,6 +24,16 @@ export const PUT = withAuthParams<{ id: string; productId: string }>(
 
     const installments = parseInstallments((await req.json()).installments);
     if (!installments) return badRequest("Se requiere al menos una cuota válida");
+    const existingDates = new Set(
+      (
+        await prisma.installment.findMany({
+          where: { paymentPlan: { productId: Number(productId) } },
+          select: { date: true },
+        })
+      ).map((i) => i.date.getTime()),
+    );
+    if (installments.some((i) => !existingDates.has(i.date.getTime()) && isWeekendDate(i.date)))
+      return badRequest(WEEKEND_DATE_ERROR);
 
     const planError = checkPlanTotal(
       installments.reduce((acc, i) => acc + i.amount, 0),

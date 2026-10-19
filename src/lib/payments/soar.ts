@@ -1,4 +1,5 @@
 import { env } from "@/env";
+import { startOfDay } from "@/lib/businessDays";
 
 // Cliente del Dashboard API de SOAR (ACH).
 //
@@ -37,6 +38,8 @@ export interface SoarClient {
     accountId: string;
     amount: number;
     memo: string;
+    /** Día hábil (YYYY-MM-DD) en que SOAR debe procesarlo; puede ser futuro. */
+    effectiveDate: string;
   }): Promise<{ id: string }>;
   getDebit(id: string): Promise<SoarDebit>;
   voidDebit(id: string): Promise<void>;
@@ -146,13 +149,14 @@ function createLiveClient(baseUrl: string, token: string, dbaId: string): SoarCl
       return { accountId: String(res.id) };
     },
 
-    async createDebit({ customerId, accountId, amount, memo }) {
+    async createDebit({ customerId, accountId, amount, memo, effectiveDate }) {
       const res = await request<{ id: string }>("POST", "/ach", {
         dba: { id: dbaId },
         type: "Debit",
         secCode: "TEL",
         amount,
         memo,
+        transactionDate: effectiveDate,
         customer: { id: customerId },
         account: { id: accountId },
       });
@@ -172,9 +176,9 @@ function createLiveClient(baseUrl: string, token: string, dbaId: string): SoarCl
 
 // ─── Cliente simulado (solo desarrollo) ───────────────────────────────────────
 //
-// Sin estado: el id del débito lleva la hora de creación y los centavos del
-// monto, y de ahí se deduce el estado al consultarlo.
-//   - Primer minuto: Pending.
+// Sin estado: el id del débito lleva hasta cuándo sigue pendiente y los
+// centavos del monto, y de ahí se deduce el estado al consultarlo.
+//   - Pending hasta un minuto después de su fecha de proceso (o de crearlo).
 //   - Después: Settled, salvo que el monto termine en .13 (Returned R01,
 //     fondos insuficientes) o en .10 (Returned R10, no autorizado).
 
@@ -192,14 +196,16 @@ function createMockClient(): SoarClient {
       return { accountId: `mock_acc_${rand()}` };
     },
 
-    async createDebit({ amount }) {
+    async createDebit({ amount, effectiveDate }) {
       const cents = Math.round(amount * 100) % 100;
-      return { id: `mock_ach_${Date.now()}_${cents}_${rand()}` };
+      const pendingUntil =
+        Math.max(Date.now(), startOfDay(effectiveDate).getTime()) + MOCK_PENDING_MS;
+      return { id: `mock_ach_${pendingUntil}_${cents}_${rand()}` };
     },
 
     async getDebit(id) {
-      const [, , createdAt, cents] = id.split("_");
-      const pending = Date.now() - Number(createdAt) < MOCK_PENDING_MS;
+      const [, , pendingUntil, cents] = id.split("_");
+      const pending = Date.now() < Number(pendingUntil);
       const returnCode = cents === "13" ? "R01" : cents === "10" ? "R10" : null;
       if (pending) return { id, status: "Pending", returnCode: null };
       if (returnCode) return { id, status: "Returned", returnCode };

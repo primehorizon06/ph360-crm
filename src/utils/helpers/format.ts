@@ -4,6 +4,24 @@ export function formatFullName(person: { firstName: string; lastName?: string | 
   return `${person.firstName} ${person.lastName ?? ""}`.trim();
 }
 
+/** Fecha de calendario "YYYY-MM-DD", p. ej. "lunes 19 de octubre" o "lun 19 oct". */
+export function formatYmd(ymd: string, style: "long" | "short" = "long"): string {
+  const [year, month, day] = ymd.split("-").map(Number);
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("es-CO", {
+      timeZone: "UTC",
+      weekday: style,
+      day: "numeric",
+      month: style,
+    })
+      .formatToParts(new Date(Date.UTC(year, month - 1, day)))
+      .map((p) => [p.type, p.value.replace(/\./g, "")]),
+  );
+  return style === "long"
+    ? `${parts.weekday} ${parts.day} de ${parts.month}`
+    : `${parts.weekday} ${parts.day} ${parts.month}`;
+}
+
 export function formatDate(iso: string | Date): string {
   const date = new Date(iso);
   const day = date.getDate().toString().padStart(2, "0");

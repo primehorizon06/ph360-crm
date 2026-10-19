@@ -70,6 +70,17 @@ export function canManagePayments(role: string): boolean {
   return role === UserRole.ADMIN || isGlobalCustomerService(role);
 }
 
+/** Marcar la confirmación de una cuota (el cliente autorizó el débito). */
+export function canConfirmInstallment(role: string): boolean {
+  return (
+    role === UserRole.ADMIN ||
+    role === UserRole.SUPERVISOR ||
+    role === UserRole.AGENT ||
+    role === UserRole.COACH ||
+    isCustomerService(role)
+  );
+}
+
 export function canEditMainPhone(role: string): boolean {
   return role === UserRole.ADMIN || isGlobalCustomerService(role);
 }

@@ -39,6 +39,8 @@ export interface PaymentMethod {
 export interface ChargeAttemptItem {
   id: number;
   processor: "SOAR_ACH" | "AUTHNET_CARD";
+  /** Id del débito en SOAR (o transId de Authorize.net). */
+  externalId: string | null;
   status: "PROCESSING" | "SUCCEEDED" | "FAILED" | "VOIDED" | "CHARGEBACK";
   failureCode: string | null;
   failureReason: string | null;
@@ -73,6 +75,8 @@ export interface Product {
       status: InstallmentStatus;
       paidAt?: string | null;
       suspendReason?: string | null;
+      confirmedAt?: string | null;
+      confirmedBy?: { name: string } | null;
       attempts?: ChargeAttemptItem[];
     }[];
   };

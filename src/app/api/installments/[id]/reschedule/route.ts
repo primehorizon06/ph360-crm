@@ -3,7 +3,8 @@ import { withAuthParams, badRequest, forbidden, notFound } from "@/lib/api";
 import { canAccessLead, canManagePayments } from "@/lib/permissions";
 import { findInstallmentContext, updateInstallmentIfStatus } from "@/lib/leadService";
 import { rescheduleSchema } from "@/lib/validations/installment";
-import { canReschedule, startOfToday, statusFields } from "@/lib/collections";
+import { canReschedule, statusFields } from "@/lib/collections";
+import { isWeekendDate, startOfToday, WEEKEND_DATE_ERROR } from "@/lib/businessDays";
 import { logAudit, getRequestMeta, auditActor } from "@/lib/audit";
 
 // Mueve una cuota pendiente, suspendida o devuelta a una nueva fecha (hoy o
@@ -28,6 +29,7 @@ export const POST = withAuthParams<{ id: string }>(async (req, session, { id }) 
 
   const { date } = parsed.data;
   if (date < startOfToday()) return badRequest("La nueva fecha no puede ser anterior a hoy");
+  if (isWeekendDate(date)) return badRequest(WEEKEND_DATE_ERROR);
 
   const installment = await updateInstallmentIfStatus(existing.id, existing.status, {
     date,

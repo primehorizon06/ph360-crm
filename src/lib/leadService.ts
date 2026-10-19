@@ -100,7 +100,7 @@ export async function findInstallmentContext(installmentId: number) {
 export async function updateInstallmentIfStatus(
   id: number,
   expected: InstallmentStatus,
-  data: Prisma.InstallmentUpdateManyMutationInput,
+  data: Prisma.InstallmentUncheckedUpdateManyInput,
 ) {
   const { count } = await prisma.installment.updateMany({ where: { id, status: expected }, data });
   if (count === 0)

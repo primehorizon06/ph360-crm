@@ -1,12 +1,12 @@
 import { z } from "zod";
 
-// Estados que se pueden asignar a mano. PAID y FAILED los determina el
-// procesador de pagos, y una cuota en esos estados ya no se edita.
-export const MANUAL_INSTALLMENT_STATUSES = ["PENDING", "SUSPENDED", "CANCELLED"] as const;
-export type ManualInstallmentStatus = (typeof MANUAL_INSTALLMENT_STATUSES)[number];
+// Estados en los que se pueden editar la fecha y el monto de un pago. El
+// estado nunca se cambia a mano: lo determinan las acciones (suspender,
+// reprogramar, cobrar) y lo que informa SOAR.
+const EDITABLE_INSTALLMENT_STATUSES = ["PENDING", "SUSPENDED"];
 
-export function isManualInstallmentStatus(status: string): status is ManualInstallmentStatus {
-  return (MANUAL_INSTALLMENT_STATUSES as readonly string[]).includes(status);
+export function isEditableInstallmentStatus(status: string): boolean {
+  return EDITABLE_INSTALLMENT_STATUSES.includes(status);
 }
 
 const MAX_AMOUNT = 99_999_999.99;
@@ -18,7 +18,8 @@ export const installmentFormSchema = z.object({
     .string()
     .min(1, "El monto es requerido")
     .refine((v) => Number(v) > 0 && Number(v) <= MAX_AMOUNT, "El monto debe ser mayor a 0"),
-  status: z.enum(MANUAL_INSTALLMENT_STATUSES),
+  /** Pago confirmado: el cliente autorizó el débito de esa fecha y ese monto. */
+  confirmed: z.boolean(),
 });
 
 export type InstallmentFormData = z.infer<typeof installmentFormSchema>;
@@ -51,17 +52,15 @@ export const rescheduleFormSchema = z.object({
 export type RescheduleFormData = z.infer<typeof rescheduleFormSchema>;
 export const rescheduleSchema = z.object({ date: dateField });
 
-// Cobro ACH con SEC TEL: cada débito necesita la autorización del cliente por
-// teléfono para ese monto y esa fecha.
-export const chargeSchema = z.object({
-  authorized: z.boolean().refine((v) => v, "Confirma que el cliente autorizó el débito"),
+// Confirmación de un pago: el cliente autorizó (por teléfono, código TEL) el
+// débito de ese monto y esa fecha. Es lo que habilita cobrarlo.
+export const confirmSchema = z.object({
+  confirmed: z.boolean({ error: "Indica si el pago queda confirmado" }),
 });
-export type ChargeFormData = z.infer<typeof chargeSchema>;
 
 export const installmentUpdateSchema = z
   .object({
     date: dateField.optional(),
     amount: amountField.optional(),
-    status: z.enum(MANUAL_INSTALLMENT_STATUSES, { error: "Estado inválido" }).optional(),
   })
-  .refine((d) => d.date || d.amount || d.status, "No hay cambios para guardar");
+  .refine((d) => d.date || d.amount, "No hay cambios para guardar");

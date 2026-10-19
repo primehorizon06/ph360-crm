@@ -5,24 +5,31 @@ import { withAuth, badRequest, forbidden } from "@/lib/api";
 import { buildScopeFilter, canManagePayments } from "@/lib/permissions";
 import { buildLeadSearchFilter } from "@/lib/leadService";
 import { decrypt } from "@/lib/crypto";
+import { isYmd, todayYmd, ymdOf } from "@/lib/businessDays";
 import { chargeMemo, isUnconfirmedAttempt, isVoidableAttempt } from "@/lib/payments/status";
 import {
   CollectionView,
   VIEW_ORDER,
   collectableProductFilter,
+  collectionWindow,
+  collectionWindowEnd,
   isCollectionView,
   viewFilter,
+  windowDayFor,
 } from "@/lib/collections";
 
 const LIMIT_DEFAULT = 50;
 const LIMIT_MAX = 200;
 
-// Pestañas que se cuentan por estado en un solo groupBy; "today" y "overdue"
-// comparten PENDING y se separan por fecha.
-const STATUS_VIEWS = { SUSPENDED: "suspended", PROCESSING: "processing", FAILED: "failed" } as const;
-
-// Cola de cobros de Customer Service: cuotas de hoy, atrasadas, suspendidas,
-// en proceso y devueltas de productos aprobados, con el conteo de cada pestaña.
+// Cola de cobros de Customer Service. Solo muestra cuotas confirmadas o que ya
+// pasaron a SOAR. Pestañas:
+//   transfer   — confirmadas sin enviar, por fecha de la ventana (hoy, aunque
+//                no sea hábil, y las 4 fechas hábiles siguientes; las atrasadas
+//                aparecen hoy). La ventana se calcula aquí y no se aceptan otras
+//                fechas.
+//   approved   — pagadas, por fecha de pago (por defecto hoy).
+//   processing — débito enviado o programado.
+//   fallen     — suspendidas y devueltas.
 export const GET = withAuth(async (req, session) => {
   const user = session.user;
   if (!canManagePayments(user.role)) return forbidden();
@@ -31,8 +38,26 @@ export const GET = withAuth(async (req, session) => {
   if (!scopeFilter) return forbidden();
 
   const url = new URL(req.url);
-  const view = url.searchParams.get("view") ?? "today";
+  const view = url.searchParams.get("view") ?? "transfer";
   if (!isCollectionView(view)) return badRequest("Vista inválida");
+
+  const window = collectionWindow();
+  const today = todayYmd();
+  const dateParam = url.searchParams.get("date");
+  if (dateParam && !isYmd(dateParam)) return badRequest("Fecha inválida");
+  // En Transfer, una fecha que ya salió de la ventana (p. ej. la pestaña quedó
+  // abierta desde ayer) vuelve al primer día; la respuesta indica la fecha usada.
+  const date =
+    view === "transfer"
+      ? dateParam && window.includes(dateParam)
+        ? dateParam
+        : window[0]
+      : (dateParam ?? today);
+  if (view === "approved" && date > today)
+    return badRequest("La fecha de pago no puede ser futura");
+
+  const where = viewFilter(view, date, window);
+  if (!where) return badRequest("Fecha inválida");
 
   const search = url.searchParams.get("search")?.trim() || undefined;
   const companyId = Number(url.searchParams.get("companyId")) || undefined;
@@ -42,16 +67,27 @@ export const GET = withAuth(async (req, session) => {
     Math.max(1, parseInt(url.searchParams.get("limit") ?? String(LIMIT_DEFAULT)) || LIMIT_DEFAULT),
   );
 
-  const leadFilter: Prisma.LeadWhereInput = {
-    ...scopeFilter,
-    ...(companyId ? { companyId } : {}),
-    ...(search ? await buildLeadSearchFilter(search, { matchId: true }) : {}),
-  };
-  const base = collectableProductFilter(leadFilter);
+  const agentId = Number(url.searchParams.get("agentId")) || undefined;
 
-  const [rows, byStatus, todayCount, overdueCount] = await Promise.all([
+  // Filtros combinados con AND sobre el alcance del usuario.
+  const leadFilter: Prisma.LeadWhereInput = {
+    AND: [
+      scopeFilter,
+      ...(companyId ? [{ companyId }] : []),
+      ...(agentId ? [{ assignedToId: agentId }] : []),
+      ...(search ? [await buildLeadSearchFilter(search, { matchId: true })] : []),
+    ],
+  };
+  // Transfer (lo que se cobra) solo con productos activos; Aprobados, Proceso y
+  // Caída también con productos suspendidos, para ver sus pagos caídos y anular
+  // sus débitos en curso.
+  const activeBase = collectableProductFilter(leadFilter);
+  const anyBase = collectableProductFilter(leadFilter, { activeOnly: false });
+  const base = view === "transfer" ? activeBase : anyBase;
+
+  const [rows, total, transferDates, byStatus, approvedToday] = await Promise.all([
     prisma.installment.findMany({
-      where: { ...base, ...viewFilter(view) },
+      where: { ...base, ...where },
       orderBy: VIEW_ORDER[view],
       skip: (page - 1) * limit,
       take: limit,
@@ -61,6 +97,9 @@ export const GET = withAuth(async (req, session) => {
         date: true,
         amount: true,
         status: true,
+        paidAt: true,
+        confirmedAt: true,
+        confirmedBy: { select: { name: true } },
         suspendedAt: true,
         suspendReason: true,
         attempts: {
@@ -72,12 +111,12 @@ export const GET = withAuth(async (req, session) => {
             rawStatus: true,
             failureCode: true,
             failureReason: true,
+            scheduledFor: true,
             createdAt: true,
           },
         },
         paymentPlan: {
           select: {
-            _count: { select: { installments: true } },
             product: {
               select: {
                 id: true,
@@ -97,8 +136,8 @@ export const GET = withAuth(async (req, session) => {
                     type: true,
                     firstName: true,
                     lastName: true,
-                    phone1: true,
                     company: { select: { name: true } },
+                    assignedTo: { select: { name: true } },
                   },
                 },
               },
@@ -107,24 +146,41 @@ export const GET = withAuth(async (req, session) => {
         },
       },
     }),
+    prisma.installment.count({ where: { ...base, ...where } }),
+    // Confirmadas sin enviar hasta el fin de la ventana (incluidas las
+    // atrasadas), agrupadas por fecha exacta; abajo se asignan a su día.
     prisma.installment.groupBy({
-      by: ["status"],
-      where: { ...base, status: { in: Object.keys(STATUS_VIEWS) as (keyof typeof STATUS_VIEWS)[] } },
+      by: ["date"],
+      where: {
+        ...activeBase,
+        status: "PENDING",
+        confirmedAt: { not: null },
+        date: { lt: collectionWindowEnd(window) },
+      },
       _count: { _all: true },
     }),
-    prisma.installment.count({ where: { ...base, ...viewFilter("today") } }),
-    prisma.installment.count({ where: { ...base, ...viewFilter("overdue") } }),
+    prisma.installment.groupBy({
+      by: ["status"],
+      where: { ...anyBase, status: { in: ["PROCESSING", "SUSPENDED", "FAILED"] } },
+      _count: { _all: true },
+    }),
+    prisma.installment.count({ where: { ...anyBase, ...viewFilter("approved", today) } }),
   ]);
 
+  const dayCounts = Object.fromEntries(window.map((d) => [d, 0]));
+  for (const row of transferDates) {
+    const day = windowDayFor(window, ymdOf(row.date));
+    if (day) dayCounts[day] += row._count._all;
+  }
+
+  const statusCount = (status: string) =>
+    byStatus.find((row) => row.status === status)?._count._all ?? 0;
   const counts: Record<CollectionView, number> = {
-    today: todayCount,
-    overdue: overdueCount,
-    suspended: 0,
-    processing: 0,
-    failed: 0,
+    transfer: Object.values(dayCounts).reduce((a, b) => a + b, 0),
+    approved: approvedToday,
+    processing: statusCount("PROCESSING"),
+    fallen: statusCount("SUSPENDED") + statusCount("FAILED"),
   };
-  for (const row of byStatus)
-    counts[STATUS_VIEWS[row.status as keyof typeof STATUS_VIEWS]] = row._count._all;
 
   const data = rows.map(({ paymentPlan, attempts, ...inst }) => {
     const { product } = paymentPlan;
@@ -139,7 +195,6 @@ export const GET = withAuth(async (req, session) => {
         unconfirmed: isUnconfirmedAttempt(lastAttempt),
         memo: chargeMemo(inst.id, lastAttempt.id),
       },
-      totalInstallments: paymentPlan._count.installments,
       product: { id: product.id, name: product.catalog.name, color: product.catalog.color },
       lead: product.lead,
       // Solo los últimos 4 dígitos; las cuentas guardadas antes de que se
@@ -156,6 +211,12 @@ export const GET = withAuth(async (req, session) => {
     };
   });
 
-  const total = counts[view];
-  return NextResponse.json({ data, total, totalPages: Math.ceil(total / limit), counts });
+  return NextResponse.json({
+    data,
+    total,
+    totalPages: Math.ceil(total / limit),
+    date: view === "transfer" || view === "approved" ? date : null,
+    window: window.map((d) => ({ date: d, count: dayCounts[d] })),
+    counts,
+  });
 });

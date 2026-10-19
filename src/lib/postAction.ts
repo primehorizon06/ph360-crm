@@ -1,19 +1,23 @@
 import { toast } from "sonner";
 
 /**
- * POST desde el cliente con el aviso correspondiente: muestra `success` si la
- * respuesta es correcta, o el `error` que devuelve la API (o el de respaldo si
- * la red falla). Nunca lanza; devuelve si salió bien.
+ * Petición desde el cliente con su aviso: muestra `success` (si se indica) cuando
+ * la respuesta es correcta, o el `error` que devuelve la API (o el de respaldo
+ * si la red falla). Nunca lanza; devuelve si salió bien.
  */
 export async function postAction(
   url: string,
   body: object | undefined,
-  { success, error = "No se pudo completar la acción" }: { success: string; error?: string },
+  {
+    success,
+    error = "No se pudo completar la acción",
+    method = "POST",
+  }: { success?: string; error?: string; method?: "POST" | "PATCH" },
 ): Promise<boolean> {
   let res: Response;
   try {
     res = await fetch(url, {
-      method: "POST",
+      method,
       ...(body
         ? { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
         : {}),
@@ -27,6 +31,6 @@ export async function postAction(
     toast.error(json.error ?? error);
     return false;
   }
-  toast.success(success);
+  if (success) toast.success(success);
   return true;
 }

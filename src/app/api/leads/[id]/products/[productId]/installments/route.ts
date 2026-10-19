@@ -5,6 +5,7 @@ import { canAccessLead, canManagePayments } from "@/lib/permissions";
 import { findLeadProduct, isProductApproved } from "@/lib/leadService";
 import { installmentCreateSchema } from "@/lib/validations/installment";
 import { logAudit, getRequestMeta } from "@/lib/audit";
+import { isWeekendDate, WEEKEND_DATE_ERROR } from "@/lib/businessDays";
 
 // Agrega una cuota al plan de un producto aprobado. Se numera al final del plan.
 export const POST = withAuthParams<{ id: string; productId: string }>(
@@ -20,6 +21,7 @@ export const POST = withAuthParams<{ id: string; productId: string }>(
     const parsed = installmentCreateSchema.safeParse(await req.json());
     if (!parsed.success)
       return badRequest(parsed.error.issues[0]?.message ?? "Datos inválidos");
+    if (isWeekendDate(parsed.data.date)) return badRequest(WEEKEND_DATE_ERROR);
 
     const plan = await prisma.paymentPlan.upsert({
       where: { productId: match.product.id },

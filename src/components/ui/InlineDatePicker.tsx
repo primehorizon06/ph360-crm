@@ -26,7 +26,8 @@ export function InlineDatePicker({ onChange, highlightDates = [] }: Props) {
           calendarStartDay={1}
           locale="es"
           minDate={new Date()}
-          filterDate={(date) => date.getDay() !== 0}
+          // Las cuotas nunca caen en sábado ni domingo.
+          filterDate={(date) => date.getDay() !== 0 && date.getDay() !== 6}
           monthsShown={2}
         />
       </div>

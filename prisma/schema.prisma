@@ -98,16 +98,17 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  company           Company?        @relation(fields: [companyId], references: [id])
-  team              Team?           @relation(fields: [teamId], references: [id])
-  leads             Lead[]
-  notes             Note[]
-  remindersAssigned Reminder[]      @relation("ReminderAssignedTo")
-  remindersCreated  Reminder[]      @relation("ReminderCreatedBy")
-  notifications     Notification[]
-  goals             Goal[]          @relation("GoalUser")
-  goalsCreated      Goal[]          @relation("GoalCreatedBy")
-  chargeAttempts    ChargeAttempt[]
+  company               Company?        @relation(fields: [companyId], references: [id])
+  team                  Team?           @relation(fields: [teamId], references: [id])
+  leads                 Lead[]
+  notes                 Note[]
+  remindersAssigned     Reminder[]      @relation("ReminderAssignedTo")
+  remindersCreated      Reminder[]      @relation("ReminderCreatedBy")
+  notifications         Notification[]
+  goals                 Goal[]          @relation("GoalUser")
+  goalsCreated          Goal[]          @relation("GoalCreatedBy")
+  chargeAttempts        ChargeAttempt[]
+  confirmedInstallments Installment[]   @relation("InstallmentConfirmedBy")
 }
 
 // ─── PERMISOS ─────────────────────────────────────────────────────────────────
@@ -334,6 +335,12 @@ model Installment {
   paidAt        DateTime?
   suspendedAt   DateTime?
   suspendReason String?
+  // Confirmación de la cuota (el cliente autorizó el débito de esa fecha y ese
+  // monto). Solo las confirmadas llegan a Cobros; se reinicia si la cuota se
+  // reprograma, se suspende, vuelve devuelta o cambia de fecha o monto.
+  confirmedAt   DateTime?
+  confirmedById Int?
+  confirmedBy   User?             @relation("InstallmentConfirmedBy", fields: [confirmedById], references: [id])
   attempts      ChargeAttempt[]
 
   @@index([paidAt])
@@ -372,6 +379,7 @@ model ChargeAttempt {
   cardLast4     String?
   cardBrand     String?
   chargedById   Int
+  scheduledFor  DateTime? // débito programado: día hábil en que SOAR lo procesa
   settledAt     DateTime?
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
@@ -424,6 +432,8 @@ model ProductApproval {
   status         ApprovalStatus @default(PENDING)
   note           String?
   isFirstProduct Boolean        @default(false)
+  /// Momento en que se aprobó; se limpia al rechazar o reenviar.
+  approvedAt     DateTime?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
@@ -510,6 +520,8 @@ enum AuditAction {
   INSTALLMENT_UPDATED
   INSTALLMENT_SUSPENDED
   INSTALLMENT_RESCHEDULED
+  INSTALLMENT_CONFIRMED
+  INSTALLMENT_UNCONFIRMED
   CHARGE_CREATED
   CHARGE_VOIDED
   SOAR_CUSTOMER_SYNCED

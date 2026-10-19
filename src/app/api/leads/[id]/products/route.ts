@@ -7,6 +7,7 @@ import { productSchema } from "@/lib/validations/product";
 import { checkPlanTotal } from "@/lib/validations/productCatalog";
 import { parseInstallments } from "@/lib/leadService";
 import { logAudit, getRequestMeta } from "@/lib/audit";
+import { isWeekendDate, WEEKEND_DATE_ERROR } from "@/lib/businessDays";
 import { notifyLeadReviewers } from "@/lib/approvalService";
 
 export const GET = withAuthParams<{ id: string }>(
@@ -24,11 +25,13 @@ export const GET = withAuthParams<{ id: string }>(
             installments: {
               orderBy: { number: "asc" },
               include: {
+                confirmedBy: { select: { name: true } },
                 attempts: {
                   orderBy: { id: "desc" },
                   select: {
                     id: true,
                     processor: true,
+                    externalId: true,
                     status: true,
                     failureCode: true,
                     failureReason: true,
@@ -96,6 +99,7 @@ export const POST = withAuthParams<{ id: string }>(
 
     const installments = parseInstallments(body.installments);
     if (!installments) return badRequest("Se requiere al menos una cuota válida");
+    if (installments.some((i) => isWeekendDate(i.date))) return badRequest(WEEKEND_DATE_ERROR);
 
     const planError = checkPlanTotal(
       installments.reduce((acc, i) => acc + i.amount, 0),

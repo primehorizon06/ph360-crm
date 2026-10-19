@@ -30,7 +30,7 @@ export const PATCH = withAuthParams<{ id: string; productId: string }>(
 
       await prisma.productApproval.update({
         where: { productId: Number(productId) },
-        data: { status: "PENDING", note: null },
+        data: { status: "PENDING", note: null, approvedAt: null },
       });
 
       await prisma.product.update({
@@ -65,6 +65,7 @@ export const PATCH = withAuthParams<{ id: string; productId: string }>(
       data: {
         status: action === "APPROVE" ? "APPROVED" : "REJECTED",
         note: action === "REJECT" ? note : null,
+        approvedAt: action === "APPROVE" ? new Date() : null,
       },
     });
 

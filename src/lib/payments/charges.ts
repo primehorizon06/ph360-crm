@@ -3,7 +3,15 @@ import { prisma } from "@/lib/prisma";
 import { decrypt } from "@/lib/crypto";
 import { UserFacingError } from "@/lib/errors";
 import { LEAD_ACCESS_SELECT } from "@/lib/leadService";
-import { canCharge, isCollectableProduct, startOfTomorrow, statusFields } from "@/lib/collections";
+import {
+  canCharge,
+  chargeDateFor,
+  COLLECTION_WINDOW_DAYS,
+  collectionWindowEnd,
+  isCollectableProduct,
+  statusFields,
+} from "@/lib/collections";
+import { startOfDay, todayYmd } from "@/lib/businessDays";
 import { getSoarClient, SoarDebit, SoarError } from "@/lib/payments/soar";
 import {
   achReturnReason,
@@ -132,7 +140,8 @@ export async function ensureSoarAccount(productId: number) {
 // ─── Cobro ────────────────────────────────────────────────────────────────────
 
 /**
- * Crea el débito ACH (SEC TEL) de una cuota pendiente de hoy o atrasada. La
+ * Crea el débito ACH (SEC TEL) de una cuota pendiente y confirmada: atrasada, de hoy, o de
+ * una fecha hábil futura dentro de la ventana de cobro (queda programado). La
  * cuota pasa a PROCESSING de forma atómica, así dos personas no pueden cobrar
  * la misma cuota a la vez.
  */
@@ -144,6 +153,7 @@ export async function chargeInstallment(installmentId: number, chargedById: numb
       status: true,
       date: true,
       amount: true,
+      confirmedAt: true,
       paymentPlan: {
         select: {
           product: {
@@ -158,18 +168,28 @@ export async function chargeInstallment(installmentId: number, chargedById: numb
   const { product } = installment.paymentPlan;
   if (!isCollectableProduct(product))
     throw new ChargeError("Solo se cobran cuotas de productos aprobados y activos");
-  if (!canCharge(installment.status))
+  if (installment.status !== "PENDING")
     throw new ChargeError("Solo se puede cobrar una cuota pendiente");
-  if (installment.date >= startOfTomorrow())
-    throw new ChargeError("La cuota todavía no vence; se cobra en su fecha");
+  if (!canCharge(installment))
+    throw new ChargeError("El pago no está confirmado; confírmalo antes de cobrarlo");
+  if (installment.date >= collectionWindowEnd())
+    throw new ChargeError(
+      `Solo se puede cobrar o programar hasta ${COLLECTION_WINDOW_DAYS - 1} días hábiles antes`,
+    );
+
+  // Si la cuota vence en un día hábil futuro, el débito queda programado para
+  // ese día; si ya venció, se procesa en el próximo día hábil.
+  const effectiveDate = chargeDateFor(installment.date);
+  const scheduledFor = effectiveDate > todayYmd() ? startOfDay(effectiveDate) : null;
 
   const { customerId, accountId } = await ensureSoarAccount(product.id);
 
   const claimed = await prisma.installment.updateMany({
-    where: { id: installment.id, status: "PENDING" },
+    where: { id: installment.id, status: "PENDING", confirmedAt: { not: null } },
     data: { status: "PROCESSING" },
   });
-  if (claimed.count === 0) throw new ChargeError("La cuota ya no está pendiente");
+  if (claimed.count === 0)
+    throw new ChargeError("El pago cambió mientras tanto (ya no está pendiente o confirmado)");
 
   const attempt = await prisma.chargeAttempt.create({
     data: {
@@ -178,6 +198,7 @@ export async function chargeInstallment(installmentId: number, chargedById: numb
       amount: installment.amount,
       status: "PROCESSING",
       chargedById,
+      scheduledFor,
     },
   });
   const memo = chargeMemo(installment.id, attempt.id);
@@ -188,6 +209,7 @@ export async function chargeInstallment(installmentId: number, chargedById: numb
       accountId,
       amount: Number(installment.amount),
       memo,
+      effectiveDate,
     });
     return prisma.chargeAttempt.update({
       where: { id: attempt.id },
