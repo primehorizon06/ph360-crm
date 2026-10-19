@@ -5,7 +5,7 @@ import useSWR from "swr";
 import { useSession } from "next-auth/react";
 import { Loading } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, X } from "lucide-react";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import { useRouter } from "next/navigation";
 import { Lead } from "@/utils/interfaces/leads";
@@ -18,10 +18,11 @@ import {
 import { CustomSelect } from "@/components/ui/Select";
 import { productColorClass } from "@/utils/constants/products";
 import { UserRole } from "@/utils/constants/roles";
-import { canCreateLead } from "@/lib/permissions";
+import { canCreateLead, isGlobalRole } from "@/lib/permissions";
 import { fetcher } from "@/lib/fetcher";
 
 const LIMIT = 50;
+const FILTER_LABEL = "block text-sm text-on-surface-variant";
 
 interface LeadsResponse {
   data: Lead[];
@@ -42,7 +43,15 @@ export function LeadsListView({ type }: Props) {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("ALL");
+  const [filterAgent, setFilterAgent] = useState("");
+  const [filterProduct, setFilterProduct] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const isAdmin = session?.user?.role === UserRole.ADMIN;
+  // Un agente solo ve sus propios leads: no necesita filtrar por agente.
+  const canFilterAgent = status === "authenticated" && session?.user?.role !== UserRole.AGENT;
+  const hasFilters =
+    filterStatus !== "ALL" || !!filterAgent || !!filterProduct || !!dateFrom || !!dateTo;
   const router = useRouter();
 
   const isLead = type === "lead";
@@ -61,10 +70,33 @@ export function LeadsListView({ type }: Props) {
     const params = new URLSearchParams({ type, page: String(page), limit: String(LIMIT) });
     if (debouncedSearch) params.set("search", debouncedSearch);
     if (filterStatus !== "ALL") params.set("status", filterStatus);
+    if (filterAgent) params.set("agentId", filterAgent);
+    if (filterProduct) params.set("catalogId", filterProduct);
+    if (dateFrom) params.set("dateFrom", dateFrom);
+    if (dateTo) params.set("dateTo", dateTo);
     return `/api/leads?${params}`;
-  }, [status, type, page, debouncedSearch, filterStatus]);
+  }, [status, type, page, debouncedSearch, filterStatus, filterAgent, filterProduct, dateFrom, dateTo]);
 
-  const { data, isLoading, mutate } = useSWR<LeadsResponse>(swrKey, fetcher);
+  const { data, isLoading, mutate } = useSWR<LeadsResponse>(swrKey, fetcher, {
+    keepPreviousData: true,
+  });
+  const { data: agents = [] } = useSWR<{ id: number; name: string; company: { name: string } | null }[]>(
+    canFilterAgent ? "/api/users/agents" : null,
+    fetcher,
+  );
+  const { data: catalog = [] } = useSWR<{ id: number; name: string }[]>(
+    status === "authenticated" ? "/api/product-catalog" : null,
+    fetcher,
+  );
+
+  function clearFilters() {
+    setFilterStatus("ALL");
+    setFilterAgent("");
+    setFilterProduct("");
+    setDateFrom("");
+    setDateTo("");
+    setPage(1);
+  }
 
   const leads = data?.data ?? [];
   const total = data?.total ?? 0;
@@ -120,34 +152,119 @@ export function LeadsListView({ type }: Props) {
         }
       />
 
-      {/* Filtros */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2 flex-1">
-          <Search size={16} className="text-on-surface-variant shrink-0" />
-          <input
-            type="text"
-            placeholder={`Buscar por nombre, teléfono, email...`}
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            className="bg-transparent text-lg text-white/70 placeholder:text-white/90 outline-none w-full"
-          />
+      {/* Filtros: el buscador ocupa el espacio libre y el resto pasa a otra línea si no cabe */}
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="space-y-1 flex-1 min-w-64">
+          <label htmlFor="filterSearch" className={FILTER_LABEL}>
+            Buscar
+          </label>
+          <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2">
+            <Search size={16} className="text-on-surface-variant shrink-0" />
+            <input
+              id="filterSearch"
+              type="text"
+              placeholder="Nombre, teléfono o email..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              className="bg-transparent text-lg text-white/70 placeholder:text-white/50 outline-none w-full"
+            />
+          </div>
         </div>
 
-        <div className="flex gap-2 flex-wrap">
-          <CustomSelect
-            name="filterStatus"
-            value={filterStatus === "ALL" ? "Todos" : (statusOptions[filterStatus] ?? "Todos")}
-            onChange={(val) => {
-              setFilterStatus(val);
-              setPage(1);
-            }}
-            options={selectOptions}
-            labels={selectLabels}
-          />
-        </div>
+          <div className="space-y-1">
+            <span className={FILTER_LABEL}>Status</span>
+            <CustomSelect
+              name="filterStatus"
+              aria-label="Status"
+              value={filterStatus === "ALL" ? "Todos" : (statusOptions[filterStatus] ?? "Todos")}
+              onChange={(val) => {
+                setFilterStatus(val);
+                setPage(1);
+              }}
+              options={selectOptions}
+              labels={selectLabels}
+            />
+          </div>
+          {canFilterAgent && (
+            <div className="space-y-1">
+              <span className={FILTER_LABEL}>Agente</span>
+              <CustomSelect
+                name="filterAgent"
+                aria-label="Agente"
+                searchable
+                value={agents.find((a) => String(a.id) === filterAgent)?.name ?? "Todos"}
+                onChange={(val) => {
+                  setFilterAgent(val);
+                  setPage(1);
+                }}
+                options={["", ...agents.map((a) => String(a.id))]}
+                labels={[
+                  "Todos",
+                  ...agents.map((a) => (isGlobalRole(session?.user?.role ?? "") && a.company ? `${a.name} · ${a.company.name}` : a.name)),
+                ]}
+              />
+            </div>
+          )}
+          <div className="space-y-1">
+            <span className={FILTER_LABEL}>Producto</span>
+            <CustomSelect
+              name="filterProduct"
+              aria-label="Producto"
+              value={catalog.find((c) => String(c.id) === filterProduct)?.name ?? "Todos"}
+              onChange={(val) => {
+                setFilterProduct(val);
+                setPage(1);
+              }}
+              options={["", ...catalog.map((c) => String(c.id))]}
+              labels={["Todos", ...catalog.map((c) => c.name)]}
+            />
+          </div>
+          {/* Fecha que muestra la tabla: creación del lead o conversión a cliente */}
+          <div className="space-y-1">
+            <label htmlFor="filterDateFrom" className={FILTER_LABEL}>
+              {isLead ? "Creado desde" : "Cliente desde"}
+            </label>
+            <input
+              id="filterDateFrom"
+              type="date"
+              value={dateFrom}
+              max={dateTo || undefined}
+              onChange={(e) => {
+                setDateFrom(e.target.value);
+                setPage(1);
+              }}
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white/90 outline-none focus:border-tertiary/50"
+            />
+          </div>
+          <div className="space-y-1">
+            <label htmlFor="filterDateTo" className={FILTER_LABEL}>
+              {isLead ? "Creado hasta" : "Cliente hasta"}
+            </label>
+            <input
+              id="filterDateTo"
+              type="date"
+              value={dateTo}
+              min={dateFrom || undefined}
+              onChange={(e) => {
+                setDateTo(e.target.value);
+                setPage(1);
+              }}
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white/90 outline-none focus:border-tertiary/50"
+            />
+          </div>
+          {hasFilters && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-lg text-on-surface-variant hover:text-white transition-colors"
+            >
+              <X size={16} />
+              Limpiar filtros
+            </button>
+          )}
       </div>
 
       {/* Tabla desktop */}

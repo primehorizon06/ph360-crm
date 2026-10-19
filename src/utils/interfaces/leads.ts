@@ -25,6 +25,8 @@ export interface Lead {
   products?: { id: number; catalog: ProductCatalogRef }[];
   customerStatus?: CustomerStatus | null;
   convertedAt?: string | null;
+  /** Cliente ACH en SOAR (se crea al aprobar un producto con cuenta bancaria). */
+  soarCustomerId?: string | null;
   assignedTo: {
     id: number;
     name: string;

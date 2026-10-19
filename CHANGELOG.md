@@ -33,6 +33,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **feat**(leads): restrict lead creation to roles with a franchise and team
 - **feat**(collections): require payment confirmation and collect within a business-day window
 - **feat**(products): edit, confirm, suspend and reschedule payments from the payment plan
+- **feat**(leads): filter leads and customers by status, agent, product and date
 
 ### Changed
 
