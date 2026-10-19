@@ -20,6 +20,7 @@ import { canManagePayments } from "@/lib/permissions";
 import { PaymentsOverview } from "@/components/dashboard/PaymentsOverview";
 import { SalesByFranchiseChart } from "@/components/dashboard/SalesByFranchiseChart";
 import { RevenueByFranchiseChart } from "@/components/dashboard/RevenueByFranchiseChart";
+import { quincenaLabel } from "@/components/dashboard/paymentGroups";
 
 interface Props {
   initialData: DashboardData;
@@ -134,6 +135,7 @@ export function DashboardClient({ initialData, user }: Props) {
           <RevenueByFranchiseChart
             data={data?.recaudoPorFranquicia ?? []}
             companyFiltered={companyId !== "all"}
+            periodLabel={quincenaLabel(year, month, quincena)}
           />
           <SalesByFranchiseChart
             year={year}

@@ -7,13 +7,15 @@ interface Props {
   data: { companyId: number; name: string; logo: string | null; recaudo: number }[];
   /** El dashboard está filtrado por una franquicia: el ranking no aplica. */
   companyFiltered: boolean;
+  /** Período del dashboard, p. ej. "2ª quincena de octubre 2026". */
+  periodLabel: string;
 }
 
 /** Eje de 0 a 10.000 de 1.000 en 1.000; si una franquicia supera 10.000, se amplía. */
 function axisFor(max: number) {
   const step = max <= 10000 ? 1000 : Math.ceil(max / 10 / 1000) * 1000;
   const top = Math.max(10000, Math.ceil(max / step) * step);
-  return { top, ticks: Array.from({ length: top / step }, (_, i) => (i + 1) * step) };
+  return { top, ticks: Array.from({ length: top / step + 1 }, (_, i) => i * step) };
 }
 
 const thousands = (v: number) => v.toLocaleString("es-CO");
@@ -22,7 +24,7 @@ const thousands = (v: number) => v.toLocaleString("es-CO");
  * Ranking quincenal de recaudo (pagos cobrados) por franquicia: una fila por
  * franquicia con su logo, y una línea que termina en un punto en su recaudo.
  */
-export function RevenueByFranchiseChart({ data, companyFiltered }: Props) {
+export function RevenueByFranchiseChart({ data, companyFiltered, periodLabel }: Props) {
   const { top, ticks } = axisFor(Math.max(0, ...data.map((f) => f.recaudo)));
   const pct = (value: number) => `${(value / top) * 100}%`;
 
@@ -30,7 +32,9 @@ export function RevenueByFranchiseChart({ data, companyFiltered }: Props) {
     <section className="bg-surface border border-white/10 rounded-xl p-5 space-y-4">
       <div>
         <h2 className="text-xl font-semibold text-on-surface">Ranking quincenal por franquicia</h2>
-        <p className="text-sm text-on-surface-variant">Recaudo de pagos cobrados</p>
+        <p className="text-sm text-on-surface-variant">
+          Recaudo de pagos cobrados (dólares) · {periodLabel}
+        </p>
       </div>
 
       {data.length === 0 ? (
@@ -82,7 +86,7 @@ export function RevenueByFranchiseChart({ data, companyFiltered }: Props) {
             </div>
           ))}
 
-          {/* Eje: 1.000 a 10.000 */}
+          {/* Eje: 0 a 10.000 */}
           <div />
           <div className="relative h-6 border-t border-white/20 mr-24">
             {ticks.map((t) => (
