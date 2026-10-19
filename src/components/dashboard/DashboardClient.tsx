@@ -16,6 +16,10 @@ const FranchiseDashboard = dynamic(
 );
 import { UserRole } from "@/utils/constants/roles";
 import { fetcher } from "@/lib/fetcher";
+import { canManagePayments } from "@/lib/permissions";
+import { PaymentsOverview } from "@/components/dashboard/PaymentsOverview";
+import { SalesByFranchiseChart } from "@/components/dashboard/SalesByFranchiseChart";
+import { RevenueByFranchiseChart } from "@/components/dashboard/RevenueByFranchiseChart";
 
 interface Props {
   initialData: DashboardData;
@@ -118,6 +122,27 @@ export function DashboardClient({ initialData, user }: Props) {
           onQuincenaChange={setQuincena}
         />
       </div>
+
+      {canManagePayments(user.role) && (
+        <>
+          <PaymentsOverview
+            year={year}
+            month={month}
+            quincena={quincena}
+            companyId={companyId === "all" ? undefined : companyId}
+          />
+          <RevenueByFranchiseChart
+            data={data?.recaudoPorFranquicia ?? []}
+            companyFiltered={companyId !== "all"}
+          />
+          <SalesByFranchiseChart
+            year={year}
+            month={month}
+            quincena={quincena}
+            companyId={companyId === "all" ? undefined : companyId}
+          />
+        </>
+      )}
 
       {isAdmin && companyId === "all" ? (
         <AdminDashboard

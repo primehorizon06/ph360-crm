@@ -16,7 +16,7 @@ export interface DashboardKpis {
 }
 
 export interface DashboardData {
-  companies: { id: number; name: string }[];
+  companies: { id: number; name: string; logo?: string | null }[];
   kpis: DashboardKpis;
   installmentStatusDist: { status: string; count: number }[];
   customerStatus: { status: string | null; count: number }[];
@@ -29,7 +29,7 @@ export interface DashboardData {
   }[];
   revenuePorDia: { day: number; amount: number }[];
   leadsPerDay: { day: number; count: number }[];
-  recaudoPorFranquicia: { companyId: number; name: string; recaudo: number }[];
+  recaudoPorFranquicia: { companyId: number; name: string; logo: string | null; recaudo: number }[];
   pendingConversions: { id: number; name: string; requestedAt: string }[];
   meta: {
     year: number;

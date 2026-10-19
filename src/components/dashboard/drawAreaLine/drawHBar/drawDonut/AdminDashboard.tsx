@@ -13,8 +13,6 @@ import { fmt } from "@/utils/helpers/format";
 import {
   AreaChart,
   Area,
-  BarChart,
-  Bar,
   PieChart,
   Pie,
   Cell,
@@ -121,37 +119,7 @@ export function AdminDashboard({ data, loading, quincena }: adminDashboardProps)
       </ChartCard>
 
       {/* ── Row 2 ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Recaudo por franquicia */}
-        <ChartCard title="Recaudo por franquicia" subtitle="Ranking quincenal PAID">
-          {data.recaudoPorFranquicia.length > 0 ? (
-            <ResponsiveContainer
-              width="100%"
-              height={data.recaudoPorFranquicia.length * 42 + 16}
-            >
-              <BarChart
-                data={data.recaudoPorFranquicia}
-                layout="vertical"
-                margin={{ top: 0, right: 60, bottom: 0, left: 8 }}
-              >
-                <XAxis type="number" tick={{ fontSize: 10, fill: TICK }} tickFormatter={(v: number) => (v >= 1000 ? `$${Math.round(v / 1000)}K` : `$${v}`)} />
-                <YAxis
-                  type="category"
-                  dataKey="name"
-                  tick={{ fontSize: 12, fill: TICK }}
-                  width={120}
-                />
-                <Tooltip formatter={(v) => [fmt(v as number), "Recaudo"]} />
-                <Bar dataKey="recaudo" fill="#06b6d4" radius={5} label={{ position: "right", formatter: (v: unknown) => fmt(Number(v)), fontSize: 11, fill: TICK }} />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <p className="text-md text-on-surface-variant text-center py-8">
-              {data.meta.companyId ? "Selecciona 'Todas' para ver el ranking" : "Sin datos"}
-            </p>
-          )}
-        </ChartCard>
-
+      <div className="grid grid-cols-1 gap-4">
         {/* Distribución estados de cuotas */}
         <ChartCard title="Distribución de estados de pagos" subtitle="Pie chart global">
           {data.installmentStatusDist.length > 0 ? (

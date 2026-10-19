@@ -34,6 +34,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **feat**(collections): require payment confirmation and collect within a business-day window
 - **feat**(products): edit, confirm, suspend and reschedule payments from the payment plan
 - **feat**(leads): filter leads and customers by status, agent, product and date
+- **feat**(dashboard): add payment cards, payments detail page and franchise charts
 
 ### Changed
 

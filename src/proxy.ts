@@ -33,7 +33,7 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(new URL("/", req.url));
   }
 
-  if (path.startsWith("/collections") && !canManagePayments(role)) {
+  if ((path.startsWith("/collections") || path.startsWith("/payments")) && !canManagePayments(role)) {
     return NextResponse.redirect(new URL("/", req.url));
   }
 

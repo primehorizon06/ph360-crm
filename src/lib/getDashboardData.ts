@@ -1,3 +1,4 @@
+import { isGlobalCustomerService } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { UserRole } from "@/utils/constants/roles";
 import { Prisma } from "@prisma/client";
@@ -257,13 +258,13 @@ export async function getDashboardData(
       where: { ...leadFilter, createdAt: dateRange },
       select: { createdAt: true },
     }),
-    user.role === UserRole.ADMIN
+    user.role === UserRole.ADMIN || isGlobalCustomerService(user.role)
       ? prisma.company.findMany({
           where: { active: true },
-          select: { id: true, name: true },
+          select: { id: true, name: true, logo: true },
           orderBy: { name: "asc" },
         })
-      : Promise.resolve([] as { id: number; name: string }[]),
+      : Promise.resolve([] as { id: number; name: string; logo: string | null }[]),
   ]);
 
   const rankingLeadFilter =
@@ -431,9 +432,10 @@ export async function getDashboardData(
   let recaudoPorFranquicia: {
     companyId: number;
     name: string;
+    logo: string | null;
     recaudo: number;
   }[] = [];
-  if (user.role === UserRole.ADMIN && !scopedCompanyId) {
+  if ((user.role === UserRole.ADMIN || isGlobalCustomerService(user.role)) && !scopedCompanyId) {
     const franqInst = await prisma.installment.findMany({
       where: {
         status: "PAID" as const,
@@ -452,7 +454,7 @@ export async function getDashboardData(
     const recaudoByCompany = Object.fromEntries(
       companies.map((c) => [
         c.id,
-        { companyId: c.id, name: c.name, recaudo: 0 },
+        { companyId: c.id, name: c.name, logo: c.logo, recaudo: 0 },
       ]),
     );
     for (const inst of franqInst) {

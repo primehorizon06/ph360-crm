@@ -59,6 +59,26 @@
   --color-warning: #fbbf24; /* pendiente */
   --color-attention: #fb923c; /* suspendido */
 
+  /* Cards de pagos del dashboard (Transfer, Proceso SOAR, Aprobados, Caída):
+     degradado del tono claro al profundo */
+  --color-neon-blue: #3ec6ea;
+  --color-neon-blue-deep: #3b7be0;
+  --color-neon-purple: #c96fd8;
+  --color-neon-purple-deep: #8b5cf6;
+  --color-neon-green: #3ddc9b;
+  --color-neon-green-deep: #10a19b;
+  --color-neon-red: #ff6f9c;
+  --color-neon-red-deep: #e0405f;
+
+  /* Gráfica de ventas por franquicia: color de la barra según el rango de ventas */
+  /* Tonos suaves validados contra el fondo oscuro: contraste ≥ 3:1 y colores
+     vecinos distinguibles, también con daltonismo. */
+  --color-sales-red: #d84472; /* 0–10 */
+  --color-sales-orange: #e5853a; /* 11–20 */
+  --color-sales-yellow: #eed36e; /* 21–30 */
+  --color-sales-aqua: #34b0c2; /* 31–40 */
+  --color-sales-green: #7ec45a; /* más de 40 */
+
   /* Roles de usuario */
   --color-role-admin: #c084fc;
   --color-role-supervisor: #60a5fa;
