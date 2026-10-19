@@ -16,6 +16,7 @@ import {
   ChevronDown,
   ChevronUp,
   Pencil,
+  CheckCircle2,
 } from "lucide-react";
 import { Loading } from "@/components/ui/Loading";
 import { ProductFormData, productSchema } from "@/lib/validations/product";
@@ -41,36 +42,28 @@ import { fetcher } from "@/lib/fetcher";
 import { ConfirmProductModal } from "@/components/leads/Confirmproductmodal/Confirmproductmodal";
 import { useSession } from "next-auth/react";
 import {
+  canConfirmInstallment,
   canCreateProduct,
   canManagePayments,
   canResubmitProduct,
 } from "@/lib/permissions";
-import { isManualInstallmentStatus } from "@/lib/validations/installment";
+import { isEditableInstallmentStatus } from "@/lib/validations/installment";
+import { canReschedule, canSuspend } from "@/lib/collections";
+import {
+  INSTALLMENT_STATUS_LABELS,
+  INSTALLMENT_STATUS_STYLES,
+} from "@/utils/constants/installments";
+import {
+  ActionTarget,
+  RescheduleModal,
+  SuspendModal,
+} from "@/components/collections/CollectionActionModals";
 import { postAction } from "@/lib/postAction";
+import { confirmToast } from "@/lib/confirmToast";
 import { PaymentMethodEditModal } from "@/components/leads/ProductPayments/PaymentMethodEditModal";
 import { InstallmentModal } from "@/components/leads/ProductPayments/InstallmentModal";
 
 // ─── Installment status helpers ───────────────────────────────────────────────
-
-const STATUS_STYLES: Record<string, string> = {
-  PAID: "bg-success/10 text-success",
-  FAILED: "bg-error/10 text-error",
-  CANCELLED: "bg-surface-variant text-on-surface-variant",
-  PENDING: "bg-warning/10 text-warning",
-  SUSPENDED: "bg-attention/10 text-attention",
-  PROCESSING: "bg-tertiary/10 text-tertiary",
-  CHARGEBACK: "bg-error/10 text-error",
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  PAID: "Pagado",
-  FAILED: "Fallido",
-  CANCELLED: "Cancelado",
-  PENDING: "Pendiente",
-  SUSPENDED: "Suspendido",
-  PROCESSING: "En proceso",
-  CHARGEBACK: "Contracargo",
-};
 
 const ATTEMPT_LABELS: Record<ChargeAttemptItem["status"], string> = {
   PROCESSING: "En proceso",
@@ -98,6 +91,8 @@ interface InstallmentItem {
   status: string;
   paidAt?: string | null;
   suspendReason?: string | null;
+  confirmedAt?: string | null;
+  confirmedBy?: { name: string } | null;
   attempts?: ChargeAttemptItem[];
 }
 
@@ -110,9 +105,12 @@ function InstallmentRow({
   idx: number;
   onEdit?: () => void;
 }) {
+  const confirmed = inst.status === "PENDING" && !!inst.confirmedAt;
   const [expanded, setExpanded] = useState(false);
   const isPaid = inst.status === "PAID";
   const attempts = inst.attempts ?? [];
+  // Último débito creado en SOAR (los intentos vienen del más reciente al más antiguo).
+  const soarId = attempts.find((a) => a.processor === "SOAR_ACH" && a.externalId)?.externalId;
   const hasDetail = isPaid || attempts.length > 0 || !!inst.suspendReason;
 
   return (
@@ -134,14 +132,30 @@ function InstallmentRow({
             #{inst.id}
           </span>
           <span className="text-white text-sm">{formatDate(inst.date)}</span>
+          {soarId && (
+            <span
+              title={`ID SOAR: ${soarId}`}
+              className="text-on-surface-variant text-[13px] font-mono truncate max-w-28"
+            >
+              SOAR {soarId}
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
           <span
-            className={`text-[15px] px-1.5 py-0.5 rounded-full font-medium ${STATUS_STYLES[inst.status] ?? STATUS_STYLES.PENDING}`}
+            className={`text-[15px] px-1.5 py-0.5 rounded-full font-medium ${INSTALLMENT_STATUS_STYLES[inst.status] ?? ""}`}
           >
-            {STATUS_LABELS[inst.status] ?? "Pendiente"}
+            {INSTALLMENT_STATUS_LABELS[inst.status] ?? inst.status}
           </span>
+          {confirmed && (
+            <span
+              title={`Pago confirmado el ${formatDate(inst.confirmedAt!)}${inst.confirmedBy ? ` por ${inst.confirmedBy.name}` : ""}`}
+              className="text-success"
+            >
+              <CheckCircle2 size={14} aria-label="Pago confirmado" />
+            </span>
+          )}
           <span className="text-white text-sm">
             $ {formatAmount(Number(inst.amount))}
           </span>
@@ -157,8 +171,8 @@ function InstallmentRow({
         <button
           type="button"
           onClick={onEdit}
-          aria-label={`Editar cuota ${inst.number}`}
-          className="shrink-0 p-1.5 rounded-md text-on-surface-variant hover:text-cyan-400 hover:bg-white/5 transition-colors"
+          aria-label={`Editar pago ${inst.number}`}
+          className="shrink-0 p-1.5 rounded-md text-on-surface-variant hover:text-tertiary hover:bg-white/5 transition-colors"
         >
           <Pencil size={13} />
         </button>
@@ -206,6 +220,11 @@ function InstallmentRow({
                   {a.processor === "SOAR_ACH" ? "Débito ACH" : `Tarjeta ···· ${a.cardLast4 ?? "—"}`}{" "}
                   · {formatDate(a.createdAt)} · {a.chargedBy.name}
                 </p>
+                {a.externalId && (
+                  <p className="text-sm text-on-surface-variant font-mono break-all">
+                    ID {a.processor === "SOAR_ACH" ? "SOAR" : "Authorize.net"}: {a.externalId}
+                  </p>
+                )}
                 {a.failureReason && (
                   <p className="text-sm text-error">
                     {a.failureCode ? `${a.failureCode} · ` : ""}
@@ -248,10 +267,17 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
   const [editingMethod, setEditingMethod] = useState<Product | null>(null);
   const [installmentModal, setInstallmentModal] = useState<{
     productId: number;
+    /** Producto aprobado y activo: se puede confirmar, suspender y reprogramar. */
+    collectable: boolean;
     installment?: InstallmentItem;
+  } | null>(null);
+  const [planAction, setPlanAction] = useState<{
+    kind: "suspend" | "reschedule";
+    target: ActionTarget;
   } | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
   const [syncingProduct, setSyncingProduct] = useState<number | null>(null);
+  const confirmsInstallments = canConfirmInstallment(role ?? "");
   const managesPayments = canManagePayments(role ?? "");
 
   const {
@@ -375,23 +401,42 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
     reloadProducts();
   }
 
-  async function handleToggleStatus(product: Product) {
-    const status = product.status === "ACTIVE" ? "SUSPENDED" : "ACTIVE";
+  async function changeProductStatus(product: Product, status: "ACTIVE" | "SUSPENDED") {
     setUpdatingStatus(product.id);
     const res = await fetch(`/api/leads/${leadId}/products/${product.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
-    });
+    }).catch(() => null);
     setUpdatingStatus(null);
 
-    if (!res.ok) {
-      const json = await res.json().catch(() => ({}));
+    const json = res ? await res.json().catch(() => ({})) : {};
+    if (!res?.ok) {
       toast.error(json.error ?? "Error al cambiar el estado del producto");
       return;
     }
-    toast.success(status === "ACTIVE" ? "Producto reactivado" : "Producto suspendido");
+
+    const affected: number = json.installmentsAffected ?? 0;
+    const plural = affected !== 1 ? "s" : "";
+    toast.success(
+      status === "SUSPENDED"
+        ? `Producto suspendido; ${affected} pago${plural} suspendido${plural}`
+        : `Producto reactivado; ${affected} pago${plural} vuelve${affected !== 1 ? "n" : ""} a pendiente (hay que confirmarlo${plural} de nuevo)`,
+    );
+    if (status === "SUSPENDED" && json.installmentsProcessing > 0)
+      toast.warning(
+        `${json.installmentsProcessing} débito(s) ya están en SOAR y no se suspendieron. Anúlalos desde Cobros › Proceso si no deben cobrarse.`,
+      );
     reloadProducts();
+  }
+
+  function handleToggleStatus(product: Product) {
+    if (product.status !== "ACTIVE") return void changeProductStatus(product, "ACTIVE");
+    confirmToast(
+      "¿Suspender el producto? Todos sus pagos pendientes quedarán suspendidos y saldrán de Cobros.",
+      () => changeProductStatus(product, "SUSPENDED"),
+      "Suspender",
+    );
   }
 
   return (
@@ -720,6 +765,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
             const isRejected = lp.approval?.status === "REJECTED";
             const isApproved = lp.approval?.status === "APPROVED";
             const managesPlan = managesPayments && isApproved;
+            const collectable = isApproved && lp.status === "ACTIVE";
 
             return (
               <div
@@ -869,8 +915,11 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                         inst={inst}
                         idx={idx}
                         onEdit={
-                          managesPlan && isManualInstallmentStatus(inst.status)
-                            ? () => setInstallmentModal({ productId: lp.id, installment: inst })
+                          (managesPlan &&
+                            (isEditableInstallmentStatus(inst.status) || canReschedule(inst.status))) ||
+                          (confirmsInstallments && collectable && inst.status === "PENDING")
+                            ? () =>
+                                setInstallmentModal({ productId: lp.id, collectable, installment: inst })
                             : undefined
                         }
                       />
@@ -881,11 +930,11 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                 {managesPlan && (
                   <button
                     type="button"
-                    onClick={() => setInstallmentModal({ productId: lp.id })}
+                    onClick={() => setInstallmentModal({ productId: lp.id, collectable })}
                     className="flex items-center justify-center gap-2 w-full py-1.5 rounded-lg border border-white/10 text-on-surface-variant hover:text-white hover:bg-white/5 text-sm transition-colors"
                   >
                     <Plus size={13} />
-                    Agregar cuota
+                    Agregar pago
                   </button>
                 )}
 
@@ -950,19 +999,54 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
         />
       )}
 
-      {installmentModal && (
-        <InstallmentModal
-          leadId={leadId}
-          productId={installmentModal.productId}
-          installment={
-            installmentModal.installment &&
-            isManualInstallmentStatus(installmentModal.installment.status)
-              ? { ...installmentModal.installment, status: installmentModal.installment.status }
-              : undefined
-          }
-          onClose={() => setInstallmentModal(null)}
-          onSaved={() => {
-            setInstallmentModal(null);
+      {installmentModal && (() => {
+        const { installment: inst, collectable, productId } = installmentModal;
+        const managesPlan = managesPayments && collectable;
+        // Abre la acción del plan de pagos (suspender o reprogramar) en su modal.
+        const openAction = (kind: "suspend" | "reschedule") => () => {
+          if (!inst) return;
+          setInstallmentModal(null);
+          setPlanAction({
+            kind,
+            target: { id: inst.id, number: inst.number, date: inst.date, amount: Number(inst.amount) },
+          });
+        };
+        return (
+          <InstallmentModal
+            leadId={leadId}
+            productId={productId}
+            installment={inst}
+            canEditPlan={managesPayments}
+            canConfirm={!!inst && confirmsInstallments && collectable && inst.status === "PENDING"}
+            onSuspend={inst && managesPlan && canSuspend(inst.status) ? openAction("suspend") : undefined}
+            onReschedule={
+              inst && managesPlan && canReschedule(inst.status) ? openAction("reschedule") : undefined
+            }
+            onClose={() => setInstallmentModal(null)}
+            onSaved={() => {
+              setInstallmentModal(null);
+              reloadProducts();
+            }}
+          />
+        );
+      })()}
+
+      {planAction?.kind === "suspend" && (
+        <SuspendModal
+          target={planAction.target}
+          onClose={() => setPlanAction(null)}
+          onDone={() => {
+            setPlanAction(null);
+            reloadProducts();
+          }}
+        />
+      )}
+      {planAction?.kind === "reschedule" && (
+        <RescheduleModal
+          target={planAction.target}
+          onClose={() => setPlanAction(null)}
+          onDone={() => {
+            setPlanAction(null);
             reloadProducts();
           }}
         />

@@ -56,6 +56,17 @@ export function LeadDetailHeader({ lead, role, onSuspend, onEdit }: Props) {
               </p>
               <CopyButton value={lead.id} label="Copiar ID" />
             </div>
+            {lead.soarCustomerId && (
+              <div className="flex gap-3 mt-1">
+                <p className="text-white text-md font-bold">
+                  ID SOAR{" "}
+                  <span className="bg-tertiary/10 text-tertiary p-1 rounded font-mono">
+                    {lead.soarCustomerId}
+                  </span>
+                </p>
+                <CopyButton value={lead.soarCustomerId} label="Copiar ID SOAR" />
+              </div>
+            )}
             <div className="flex flex-col flex-wrap gap-x-4 gap-y-1 mt-2">
               <span className="text-lg text-white">
                 <strong className="text-lg text-white/60">Teléfono(s):</strong>{" "}

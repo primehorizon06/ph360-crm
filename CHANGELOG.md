@@ -32,6 +32,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **feat**(collections): add Customer Service collections queue and SOAR ACH charges
 - **feat**(leads): restrict lead creation to roles with a franchise and team
 - **feat**(collections): require payment confirmation and collect within a business-day window
+- **feat**(products): edit, confirm, suspend and reschedule payments from the payment plan
 
 ### Changed
 
