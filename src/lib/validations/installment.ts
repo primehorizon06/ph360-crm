@@ -37,14 +37,17 @@ export const installmentCreateSchema = z.object({
 });
 
 // Cola de cobros: suspender (sin autorización del cliente) y reprogramar.
-const suspendReasonField = z
-  .string()
-  .trim()
-  .min(3, "Escribe el motivo de la suspensión")
-  .max(500, "Máximo 500 caracteres");
+const reasonField = (required: string) =>
+  z.string().trim().min(3, required).max(500, "Máximo 500 caracteres");
+
+const suspendReasonField = reasonField("Escribe el motivo de la suspensión");
 
 export const suspendSchema = z.object({ reason: suspendReasonField });
 export type SuspendFormData = z.infer<typeof suspendSchema>;
+
+// Cancelar un pago: baja definitiva, con el motivo (acuerdo, pago duplicado...).
+export const cancelSchema = z.object({ reason: reasonField("Escribe el motivo de la cancelación") });
+export type CancelFormData = z.infer<typeof cancelSchema>;
 
 export const rescheduleFormSchema = z.object({
   date: z.string().min(1, "La fecha es requerida"),

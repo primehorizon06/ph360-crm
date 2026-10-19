@@ -48,13 +48,14 @@ import {
   canResubmitProduct,
 } from "@/lib/permissions";
 import { isEditableInstallmentStatus } from "@/lib/validations/installment";
-import { canReschedule, canSuspend } from "@/lib/collections";
+import { canCancel, canReschedule, canSuspend } from "@/lib/collections";
 import {
   INSTALLMENT_STATUS_LABELS,
   INSTALLMENT_STATUS_STYLES,
 } from "@/utils/constants/installments";
 import {
   ActionTarget,
+  CancelModal,
   RescheduleModal,
   SuspendModal,
 } from "@/components/collections/CollectionActionModals";
@@ -91,6 +92,7 @@ interface InstallmentItem {
   status: string;
   paidAt?: string | null;
   suspendReason?: string | null;
+  cancelReason?: string | null;
   confirmedAt?: string | null;
   confirmedBy?: { name: string } | null;
   attempts?: ChargeAttemptItem[];
@@ -111,7 +113,7 @@ function InstallmentRow({
   const attempts = inst.attempts ?? [];
   // Último débito creado en SOAR (los intentos vienen del más reciente al más antiguo).
   const soarId = attempts.find((a) => a.processor === "SOAR_ACH" && a.externalId)?.externalId;
-  const hasDetail = isPaid || attempts.length > 0 || !!inst.suspendReason;
+  const hasDetail = isPaid || attempts.length > 0 || !!inst.suspendReason || !!inst.cancelReason;
 
   return (
     <div>
@@ -205,12 +207,17 @@ function InstallmentRow({
         </div>
       )}
 
-      {/* Motivo de suspensión e historial de intentos de cobro */}
-      {expanded && (inst.suspendReason || attempts.length > 0) && (
+      {/* Motivo de suspensión o cancelación e historial de intentos de cobro */}
+      {expanded && (inst.suspendReason || inst.cancelReason || attempts.length > 0) && (
         <div className="mx-2 mb-1.5 px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg space-y-1.5">
           {inst.suspendReason && (
             <p className="text-md text-white/90">
               <span className="text-attention">Suspendida:</span> {inst.suspendReason}
+            </p>
+          )}
+          {inst.cancelReason && (
+            <p className="text-md text-on-surface">
+              <span className="text-on-surface-variant">Cancelado:</span> {inst.cancelReason}
             </p>
           )}
           {attempts.map((a) => (
@@ -272,7 +279,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
     installment?: InstallmentItem;
   } | null>(null);
   const [planAction, setPlanAction] = useState<{
-    kind: "suspend" | "reschedule";
+    kind: "suspend" | "reschedule" | "cancel";
     target: ActionTarget;
   } | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
@@ -754,11 +761,10 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
           {products.map((lp) => {
-            const total =
-              lp.paymentPlan?.installments.reduce(
-                (acc, i) => acc + Number(i.amount),
-                0,
-              ) ?? 0;
+            // Los pagos cancelados no se cobrarán: no suman al total ni al conteo.
+            const activeInstallments =
+              lp.paymentPlan?.installments.filter((i) => i.status !== "CANCELLED") ?? [];
+            const total = activeInstallments.reduce((acc, i) => acc + Number(i.amount), 0);
             const paidCount =
               lp.paymentPlan?.installments.filter((i) => i.status === "PAID")
                 .length ?? 0;
@@ -900,8 +906,8 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                   <div className="border-t border-white/5 pt-2 space-y-0.5">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-white/20 text-[15px] uppercase tracking-widest">
-                        {lp.paymentPlan.installments.length} cuota
-                        {lp.paymentPlan.installments.length !== 1 ? "s" : ""}
+                        {activeInstallments.length} cuota
+                        {activeInstallments.length !== 1 ? "s" : ""}
                       </p>
                       {paidCount > 0 && (
                         <p className="text-success text-[15px]">
@@ -916,7 +922,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                         idx={idx}
                         onEdit={
                           (managesPlan &&
-                            (isEditableInstallmentStatus(inst.status) || canReschedule(inst.status))) ||
+                            (isEditableInstallmentStatus(inst.status) || canCancel(inst.status))) ||
                           (confirmsInstallments && collectable && inst.status === "PENDING")
                             ? () =>
                                 setInstallmentModal({ productId: lp.id, collectable, installment: inst })
@@ -1002,13 +1008,19 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
       {installmentModal && (() => {
         const { installment: inst, collectable, productId } = installmentModal;
         const managesPlan = managesPayments && collectable;
-        // Abre la acción del plan de pagos (suspender o reprogramar) en su modal.
-        const openAction = (kind: "suspend" | "reschedule") => () => {
+        // Abre la acción del plan de pagos (suspender, reprogramar o cancelar) en su modal.
+        const openAction = (kind: "suspend" | "reschedule" | "cancel") => () => {
           if (!inst) return;
           setInstallmentModal(null);
           setPlanAction({
             kind,
-            target: { id: inst.id, number: inst.number, date: inst.date, amount: Number(inst.amount) },
+            target: {
+              id: inst.id,
+              number: inst.number,
+              date: inst.date,
+              amount: Number(inst.amount),
+              processing: inst.status === "PROCESSING",
+            },
           });
         };
         return (
@@ -1022,6 +1034,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
             onReschedule={
               inst && managesPlan && canReschedule(inst.status) ? openAction("reschedule") : undefined
             }
+            onCancel={inst && managesPlan && canCancel(inst.status) ? openAction("cancel") : undefined}
             onClose={() => setInstallmentModal(null)}
             onSaved={() => {
               setInstallmentModal(null);
@@ -1033,6 +1046,16 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
 
       {planAction?.kind === "suspend" && (
         <SuspendModal
+          target={planAction.target}
+          onClose={() => setPlanAction(null)}
+          onDone={() => {
+            setPlanAction(null);
+            reloadProducts();
+          }}
+        />
+      )}
+      {planAction?.kind === "cancel" && (
+        <CancelModal
           target={planAction.target}
           onClose={() => setPlanAction(null)}
           onDone={() => {

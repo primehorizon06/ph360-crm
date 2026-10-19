@@ -6,6 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Modal, ModalFooter, modalInputClass } from "@/components/ui/Modal";
 import { postAction } from "@/lib/postAction";
 import {
+  cancelSchema,
+  CancelFormData,
   rescheduleFormSchema,
   RescheduleFormData,
   suspendSchema,
@@ -26,6 +28,8 @@ export interface ActionTarget {
   accountLabel?: string;
   /** Día hábil (YYYY-MM-DD) en que SOAR procesaría el débito. */
   chargeDate?: string;
+  /** Tiene un débito en curso en SOAR (cancelar lo anula primero). */
+  processing?: boolean;
 }
 
 interface Props {
@@ -127,6 +131,44 @@ export function SuspendModal({ target, onClose, onDone }: Props) {
           {errors.reason && <p className="text-error text-sm">{errors.reason.message}</p>}
         </div>
         <ModalFooter onClose={onClose} saving={isSubmitting} label="Suspender" />
+      </form>
+    </ActionModal>
+  );
+}
+
+// Baja definitiva: el pago no se cobra más y sale de Caída. No se puede deshacer.
+export function CancelModal({ target, onClose, onDone }: Props) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<CancelFormData>({ resolver: zodResolver(cancelSchema) });
+
+  return (
+    <ActionModal title="Cancelar pago" target={target} onClose={onClose}>
+      <form
+        onSubmit={handleSubmit(async ({ reason }) => {
+          if (await postAction(`/api/installments/${target.id}/cancel`, { reason }, { success: "Pago cancelado" }))
+            onDone();
+        })}
+        className="space-y-3"
+      >
+        <p className="text-lg text-on-surface">
+          El pago se dará de baja y no se volverá a cobrar.
+          {target.processing && " Primero se anulará en SOAR el débito que está en curso."} Esta acción
+          no se puede deshacer.
+        </p>
+        <div className="space-y-1">
+          <label className="text-lg text-on-surface-variant">Motivo</label>
+          <textarea
+            {...register("reason")}
+            rows={3}
+            placeholder="Ej: acuerdo de pago con el cliente, pago duplicado..."
+            className={`${modalInputClass} resize-none`}
+          />
+          {errors.reason && <p className="text-error text-sm">{errors.reason.message}</p>}
+        </div>
+        <ModalFooter onClose={onClose} saving={isSubmitting} label="Cancelar pago" closeLabel="Volver" />
       </form>
     </ActionModal>
   );

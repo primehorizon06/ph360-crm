@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { CalendarClock, PauseCircle } from "lucide-react";
+import { CalendarClock, PauseCircle, XCircle } from "lucide-react";
 import { Modal, ModalFooter, modalInputClass } from "@/components/ui/Modal";
 import {
   installmentFormSchema,
@@ -40,6 +40,7 @@ interface Props {
   /** Acciones del plan de pagos; se muestran solo si se pasan. */
   onSuspend?: () => void;
   onReschedule?: () => void;
+  onCancel?: () => void;
   onClose: () => void;
   onSaved: () => void;
 }
@@ -55,6 +56,7 @@ export function InstallmentModal({
   canConfirm,
   onSuspend,
   onReschedule,
+  onCancel,
   onClose,
   onSaved,
 }: Props) {
@@ -128,7 +130,7 @@ export function InstallmentModal({
   }
 
   const status = installment?.status;
-  const hasActions = !!onSuspend || !!onReschedule;
+  const hasActions = !!onSuspend || !!onReschedule || !!onCancel;
   const canSave = !isEdit || fieldsEditable || canConfirm;
 
   return (
@@ -221,6 +223,16 @@ export function InstallmentModal({
               >
                 <CalendarClock size={14} />
                 Reprogramar
+              </button>
+            )}
+            {onCancel && (
+              <button
+                type="button"
+                onClick={onCancel}
+                className={`${actionButton} hover:text-error hover:border-error/30`}
+              >
+                <XCircle size={14} />
+                Cancelar pago
               </button>
             )}
           </div>

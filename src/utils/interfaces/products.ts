@@ -75,6 +75,7 @@ export interface Product {
       status: InstallmentStatus;
       paidAt?: string | null;
       suspendReason?: string | null;
+      cancelReason?: string | null;
       confirmedAt?: string | null;
       confirmedBy?: { name: string } | null;
       attempts?: ChargeAttemptItem[];

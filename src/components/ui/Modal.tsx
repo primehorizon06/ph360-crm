@@ -43,10 +43,13 @@ export function ModalFooter({
   onClose,
   saving,
   label = "Guardar",
+  closeLabel = "Cancelar",
 }: {
   onClose: () => void;
   saving: boolean;
   label?: string;
+  /** Texto del botón que cierra; cámbialo si la acción misma se llama "Cancelar ...". */
+  closeLabel?: string;
 }) {
   return (
     <div className="flex justify-end gap-3 pt-2">
@@ -55,7 +58,7 @@ export function ModalFooter({
         onClick={onClose}
         className="px-4 py-2 text-lg text-white/90 hover:text-white transition-colors"
       >
-        Cancelar
+        {closeLabel}
       </button>
       <button
         type="submit"

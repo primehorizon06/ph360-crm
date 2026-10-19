@@ -87,8 +87,20 @@ export function canSuspend(status: string): boolean {
 }
 
 /** Reprogramar: pendiente, suspendida o devuelta. */
+const RESCHEDULABLE_STATUSES: InstallmentStatus[] = ["PENDING", "SUSPENDED", "FAILED"];
+
 export function canReschedule(status: string): boolean {
-  return status === "PENDING" || status === "SUSPENDED" || status === "FAILED";
+  return (RESCHEDULABLE_STATUSES as string[]).includes(status);
+}
+
+/**
+ * Cancelar (baja definitiva): cualquier pago que no se haya cobrado. Si está
+ * en proceso, primero se anula el débito en SOAR.
+ */
+export const CANCELLABLE_STATUSES: InstallmentStatus[] = [...RESCHEDULABLE_STATUSES, "PROCESSING"];
+
+export function canCancel(status: string): boolean {
+  return (CANCELLABLE_STATUSES as string[]).includes(status);
 }
 
 /**
@@ -101,18 +113,22 @@ export const PRODUCT_SUSPENDED_REASON = "Producto suspendido";
 export const CLEAR_CONFIRMATION = { confirmedAt: null, confirmedById: null } as const;
 
 /**
- * Campos que acompañan un cambio de estado. La suspensión guarda fecha y
- * motivo, y cualquier otro estado los limpia. Volver a pendiente, suspender o
- * devolver también reinicia la confirmación: la autorización era para ese
- * cobro, y hay que confirmarla de nuevo.
+ * Campos que acompañan un cambio de estado. La suspensión y la cancelación
+ * guardan fecha y motivo, y cualquier otro estado los limpia. Volver a
+ * pendiente, suspender, devolver o cancelar también reinicia la confirmación:
+ * la autorización era para ese cobro, y hay que confirmarla de nuevo.
  */
-export function statusFields(status: InstallmentStatus, suspendReason?: string | null) {
+export function statusFields(status: InstallmentStatus, reason?: string | null) {
   const suspended = status === "SUSPENDED";
-  const resetsConfirmation = status === "PENDING" || suspended || status === "FAILED";
+  const cancelled = status === "CANCELLED";
+  const resetsConfirmation =
+    status === "PENDING" || suspended || status === "FAILED" || cancelled;
   return {
     status,
     suspendedAt: suspended ? new Date() : null,
-    suspendReason: suspended ? (suspendReason ?? null) : null,
+    suspendReason: suspended ? (reason ?? null) : null,
+    cancelledAt: cancelled ? new Date() : null,
+    cancelReason: cancelled ? (reason ?? null) : null,
     ...(resetsConfirmation ? CLEAR_CONFIRMATION : {}),
   };
 }

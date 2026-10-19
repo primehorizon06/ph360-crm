@@ -335,6 +335,9 @@ model Installment {
   paidAt        DateTime?
   suspendedAt   DateTime?
   suspendReason String?
+  // Baja definitiva (acuerdo con el cliente, pago duplicado): no se cobra más.
+  cancelledAt   DateTime?
+  cancelReason  String?
   // Confirmación de la cuota (el cliente autorizó el débito de esa fecha y ese
   // monto). Solo las confirmadas llegan a Cobros; se reinicia si la cuota se
   // reprograma, se suspende, vuelve devuelta o cambia de fecha o monto.
@@ -522,6 +525,7 @@ enum AuditAction {
   INSTALLMENT_RESCHEDULED
   INSTALLMENT_CONFIRMED
   INSTALLMENT_UNCONFIRMED
+  INSTALLMENT_CANCELLED
   CHARGE_CREATED
   CHARGE_VOIDED
   SOAR_CUSTOMER_SYNCED

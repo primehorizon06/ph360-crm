@@ -375,7 +375,8 @@ export async function voidAttempt(attemptId: number) {
     return discarded;
   }
 
-  if (!isVoidableAttempt(attempt)) throw new ChargeError("Este débito ya no se puede anular");
+  if (!isVoidableAttempt(attempt))
+    throw new ChargeError("SOAR ya transmitió este débito al banco y no se puede anular");
 
   try {
     await soarClientOrThrow().voidDebit(attempt.externalId);
