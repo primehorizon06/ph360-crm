@@ -56,6 +56,7 @@ export interface ProductApproval {
   status: ApprovalStatus;
   isFirstProduct: boolean;
   note?: string | null;
+  approvedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }

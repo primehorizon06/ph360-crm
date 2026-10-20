@@ -131,7 +131,20 @@ function createLiveClient(baseUrl: string, token: string, dbaIdEnv: string): Soa
     }
 
     if (!res.ok) {
-      const message = (json?.message ?? json?.error ?? `Error ${res.status}`) as string;
+      if (!json) {
+        const challenged = res.headers.get("cf-mitigated") === "challenge";
+        console.error(
+          `SOAR ${method} ${path}: HTTP ${res.status}`,
+          challenged ? "bloqueada por el desafío de Cloudflare" : "respuesta que no es de la API",
+          { cfRay: res.headers.get("cf-ray"), contentType: res.headers.get("content-type") },
+        );
+        throw new SoarError(
+          "No se pudo conectar con el procesador de pagos. Intenta de nuevo más tarde.",
+          res.status,
+          !challenged && res.status >= 500,
+        );
+      }
+      const message = (json.message ?? json.error ?? `Error ${res.status}`) as string;
       // Un 5xx no garantiza que SOAR no haya procesado la petición.
       throw new SoarError(`SOAR: ${message}`, res.status, res.status >= 500);
     }

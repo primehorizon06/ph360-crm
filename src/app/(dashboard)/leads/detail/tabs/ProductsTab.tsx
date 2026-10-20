@@ -250,6 +250,23 @@ function InstallmentRow({
   );
 }
 
+const SOAR_SYNC_POLL_MS = 2_000;
+const SOAR_SYNC_WINDOW_MS = 60_000;
+
+function awaitingSoarSync(products: Product[]): boolean {
+  return products.some((p) => {
+    const method = p.paymentMethod;
+    const approvedAt = p.approval?.status === "APPROVED" ? p.approval.approvedAt : null;
+    return (
+      method?.type === "CUENTA" &&
+      !method.soarAccountId &&
+      !method.soarSyncError &&
+      !!approvedAt &&
+      Date.now() - new Date(approvedAt).getTime() < SOAR_SYNC_WINDOW_MS
+    );
+  });
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function ProductsTab({ leadId, onProductCreated }: Props) {
@@ -260,7 +277,9 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
     data: products = [],
     isLoading: loading,
     mutate: reloadProducts,
-  } = useSWR<Product[]>(`/api/leads/${leadId}/products`, fetcher);
+  } = useSWR<Product[]>(`/api/leads/${leadId}/products`, fetcher, {
+    refreshInterval: (data) => (data && awaitingSoarSync(data) ? SOAR_SYNC_POLL_MS : 0),
+  });
   const { data: catalog = [] } = useSWR<ProductCatalogItem[]>(
     "/api/product-catalog",
     fetcher,
