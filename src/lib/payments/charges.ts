@@ -50,6 +50,36 @@ function errorMessage(err: unknown) {
 const SOAR_SYNC_LOCK = 7201;
 const SOAR_SYNC_TIMEOUT_MS = 45_000;
 
+function soarCustomerData(lead: {
+  lastName: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  zipCode: string | null;
+}) {
+  const lastName = lead.lastName?.trim() ?? "";
+  const address1 = lead.address?.trim() ?? "";
+  const city = lead.city?.trim() ?? "";
+  const state = lead.state?.trim().toUpperCase() ?? "";
+  const zipCode = lead.zipCode?.trim() ?? "";
+
+  const missing = [
+    !lastName && "apellido",
+    !address1 && "dirección",
+    !city && "ciudad",
+    !state && "estado",
+    !zipCode && "código postal",
+  ].filter(Boolean);
+  if (missing.length)
+    return {
+      error: `Faltan datos del cliente para registrarlo en el procesador de pagos: ${missing.join(", ")}`,
+    };
+  if (!/^[A-Z]{2}$/.test(state))
+    return { error: "El estado del cliente debe ser el código de dos letras (por ejemplo, PR o NY)" };
+
+  return { lastName, address: { address1, city, state, zipCode } };
+}
+
 /**
  * Garantiza que el lead exista como cliente ACH en SOAR (identifier = id del
  * lead) y que la cuenta bancaria del producto esté registrada. Guarda los ids
@@ -76,7 +106,16 @@ export async function ensureSoarAccount(productId: number) {
       // Releer con el bloqueo tomado: otro proceso pudo terminar mientras tanto.
       const lead = await tx.lead.findUniqueOrThrow({
         where: { id: product.leadId },
-        select: { id: true, firstName: true, lastName: true, soarCustomerId: true },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          address: true,
+          city: true,
+          state: true,
+          zipCode: true,
+          soarCustomerId: true,
+        },
       });
       const method = await tx.paymentMethod.findUniqueOrThrow({ where: { id: methodRef.id } });
 
@@ -100,10 +139,13 @@ export async function ensureSoarAccount(productId: number) {
       try {
         const client = soarClientOrThrow();
         if (!lead.soarCustomerId) {
+          const customer = soarCustomerData(lead);
+          if ("error" in customer) return { error: customer.error };
           const { customerId, accountId } = await client.createCustomer({
             identifier: String(lead.id),
             firstName: lead.firstName,
-            lastName: lead.lastName ?? "",
+            lastName: customer.lastName,
+            address: customer.address,
             account,
           });
           await tx.lead.update({ where: { id: lead.id }, data: { soarCustomerId: customerId } });

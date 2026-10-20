@@ -25,11 +25,19 @@ export interface SoarDebit {
   returnCode: string | null;
 }
 
+export interface SoarAddressInput {
+  address1: string;
+  city: string;
+  state: string;
+  zipCode: string;
+}
+
 export interface SoarClient {
   createCustomer(input: {
     identifier: string;
     firstName: string;
     lastName: string;
+    address: SoarAddressInput;
     account: SoarAccountInput;
   }): Promise<{ customerId: string; accountId: string }>;
   addAccount(customerId: string, account: SoarAccountInput): Promise<{ accountId: string }>;
@@ -153,11 +161,11 @@ function createLiveClient(baseUrl: string, token: string, dbaIdEnv: string): Soa
   }
 
   return {
-    async createCustomer({ identifier, firstName, lastName, account }) {
+    async createCustomer({ identifier, firstName, lastName, address, account }) {
       const res = await request<{ id: string; accounts?: { id: string }[] }>(
         "POST",
         "/ach/customer",
-        { dba, identifier, firstName, lastName, ...toCustomerAccount(account) },
+        { dba, identifier, firstName, lastName, ...address, ...toCustomerAccount(account) },
       );
       const accountId = res.accounts?.[0]?.id;
       if (!res.id || !accountId) throw new SoarError("SOAR no devolvió el cliente o la cuenta");
