@@ -59,6 +59,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **chore**(prisma): apply migrations with migrate deploy instead of migrate dev
 - **style**(ui): add semantic status and role color tokens
 - **refactor**(dashboard): show franchise sales as sorted bars and label chart units and period
+- **chore**(docker): load SOAR credentials from an optional .env.soar file
 
 ### Fixed
 

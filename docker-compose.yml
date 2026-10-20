@@ -26,6 +26,10 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     container_name: crm-nextjs-dev
+    # Credenciales del sandbox de SOAR. Sin este archivo se usa el cliente simulado.
+    env_file:
+      - path: .env.soar
+        required: false
     environment:
       # Stack 100% local: no depende ni puede llegar a tocar el Supabase de
       # desarrollo. No se monta .env.local a propósito — todo lo que la app
