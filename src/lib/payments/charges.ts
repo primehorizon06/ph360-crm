@@ -102,7 +102,8 @@ export async function ensureSoarAccount(productId: number) {
         if (!lead.soarCustomerId) {
           const { customerId, accountId } = await client.createCustomer({
             identifier: String(lead.id),
-            name: leadName,
+            firstName: lead.firstName,
+            lastName: lead.lastName ?? "",
             account,
           });
           await tx.lead.update({ where: { id: lead.id }, data: { soarCustomerId: customerId } });

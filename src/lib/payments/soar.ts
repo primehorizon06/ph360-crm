@@ -3,10 +3,9 @@ import { startOfDay } from "@/lib/businessDays";
 
 // Cliente del Dashboard API de SOAR (ACH).
 //
-// Los endpoints salen de la documentación de SOAR; los NOMBRES DE CAMPO de
-// cada petición y respuesta están concentrados en las funciones to*/from* de
-// este archivo y hay que confirmarlos en el sandbox (fase F0) antes de usar el
-// cliente real.
+// Endpoints y nombres de campo según la documentación del Dashboard API
+// (developers.soarpaydashboard.com, sección ACH). Falta confirmarlos con una
+// llamada real al sandbox (ver docs/soar-integration.md).
 //
 // Sin SOAR_API_TOKEN, fuera de producción se usa un cliente simulado para
 // poder desarrollar y probar el flujo completo. En producción, sin token, no
@@ -29,7 +28,8 @@ export interface SoarDebit {
 export interface SoarClient {
   createCustomer(input: {
     identifier: string;
-    name: string;
+    firstName: string;
+    lastName: string;
     account: SoarAccountInput;
   }): Promise<{ customerId: string; accountId: string }>;
   addAccount(customerId: string, account: SoarAccountInput): Promise<{ accountId: string }>;
@@ -65,26 +65,38 @@ export class SoarError extends Error {
 
 const REQUEST_TIMEOUT_MS = 15_000;
 
+// Objeto Account (POST /ach/customer/{id}/account).
 function toAccount(account: SoarAccountInput) {
   return {
     name: account.holderName,
+    type: account.accountType,
     routingNumber: account.routingNumber,
     accountNumber: account.accountNumber,
+  };
+}
+
+// Al crear el cliente, su primera cuenta va en campos planos del Customer.
+function toCustomerAccount(account: SoarAccountInput) {
+  return {
+    accountName: account.holderName,
     accountType: account.accountType,
+    routingNumber: account.routingNumber,
+    accountNumber: account.accountNumber,
   };
 }
 
 function fromDebit(raw: Record<string, unknown>): SoarDebit {
-  const status = raw.status as string | { status?: string } | undefined;
   const ret = raw.return as { code?: string } | null | undefined;
   return {
     id: String(raw.id),
-    status: (typeof status === "object" ? status?.status : status) ?? "Unknown",
+    status: (raw.transactionStatus as string | undefined) ?? "Unknown",
     returnCode: ret?.code ?? null,
   };
 }
 
-function createLiveClient(baseUrl: string, token: string, dbaId: string): SoarClient {
+function createLiveClient(baseUrl: string, token: string, dbaIdEnv: string): SoarClient {
+  const dba = { id: Number(dbaIdEnv) };
+
   async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
     let res: Response;
     try {
@@ -128,11 +140,11 @@ function createLiveClient(baseUrl: string, token: string, dbaId: string): SoarCl
   }
 
   return {
-    async createCustomer({ identifier, name, account }) {
+    async createCustomer({ identifier, firstName, lastName, account }) {
       const res = await request<{ id: string; accounts?: { id: string }[] }>(
         "POST",
         "/ach/customer",
-        { dba: { id: dbaId }, identifier, name, accounts: [toAccount(account)] },
+        { dba, identifier, firstName, lastName, ...toCustomerAccount(account) },
       );
       const accountId = res.accounts?.[0]?.id;
       if (!res.id || !accountId) throw new SoarError("SOAR no devolvió el cliente o la cuenta");
@@ -150,10 +162,10 @@ function createLiveClient(baseUrl: string, token: string, dbaId: string): SoarCl
     },
 
     async createDebit({ customerId, accountId, amount, memo, effectiveDate }) {
+      // El código SEC (TEL) no se envía: viene configurado en el DBA.
       const res = await request<{ id: string }>("POST", "/ach", {
-        dba: { id: dbaId },
-        type: "Debit",
-        secCode: "TEL",
+        dba,
+        transactionType: "Debit",
         amount,
         memo,
         transactionDate: effectiveDate,
@@ -168,8 +180,16 @@ function createLiveClient(baseUrl: string, token: string, dbaId: string): SoarCl
       return fromDebit(await request("GET", `/ach/${encodeURIComponent(id)}`));
     },
 
+    // La acción void solo aplica a débitos ya enviados a procesar; uno que
+    // todavía no se envía se elimina en su lugar.
     async voidDebit(id) {
-      await request("POST", `/ach/${encodeURIComponent(id)}/void`);
+      const path = `/ach/${encodeURIComponent(id)}`;
+      try {
+        await request("POST", `${path}/void`);
+      } catch (err) {
+        if (!(err instanceof SoarError) || err.ambiguous || err.status === undefined) throw err;
+        await request("DELETE", path);
+      }
     },
   };
 }
