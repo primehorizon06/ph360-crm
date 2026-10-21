@@ -19,6 +19,7 @@ const schema = z.object({
   SOAR_API_URL: z.string().url().optional(),
   SOAR_API_TOKEN: z.string().min(1).optional(),
   SOAR_ACH_DBA_ID: z.string().min(1).optional(),
+  SOAR_ACH_SEC_CODE: z.enum(["TEL", "PPD", "CCD", "WEB"]).default("TEL"),
 }).refine(
   (data) => Boolean(data.SUPABASE_URL) === Boolean(data.SUPABASE_SERVICE_ROLE_KEY),
   {

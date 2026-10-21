@@ -102,7 +102,12 @@ function fromDebit(raw: Record<string, unknown>): SoarDebit {
   };
 }
 
-function createLiveClient(baseUrl: string, token: string, dbaIdEnv: string): SoarClient {
+function createLiveClient(
+  baseUrl: string,
+  token: string,
+  dbaIdEnv: string,
+  secCode: string,
+): SoarClient {
   const dba = { id: Number(dbaIdEnv) };
 
   async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -186,7 +191,7 @@ function createLiveClient(baseUrl: string, token: string, dbaIdEnv: string): Soa
       const res = await request<{ id: string }>("POST", "/ach", {
         dba,
         transactionType: "Debit",
-        SECCode: "TEL",
+        SECCode: secCode,
         amount,
         memo,
         transactionDate: effectiveDate,
@@ -264,7 +269,12 @@ export function getSoarClient(): SoarClient | null {
   if (client === undefined) {
     client =
       env.SOAR_API_TOKEN && env.SOAR_API_URL && env.SOAR_ACH_DBA_ID
-        ? createLiveClient(env.SOAR_API_URL, env.SOAR_API_TOKEN, env.SOAR_ACH_DBA_ID)
+        ? createLiveClient(
+            env.SOAR_API_URL,
+            env.SOAR_API_TOKEN,
+            env.SOAR_ACH_DBA_ID,
+            env.SOAR_ACH_SEC_CODE,
+          )
         : env.NODE_ENV !== "production"
           ? createMockClient()
           : null;
