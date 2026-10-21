@@ -52,3 +52,6 @@ next-env.d.ts
 
 # Informes locales del skill /revisar
 /docs/auditorias/
+
+# Datos privados de la cuenta de SOAR
+/soar-integration.md
