@@ -51,6 +51,7 @@ export interface SoarClient {
     effectiveDate: string;
   }): Promise<{ id: string }>;
   getDebit(id: string): Promise<SoarDebit>;
+  rawGet(path: string): Promise<{ status: number; body: unknown }>;
   voidDebit(id: string): Promise<void>;
 }
 
@@ -208,6 +209,20 @@ function createLiveClient(
       return fromDebit(await request("GET", `/ach/${encodeURIComponent(id)}`));
     },
 
+    async rawGet(path) {
+      const res = await fetch(`${baseUrl.replace(/\/$/, "")}${path}`, {
+        headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        cache: "no-store",
+      });
+      const text = await res.text().catch(() => "");
+      try {
+        return { status: res.status, body: JSON.parse(text) as unknown };
+      } catch {
+        return { status: res.status, body: text };
+      }
+    },
+
     // La acción void solo aplica a débitos ya enviados a procesar; uno que
     // todavía no se envía se elimina en su lugar.
     async voidDebit(id) {
@@ -258,6 +273,10 @@ function createMockClient(): SoarClient {
       if (pending) return { id, status: "Pending", returnCode: null };
       if (returnCode) return { id, status: "Returned", returnCode };
       return { id, status: "Settled", returnCode: null };
+    },
+
+    async rawGet() {
+      throw new SoarError("La consulta directa a SOAR no está disponible con el cliente simulado");
     },
 
     async voidDebit() {},
