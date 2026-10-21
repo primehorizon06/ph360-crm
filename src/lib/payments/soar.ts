@@ -20,9 +20,10 @@ export interface SoarAccountInput {
 
 export interface SoarDebit {
   id: string;
-  /** Pending, Submitted, Held, Transmitted, Settled, Returned o Voided. */
+  /** Pending, Submitted, Held, Transmitted, Settled, Returned, Voided o Error. */
   status: string;
   returnCode: string | null;
+  errorMessage?: string | null;
 }
 
 export interface SoarAddressInput {
@@ -99,6 +100,7 @@ function fromDebit(raw: Record<string, unknown>): SoarDebit {
     id: String(raw.id),
     status: (raw.transactionStatus as string | undefined) ?? "Unknown",
     returnCode: ret?.code ?? null,
+    errorMessage: typeof raw.error === "string" && raw.error.trim() ? raw.error.trim() : null,
   };
 }
 

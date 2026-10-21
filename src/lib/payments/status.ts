@@ -14,6 +14,7 @@ export function mapSoarStatus(
     case "Settled":
       return { attempt: "SUCCEEDED", installment: "PAID" };
     case "Returned":
+    case "Error":
       return { attempt: "FAILED", installment: "FAILED" };
     case "Voided":
       // Anular un débito no perdona la cuota: vuelve a quedar por cobrar.

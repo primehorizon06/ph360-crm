@@ -339,7 +339,11 @@ export async function applySoarDebit(attemptId: number, debit: SoarDebit) {
         status: mapped.attempt,
         rawStatus: debit.status,
         failureCode: isReturn ? debit.returnCode : null,
-        failureReason: isReturn ? achReturnReason(debit.returnCode) : null,
+        failureReason: isReturn
+          ? (achReturnReason(debit.returnCode) ??
+            debit.errorMessage ??
+            "El procesador de pagos rechazó el débito")
+          : null,
         settledAt: mapped.attempt === "SUCCEEDED" ? (attempt.settledAt ?? now) : attempt.settledAt,
       },
     }),
