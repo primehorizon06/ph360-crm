@@ -28,7 +28,8 @@ const LIMIT_MAX = 200;
 //                aparecen hoy). La ventana se calcula aquí y no se aceptan otras
 //                fechas.
 //   approved   — pagadas, por fecha de pago (por defecto hoy).
-//   processing — débito enviado o programado.
+//   scheduled  — débito en SOAR programado para una fecha futura.
+//   processing — débito en SOAR cuya fecha ya llegó.
 //   fallen     — suspendidas y devueltas.
 export const GET = withAuth(async (req, session) => {
   const user = session.user;
@@ -85,7 +86,7 @@ export const GET = withAuth(async (req, session) => {
   const anyBase = collectableProductFilter(leadFilter, { activeOnly: false });
   const base = view === "transfer" ? activeBase : anyBase;
 
-  const [rows, total, transferDates, byStatus, approvedToday] = await Promise.all([
+  const [rows, total, transferDates, byStatus, approvedToday, scheduled] = await Promise.all([
     prisma.installment.findMany({
       where: { ...base, ...where },
       orderBy: VIEW_ORDER[view],
@@ -165,6 +166,7 @@ export const GET = withAuth(async (req, session) => {
       _count: { _all: true },
     }),
     prisma.installment.count({ where: { ...anyBase, ...viewFilter("approved", today) } }),
+    prisma.installment.count({ where: { ...anyBase, ...viewFilter("scheduled", today) } }),
   ]);
 
   const dayCounts = Object.fromEntries(window.map((d) => [d, 0]));
@@ -178,7 +180,8 @@ export const GET = withAuth(async (req, session) => {
   const counts: Record<CollectionView, number> = {
     transfer: Object.values(dayCounts).reduce((a, b) => a + b, 0),
     approved: approvedToday,
-    processing: statusCount("PROCESSING"),
+    scheduled,
+    processing: statusCount("PROCESSING") - scheduled,
     fallen: statusCount("SUSPENDED") + statusCount("FAILED"),
   };
 

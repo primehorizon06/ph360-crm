@@ -13,10 +13,11 @@ import {
 // Pestañas:
 //   transfer   — confirmadas que aún no se envían a SOAR (por fecha de la ventana)
 //   approved   — pagadas (por fecha de pago)
-//   processing — débito enviado o programado
+//   scheduled  — débito en SOAR programado para una fecha futura
+//   processing — débito en SOAR cuya fecha ya llegó
 //   fallen     — caídas: suspendidas y devueltas
 
-export const COLLECTION_VIEWS = ["transfer", "approved", "processing", "fallen"] as const;
+export const COLLECTION_VIEWS = ["transfer", "approved", "scheduled", "processing", "fallen"] as const;
 export type CollectionView = (typeof COLLECTION_VIEWS)[number];
 
 export function isCollectionView(value: string | null): value is CollectionView {
@@ -139,6 +140,10 @@ export function statusFields(status: InstallmentStatus, reason?: string | null) 
  * Filtro de cada pestaña. Transfer y Aprobados reciben la fecha elegida: un día
  * de la ventana (fecha de la cuota) o un día cualquiera (fecha de pago).
  */
+function scheduledAttempt(): Prisma.ChargeAttemptWhereInput {
+  return { status: "PROCESSING", scheduledFor: { gt: new Date() } };
+}
+
 export function viewFilter(
   view: CollectionView,
   ymd: string,
@@ -151,8 +156,10 @@ export function viewFilter(
     }
     case "approved":
       return { status: "PAID", paidAt: { gte: startOfDay(ymd), lt: startOfDay(addDays(ymd, 1)) } };
+    case "scheduled":
+      return { status: "PROCESSING", attempts: { some: scheduledAttempt() } };
     case "processing":
-      return { status: "PROCESSING" };
+      return { status: "PROCESSING", attempts: { none: scheduledAttempt() } };
     case "fallen":
       return { status: { in: ["SUSPENDED", "FAILED"] } };
   }
@@ -161,6 +168,7 @@ export function viewFilter(
 export const VIEW_ORDER: Record<CollectionView, Prisma.InstallmentOrderByWithRelationInput[]> = {
   transfer: [{ date: "asc" }, { id: "asc" }],
   approved: [{ paidAt: "desc" }, { id: "asc" }],
+  scheduled: [{ date: "asc" }, { id: "asc" }],
   processing: [{ date: "asc" }, { id: "asc" }],
   fallen: [{ date: "asc" }, { id: "asc" }],
 };

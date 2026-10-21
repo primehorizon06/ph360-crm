@@ -47,9 +47,15 @@ const TABS: { view: CollectionView; label: string; empty: string; countStyle: st
     countStyle: "bg-success/10 text-success",
   },
   {
+    view: "scheduled",
+    label: "Programado",
+    empty: "No hay débitos programados",
+    countStyle: "bg-secondary/10 text-secondary",
+  },
+  {
     view: "processing",
-    label: "Proceso",
-    empty: "No hay débitos en proceso",
+    label: "SOAR Processed",
+    empty: "No hay débitos procesados por SOAR",
     countStyle: "bg-tertiary/10 text-tertiary",
   },
   {
@@ -161,7 +167,7 @@ export function CollectionsQueue() {
   const tab = TABS.find((t) => t.view === view)!;
   const shownDate = data?.date ?? dates[view] ?? null;
   // Suspender y reprogramar se hacen desde el plan de pagos del cliente.
-  const hasActions = view === "transfer" || view === "processing";
+  const hasActions = view === "transfer" || view === "scheduled" || view === "processing";
 
   function selectDate(ymd: string) {
     setDates((prev) => ({ ...prev, [view]: ymd }));
@@ -305,7 +311,7 @@ export function CollectionsQueue() {
     }
     if (view === "approved" && item.paidAt)
       return <p className="text-sm text-success">Pagada {formatDate(item.paidAt)}</p>;
-    if (view === "processing" && attempt) {
+    if ((view === "scheduled" || view === "processing") && attempt) {
       if (attempt.unconfirmed)
         return (
           <p className="text-sm text-attention">
