@@ -122,18 +122,18 @@ function InstallmentRow({
       <button
         type="button"
         onClick={() => hasDetail && setExpanded((p) => !p)}
-        className={`flex-1 min-w-0 flex items-center justify-between px-2 py-1.5 rounded-md transition-colors ${
+        className={`flex-1 min-w-0 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 px-2 py-1.5 rounded-md transition-colors ${
           idx % 2 === 0 ? "bg-white/5" : ""
         } ${hasDetail ? "cursor-pointer hover:bg-white/10" : "cursor-default"}`}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0">
           <span className="w-5 h-5 rounded-full bg-white/5 flex items-center justify-center text-md text-white/90 shrink-0">
             {inst.number}
           </span>
           <span className="text-white/90 text-[15px] font-mono shrink-0">
             #{inst.id}
           </span>
-          <span className="text-white text-sm">{formatDate(inst.date)}</span>
+          <span className="text-white text-sm whitespace-nowrap">{formatDate(inst.date)}</span>
           {soarId && (
             <span
               title={`ID SOAR: ${soarId}`}
@@ -144,9 +144,9 @@ function InstallmentRow({
           )}
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 ml-auto">
           <span
-            className={`text-[15px] px-1.5 py-0.5 rounded-full font-medium ${INSTALLMENT_STATUS_STYLES[inst.status] ?? ""}`}
+            className={`text-[15px] px-1.5 py-0.5 rounded-full font-medium whitespace-nowrap ${INSTALLMENT_STATUS_STYLES[inst.status] ?? ""}`}
           >
             {INSTALLMENT_STATUS_LABELS[inst.status] ?? inst.status}
           </span>
@@ -158,7 +158,7 @@ function InstallmentRow({
               <CheckCircle2 size={14} aria-label="Pago confirmado" />
             </span>
           )}
-          <span className="text-white text-sm">
+          <span className="text-white text-sm whitespace-nowrap">
             $ {formatAmount(Number(inst.amount))}
           </span>
           {hasDetail &&
@@ -778,7 +778,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
           <p className="text-white/90 text-lg">No hay productos asociados</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
           {products.map((lp) => {
             // Los pagos cancelados no se cobrarán: no suman al total ni al conteo.
             const activeInstallments =

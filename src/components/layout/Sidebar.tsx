@@ -82,7 +82,7 @@ export function Sidebar() {
       {/* Overlay móvil */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black/60 z-40 md:hidden"
+          className="fixed inset-0 bg-black/60 z-40 lg:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
@@ -92,7 +92,7 @@ export function Sidebar() {
           bg-surface flex flex-col h-dvh fixed left-0 top-0 z-50 transition-all duration-300 overflow-visible
           ${collapsed ? "w-16" : "w-56"}
           ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
-          md:translate-x-0
+          lg:translate-x-0
         `}
       >
         {/* Logo */}
@@ -104,14 +104,14 @@ export function Sidebar() {
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className={`text-on-surface-variant hover:text-white transition-colors hidden md:block ${collapsed ? "mx-auto" : ""}`}
+            className={`text-on-surface-variant hover:text-white transition-colors hidden lg:block ${collapsed ? "mx-auto" : ""}`}
           >
             {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
           </button>
           {/* Cerrar en móvil */}
           <button
             onClick={() => setMobileOpen(false)}
-            className="text-on-surface-variant hover:text-white transition-colors md:hidden ml-auto"
+            className="text-on-surface-variant hover:text-white transition-colors lg:hidden ml-auto"
           >
             <ChevronLeft size={16} />
           </button>

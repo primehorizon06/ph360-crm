@@ -8,7 +8,7 @@ interface Props {
 
 export function LeadDetailTabs({ activeTab, onChange }: Props) {
   return (
-    <div className="border-b border-white/10 overflow-x-auto overflow-y-hidden">
+    <div className="border-b border-white/10 overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <div className="flex gap-1 min-w-max">
         {TABS.map((tab) => (
           <button
