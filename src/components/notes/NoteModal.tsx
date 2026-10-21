@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { X, Paperclip, File, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { CustomSelect } from "@/components/ui/Select";
+import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import { NoteFormData, noteSchema, Props } from "@/utils/interfaces/notes";
 import { NOTE_TITLES } from "@/utils/constants/notes";
 
@@ -14,13 +15,12 @@ export function NoteModal({ leadId, onClose, onSave }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
-    register,
     handleSubmit,
     control,
     formState: { errors, isSubmitting },
   } = useForm<NoteFormData>({
     resolver: zodResolver(noteSchema),
-    defaultValues: { title: NOTE_TITLES[0] },
+    defaultValues: { title: NOTE_TITLES[0], content: "" },
   });
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -106,11 +106,18 @@ export function NoteModal({ leadId, onClose, onSave }: Props) {
             <label className="text-sm text-on-surface-variant mb-1 block">
               Contenido <span className="text-red-400">*</span>
             </label>
-            <textarea
-              {...register("content")}
-              rows={5}
-              placeholder="Escribe aquí los detalles de la nota..."
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50 resize-none"
+            <Controller
+              name="content"
+              control={control}
+              render={({ field: { value, onChange } }) => (
+                <RichTextEditor
+                  value={value ?? ""}
+                  onChange={onChange}
+                  label="Contenido"
+                  placeholder="Escribe aquí los detalles de la nota..."
+                  invalid={!!errors.content}
+                />
+              )}
             />
             {errors.content && (
               <p className="text-red-400 text-sm mt-1">

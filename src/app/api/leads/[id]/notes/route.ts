@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuthParams, badRequest, notFound, forbidden } from "@/lib/api";
 import { canAccessLead } from "@/lib/permissions";
+import { sanitizeNoteHtml } from "@/lib/sanitizeHtml";
+import { richTextLength } from "@/lib/richText";
 
 export const GET = withAuthParams<{ id: string }>(async (_req, session, { id }) => {
   const lead = await prisma.lead.findUnique({ where: { id: Number(id) } });
@@ -47,12 +49,15 @@ export const POST = withAuthParams<{ id: string }>(async (req, session, { id }) 
   if (!canAccessLead(session.user, lead)) return forbidden();
 
   const { title, content } = await req.json();
-  if (!title || !content) return badRequest("Título y contenido son requeridos");
+  if (!title || typeof content !== "string") return badRequest("Título y contenido son requeridos");
+
+  const safeContent = sanitizeNoteHtml(content);
+  if (richTextLength(safeContent) < 5) return badRequest("El contenido debe tener mínimo 5 caracteres");
 
   const note = await prisma.note.create({
     data: {
       title,
-      content,
+      content: safeContent,
       leadId: Number(id),
       authorId: Number(session.user.id),
     },

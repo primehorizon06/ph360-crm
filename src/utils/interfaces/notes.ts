@@ -1,4 +1,5 @@
 import z from "zod";
+import { richTextLength } from "@/lib/richText";
 
 export interface NoteAttachment {
   id: number;
@@ -20,7 +21,7 @@ export interface Note {
 
 export const noteSchema = z.object({
   title: z.string().min(1, "El título es requerido"),
-  content: z.string().min(5, "Mínimo 5 caracteres"),
+  content: z.string().refine((v) => richTextLength(v) >= 5, "Mínimo 5 caracteres"),
 });
 
 export type NoteFormData = z.infer<typeof noteSchema>;

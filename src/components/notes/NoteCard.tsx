@@ -1,6 +1,7 @@
 import { FileText, Paperclip, Pin, PinOff } from "lucide-react";
 import { AttachmentPreview } from "./AttachmentPreview";
 import { Note } from "@/utils/interfaces/notes";
+import { RICH_TEXT_CLASSES } from "@/lib/richText";
 
 interface NoteCardProps {
   note: Note;
@@ -56,7 +57,10 @@ export function NoteCard({ note, onTogglePin }: NoteCardProps) {
         </div>
       </div>
 
-      <p className="text-lg text-white/60 leading-relaxed">{note.content}</p>
+      <div
+        className={`text-lg text-white/60 leading-relaxed ${RICH_TEXT_CLASSES}`}
+        dangerouslySetInnerHTML={{ __html: note.content }}
+      />
 
       {note.attachments?.length > 0 && (
         <div className="space-y-2">
