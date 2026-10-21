@@ -129,7 +129,7 @@ export async function ensureSoarAccount(productId: number) {
 
       const leadName = formatFullName(lead);
       const account = {
-        holderName: method.accountHolder ?? leadName,
+        holderName: method.accountHolder?.trim() || leadName.trim(),
         routingNumber,
         accountNumber,
         accountType:
@@ -143,7 +143,7 @@ export async function ensureSoarAccount(productId: number) {
           if ("error" in customer) return { error: customer.error };
           const { customerId, accountId } = await client.createCustomer({
             identifier: String(lead.id),
-            firstName: lead.firstName,
+            firstName: lead.firstName.trim(),
             lastName: customer.lastName,
             address: customer.address,
             account,

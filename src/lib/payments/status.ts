@@ -2,10 +2,14 @@ import type { ChargeAttemptStatus, InstallmentStatus } from "@prisma/client";
 
 // Traduce el estado de cada procesador al estado del intento y de la cuota.
 
+function normalizeSoarStatus(status: string): string {
+  return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+}
+
 export function mapSoarStatus(
   status: string,
 ): { attempt: ChargeAttemptStatus; installment: InstallmentStatus } | null {
-  switch (status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()) {
+  switch (normalizeSoarStatus(status)) {
     case "Pending":
     case "Submitted":
     case "Held":
@@ -28,7 +32,10 @@ export function mapSoarStatus(
 const SOAR_VOIDABLE_STATUSES = ["Pending", "Submitted", "Held"];
 
 export function isVoidableAttempt(attempt: { status: string; rawStatus: string | null }): boolean {
-  return attempt.status === "PROCESSING" && SOAR_VOIDABLE_STATUSES.includes(attempt.rawStatus ?? "");
+  return (
+    attempt.status === "PROCESSING" &&
+    SOAR_VOIDABLE_STATUSES.includes(normalizeSoarStatus(attempt.rawStatus ?? ""))
+  );
 }
 
 // Débito que SOAR no confirmó (timeout o error ambiguo al crearlo): puede o no
