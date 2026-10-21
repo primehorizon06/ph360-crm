@@ -183,10 +183,10 @@ function createLiveClient(baseUrl: string, token: string, dbaIdEnv: string): Soa
     },
 
     async createDebit({ customerId, accountId, amount, memo, effectiveDate }) {
-      // El código SEC (TEL) no se envía: viene configurado en el DBA.
       const res = await request<{ id: string }>("POST", "/ach", {
         dba,
         transactionType: "Debit",
+        SECCode: "TEL",
         amount,
         memo,
         transactionDate: effectiveDate,
