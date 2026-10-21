@@ -194,7 +194,7 @@ function createLiveClient(
         SECCode: secCode,
         amount,
         memo,
-        transactionDate: effectiveDate,
+        transactionDate: `${effectiveDate} 12:00:00`,
         customer: { id: customerId },
         account: { id: accountId },
       });
