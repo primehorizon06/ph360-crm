@@ -310,7 +310,10 @@ const ALLOWED_FROM: Record<InstallmentStatus, InstallmentStatus[]> = {
  */
 export async function applySoarDebit(attemptId: number, debit: SoarDebit) {
   const mapped = mapSoarStatus(debit.status);
-  if (!mapped) return null;
+  if (!mapped) {
+    console.error(`SOAR débito ${debit.id}: estado desconocido "${debit.status}"`);
+    return null;
+  }
 
   const attempt = await prisma.chargeAttempt.findUnique({
     where: { id: attemptId },
@@ -393,7 +396,12 @@ export async function refreshAttempt(attemptId: number) {
   } catch (err) {
     throw new ChargeError(errorMessage(err));
   }
-  return (await applySoarDebit(attempt.id, debit)) ?? attempt;
+  const updated = await applySoarDebit(attempt.id, debit);
+  if (!updated)
+    throw new ChargeError(
+      `El procesador de pagos informó un estado que el CRM no reconoce (${debit.status})`,
+    );
+  return updated;
 }
 
 /**

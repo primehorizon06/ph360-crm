@@ -5,7 +5,7 @@ import type { ChargeAttemptStatus, InstallmentStatus } from "@prisma/client";
 export function mapSoarStatus(
   status: string,
 ): { attempt: ChargeAttemptStatus; installment: InstallmentStatus } | null {
-  switch (status) {
+  switch (status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()) {
     case "Pending":
     case "Submitted":
     case "Held":
