@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -77,17 +78,6 @@ const navGroups: NavGroup[] = [
   },
 ];
 
-function CollapsedTooltip({ label }: { label: string }) {
-  return (
-    <div
-      aria-hidden="true"
-      className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-surface-container border border-white/10 rounded-lg text-sm text-white whitespace-nowrap opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity pointer-events-none z-50"
-    >
-      {label}
-    </div>
-  );
-}
-
 export function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
@@ -100,6 +90,9 @@ export function Sidebar() {
     setLeadsModalOpen,
     onLeadCreated,
   } = useSidebar();
+  const [tooltip, setTooltip] = useState<{ label: string; top: number } | null>(null);
+
+  const compact = collapsed && !mobileOpen;
 
   const role = session?.user?.role ?? "";
   const visibleGroups = navGroups
@@ -108,6 +101,22 @@ export function Sidebar() {
       items: group.items.filter((item) => !item.roles || item.roles.includes(role)),
     }))
     .filter((group) => group.items.length > 0);
+
+  function showTooltip(label: string, target: HTMLElement) {
+    const rect = target.getBoundingClientRect();
+    setTooltip({ label, top: rect.top + rect.height / 2 });
+  }
+
+  function tooltipProps(label: string) {
+    if (!compact) return {};
+    return {
+      "aria-label": label,
+      onMouseEnter: (e: React.MouseEvent<HTMLElement>) => showTooltip(label, e.currentTarget),
+      onFocus: (e: React.FocusEvent<HTMLElement>) => showTooltip(label, e.currentTarget),
+      onMouseLeave: () => setTooltip(null),
+      onBlur: () => setTooltip(null),
+    };
+  }
 
   return (
     <>
@@ -122,7 +131,7 @@ export function Sidebar() {
       <aside
         className={`
           bg-surface flex flex-col h-dvh fixed left-0 top-0 z-50 transition-all duration-300 overflow-visible
-          ${collapsed ? "w-16" : "w-56"}
+          ${compact ? "w-16" : "w-56"}
           ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
           lg:translate-x-0
         `}
@@ -130,26 +139,26 @@ export function Sidebar() {
         {/* Logo */}
         <div
           className={`h-14 border-b border-white/10 flex items-center gap-2 ${
-            collapsed ? "justify-center" : "pl-6 pr-4 justify-between"
+            compact ? "justify-center" : "pl-6 pr-4 justify-between"
           }`}
         >
           <div className="flex items-center gap-2 min-w-0">
             <Image
               src={logo}
-              alt={collapsed ? "PH360 CRM" : ""}
-              width={collapsed ? 28 : 32}
-              height={collapsed ? 14 : 16}
+              alt={compact ? "PH360 CRM" : ""}
+              width={compact ? 28 : 32}
+              height={compact ? 14 : 16}
               priority
               className="shrink-0"
             />
-            {!collapsed && (
+            {!compact && (
               <p className="text-white font-semibold text-lg leading-none truncate">
                 PH360 CRM
               </p>
             )}
           </div>
           {/* Cerrar en móvil */}
-          {!collapsed && (
+          {!compact && (
             <button
               onClick={() => setMobileOpen(false)}
               aria-label="Cerrar menú"
@@ -177,11 +186,12 @@ export function Sidebar() {
         {/* Nav */}
         <nav
           aria-label="Menú principal"
-          className={`flex-1 p-3 ${collapsed ? "" : "overflow-y-auto"}`}
+          onScroll={() => setTooltip(null)}
+          className="flex-1 p-3 overflow-y-auto"
         >
           {visibleGroups.map((group, groupIdx) => {
             const headingId = group.label ? `nav-group-${groupIdx}` : undefined;
-            const showHeading = group.label && !collapsed;
+            const showHeading = group.label && !compact;
             return (
               <div
                 key={group.label ?? groupIdx}
@@ -198,7 +208,7 @@ export function Sidebar() {
                     {group.label}
                   </p>
                 )}
-                {group.label && collapsed && (
+                {group.label && compact && (
                   <div aria-hidden="true" className="mx-2 mb-2 border-t border-white/10" />
                 )}
                 <ul className="space-y-1">
@@ -209,14 +219,14 @@ export function Sidebar() {
                         ? pathname === "/"
                         : pathname === item.href || pathname.startsWith(`${item.href}/`);
                     return (
-                      <li key={item.href} className="relative group">
+                      <li key={item.href}>
                         <Link
                           href={item.href}
                           onClick={() => setMobileOpen(false)}
                           aria-current={isActive ? "page" : undefined}
-                          aria-label={collapsed ? item.label : undefined}
+                          {...tooltipProps(item.label)}
                           className={`flex items-center gap-3 px-3 py-2 rounded-lg text-lg transition-colors ${
-                            collapsed ? "justify-center" : ""
+                            compact ? "justify-center" : ""
                           } ${
                             isActive
                               ? "bg-tertiary/10 text-tertiary"
@@ -224,9 +234,8 @@ export function Sidebar() {
                           }`}
                         >
                           <Icon size={18} aria-hidden="true" />
-                          {!collapsed && item.label}
+                          {!compact && item.label}
                         </Link>
-                        {collapsed && <CollapsedTooltip label={item.label} />}
                       </li>
                     );
                   })}
@@ -237,35 +246,39 @@ export function Sidebar() {
         </nav>
 
         {canCreateLead(role) && (
-        <div className="px-3 pb-3">
-          <div className="relative group">
+          <div className="px-3 pb-3">
             <button
               onClick={() => setLeadsModalOpen(true)}
-              aria-label={collapsed ? "Nuevo Lead" : undefined}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-lg bg-tertiary/10 text-tertiary hover:bg-tertiary/20 w-full transition-colors ${collapsed ? "justify-center" : ""}`}
+              {...tooltipProps("Nuevo Lead")}
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-lg bg-tertiary/10 text-tertiary hover:bg-tertiary/20 w-full transition-colors ${compact ? "justify-center" : ""}`}
             >
               <Plus size={18} aria-hidden="true" />
-              {!collapsed && "Nuevo Lead"}
+              {!compact && "Nuevo Lead"}
             </button>
-            {collapsed && <CollapsedTooltip label="Nuevo Lead" />}
           </div>
-        </div>
         )}
 
         {/* Footer */}
         <div className="p-3 border-t border-white/10">
-          <div className="relative group">
-            <button
-              onClick={() => signOut({ callbackUrl: "/auth/login" })}
-              aria-label={collapsed ? "Cerrar Sesión" : undefined}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-lg text-error/70 hover:text-error hover:bg-error/10 w-full transition-colors ${collapsed ? "justify-center" : ""}`}
-            >
-              <LogOut size={18} aria-hidden="true" />
-              {!collapsed && "Cerrar Sesión"}
-            </button>
-            {collapsed && <CollapsedTooltip label="Cerrar Sesión" />}
-          </div>
+          <button
+            onClick={() => signOut({ callbackUrl: "/auth/login" })}
+            {...tooltipProps("Cerrar Sesión")}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-lg text-error/70 hover:text-error hover:bg-error/10 w-full transition-colors ${compact ? "justify-center" : ""}`}
+          >
+            <LogOut size={18} aria-hidden="true" />
+            {!compact && "Cerrar Sesión"}
+          </button>
         </div>
+
+        {compact && tooltip && (
+          <div
+            aria-hidden="true"
+            style={{ top: tooltip.top }}
+            className="fixed left-[4.5rem] -translate-y-1/2 px-2 py-1 bg-surface-container border border-white/10 rounded-lg text-sm text-white whitespace-nowrap pointer-events-none z-50"
+          >
+            {tooltip.label}
+          </div>
+        )}
       </aside>
 
       {leadsModalOpen && (
