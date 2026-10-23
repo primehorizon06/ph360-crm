@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 import { useReminderNotifications } from "@/hooks/useReminderNotifications";
 import { REMINDER_STATUS } from "@/utils/constants/reminders";
 
@@ -29,8 +29,6 @@ export function NotificationHandler() {
       });
 
       if (response.ok) {
-        console.log(`Recordatorio ${reminderId} marcado como completado`);
-        // Refrescar la lista de pendientes
         refresh();
       } else {
         console.error("Error al marcar como completado");
@@ -40,7 +38,7 @@ export function NotificationHandler() {
     }
   };
 
-  const showNotification = (reminder: NotificationReminder) => {
+  const showNotification = useEffectEvent((reminder: NotificationReminder) => {
     if (!("Notification" in window)) return;
 
     const leadName = reminder.lead.fullName;
@@ -64,7 +62,7 @@ export function NotificationHandler() {
         window.location.href = `/leads/${reminder.leadId}?tab=reminders`;
       };
     }
-  };
+  });
 
   const requestNotificationPermission = async () => {
     if ("Notification" in window && Notification.permission === "default") {

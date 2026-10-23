@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 interface AvatarProps {
   name?: string | null;
   avatar?: string | null;
@@ -10,12 +12,17 @@ const sizes = {
   lg: "w-16 h-16 text-xl",
 };
 
+const pixels = { sm: 32, md: 40, lg: 64 };
+
 export function Avatar({ name, avatar, size = "sm" }: AvatarProps) {
   if (avatar) {
     return (
-      <img
+      <Image
         src={avatar}
         alt={name ?? ""}
+        width={pixels[size]}
+        height={pixels[size]}
+        unoptimized
         className={`${sizes[size]} rounded-full object-cover`}
       />
     );

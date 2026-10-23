@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import useSWR from "swr";
@@ -33,7 +33,7 @@ export function UserModal({ user, onClose, onSave, defaults }: Props) {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<UserFormData>({
@@ -53,9 +53,11 @@ export function UserModal({ user, onClose, onSave, defaults }: Props) {
     },
   });
 
-  const companyId = watch("companyId");
-  const role = watch("role");
-  const passwordValue = watch("password");
+  const companyId = useWatch({ control, name: "companyId" });
+  const teamIdValue = useWatch({ control, name: "teamId" });
+  const role = useWatch({ control, name: "role" });
+  const passwordValue = useWatch({ control, name: "password" });
+  const avatarValue = useWatch({ control, name: "name" });
 
   const isGlobal = isGlobalRole(role);
 
@@ -108,8 +110,6 @@ export function UserModal({ user, onClose, onSave, defaults }: Props) {
     toast.success(user ? "Usuario actualizado" : "Usuario creado");
     onSave();
   }
-
-  const avatarValue = watch("name");
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -261,7 +261,7 @@ export function UserModal({ user, onClose, onSave, defaults }: Props) {
             <label className="text-sm text-on-surface-variant mb-1 block">Rol</label>
             <CustomSelect
               name="role"
-              value={roleLabel(watch("role"))}
+              value={roleLabel(role)}
               onChange={(val) => setValue("role", val as UserFormData["role"])}
               options={roles}
               labels={roles.map(roleLabel)}
@@ -270,8 +270,6 @@ export function UserModal({ user, onClose, onSave, defaults }: Props) {
               <p className="text-red-400 text-sm mt-1">{errors.role.message}</p>
             )}
           </div>
-
-          {/* Franquicia — ADMIN y Customer Service Holding no pertenecen a ninguna */}
           {!isGlobal && (
           <div>
             <label className="text-sm text-on-surface-variant mb-1 block">
@@ -309,7 +307,7 @@ export function UserModal({ user, onClose, onSave, defaults }: Props) {
             <CustomSelect
               name="teamId"
               value={
-                teams.find((t) => String(t.id) === watch("teamId"))?.name ??
+                teams.find((t) => String(t.id) === teamIdValue)?.name ??
                 "Seleccionar equipo"
               }
               onChange={(val) => setValue("teamId", val)}

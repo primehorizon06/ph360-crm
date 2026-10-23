@@ -3,7 +3,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { X } from "lucide-react";
-import { useState } from "react";
 import { toast } from "sonner";
 import { TeamModalProps } from "@/utils/interfaces/companies";
 import { schemaTeams } from "@/lib/validations/teams";

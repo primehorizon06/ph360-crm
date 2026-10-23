@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { File, ZoomIn } from "lucide-react";
 
 interface NoteAttachment {
@@ -18,18 +19,21 @@ export function AttachmentPreview({
   const isImage = attachment.mimeType?.startsWith("image/");
 
   return isImage ? (
-    // Preview de imagen inline
     <a
       href={attachment.url}
       target="_blank"
       rel="noopener noreferrer"
       className="relative group rounded-lg overflow-hidden border border-white/10 hover:border-cyan-500/50 transition-colors"
     >
-      <img
-        src={attachment.url}
-        alt={attachment.name}
-        className="w-full h-24 object-cover"
-      />
+      <div className="relative w-full h-24">
+        <Image
+          src={attachment.url}
+          alt={attachment.name}
+          fill
+          unoptimized
+          className="object-cover"
+        />
+      </div>
       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
         <ZoomIn size={20} className="text-white" />
       </div>
@@ -38,7 +42,6 @@ export function AttachmentPreview({
       </div>
     </a>
   ) : (
-    // PDF u otro archivo — abre en pestaña nueva
     <a
       href={attachment.url}
       target="_blank"

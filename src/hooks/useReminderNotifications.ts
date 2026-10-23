@@ -19,6 +19,8 @@ export interface PendingReminder {
   };
 }
 
+const NO_REMINDERS: PendingReminder[] = [];
+
 // Hook para notificaciones globales (todos los leads)
 export function useReminderNotifications() {
   const params = new URLSearchParams({
@@ -36,7 +38,7 @@ export function useReminderNotifications() {
   );
 
   return {
-    pendingReminders: data || [],
+    pendingReminders: data ?? NO_REMINDERS,
     isLoading,
     isError: error,
     refresh: mutate,

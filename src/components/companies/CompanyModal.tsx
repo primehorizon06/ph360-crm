@@ -1,10 +1,9 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { X, Camera } from "lucide-react";
-import { useState } from "react";
 import { toast } from "sonner";
 import { CompanyGoals } from "@/utils/interfaces/companies";
 import { Avatar } from "@/components/ui/Avatar";
@@ -30,7 +29,7 @@ export function CompanyModal({ company, onClose, onSave }: Props) {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -39,6 +38,7 @@ export function CompanyModal({ company, onClose, onSave }: Props) {
       active: company?.active ?? true,
     },
   });
+  const nameValue = useWatch({ control, name: "name" });
 
   async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -91,7 +91,7 @@ export function CompanyModal({ company, onClose, onSave }: Props) {
           {company && (
             <div className="flex justify-center">
               <label className="cursor-pointer group relative">
-                <Avatar name={watch("name")} avatar={company.logo} size="lg" />
+                <Avatar name={nameValue} avatar={company.logo} size="lg" />
                 <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <Camera size={16} className="text-white" />
                 </div>

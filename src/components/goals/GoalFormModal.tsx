@@ -1,7 +1,5 @@
-// ── Goal Form Modal ───────────────────────────────────────────────────────────
-
 import { useEffect, useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -51,7 +49,6 @@ export function GoalFormModal({
     register,
     handleSubmit,
     control,
-    watch,
     setValue,
     setError,
     getValues,
@@ -65,10 +62,10 @@ export function GoalFormModal({
   const isSupervisor = userRole === UserRole.SUPERVISOR;
   const isAdmin = userRole === UserRole.ADMIN;
 
-  const companyIdValue = watch("companyId") ?? "";
-  const teamIdValue = watch("teamId") ?? "";
-  const userIdValue = watch("userId") ?? "";
-  const amountValue = watch("amount");
+  const companyIdValue = useWatch({ control, name: "companyId" }) ?? "";
+  const teamIdValue = useWatch({ control, name: "teamId" }) ?? "";
+  const userIdValue = useWatch({ control, name: "userId" }) ?? "";
+  const amountValue = useWatch({ control, name: "amount" });
 
   // Filtered teams/agents based on selections
   const effectiveCompanyId = isSupervisor
@@ -133,11 +130,15 @@ export function GoalFormModal({
 
   const availableForCurrent = getAvailableForCurrent();
 
-  // Reset on open — supervisor starts on "company" scope too
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
+    if (open) setScope("company");
+  }
+
   useEffect(() => {
     if (!open) return;
     reset({ companyId: "", teamId: "", userId: "" });
-    setScope("company");
   }, [open, reset]);
 
   async function onSubmit(data: GoalFormData) {

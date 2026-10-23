@@ -37,7 +37,6 @@ export default function GoalsPage() {
   const [year, setYear] = useState(now.getFullYear());
   const [quincena, setQuincena] = useState<1 | 2>(now.getDate() <= 15 ? 1 : 2);
   const [modalOpen, setModalOpen] = useState(false);
-  const [deleting, setDeleting] = useState<number | null>(null);
 
   const isAdmin = user?.role === UserRole.ADMIN;
   const isSupervisor = user?.role === UserRole.SUPERVISOR;
@@ -52,17 +51,12 @@ export default function GoalsPage() {
 
   function handleDelete(id: number) {
     confirmToast("¿Eliminar esta meta?", async () => {
-      setDeleting(id);
-      try {
-        const ok = await postAction(
-          "/api/goals",
-          { id },
-          { method: "DELETE", success: "Meta eliminada", error: "Error al eliminar la meta" },
-        );
-        if (ok) void mutate();
-      } finally {
-        setDeleting(null);
-      }
+      const ok = await postAction(
+        "/api/goals",
+        { id },
+        { method: "DELETE", success: "Meta eliminada", error: "Error al eliminar la meta" },
+      );
+      if (ok) void mutate();
     });
   }
 

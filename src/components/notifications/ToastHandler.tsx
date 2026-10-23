@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 import { toast } from "sonner";
-import { useReminderNotifications } from "@/hooks/useReminderNotifications";
+import {
+  PendingReminder,
+  useReminderNotifications,
+} from "@/hooks/useReminderNotifications";
 import { REMINDER_STATUS } from "@/utils/constants/reminders";
 import { Bell, CheckCircle, Clock } from "lucide-react";
 
@@ -28,7 +31,7 @@ export function ToastHandler() {
     return false;
   };
 
-  const showToast = (reminder: any) => {
+  const showToast = useEffectEvent((reminder: PendingReminder) => {
     const leadName = reminder.lead.fullName;
     const time = new Date(reminder.scheduledAt).toLocaleTimeString("es", {
       hour: "2-digit",
@@ -79,11 +82,11 @@ export function ToastHandler() {
         </div>
       ),
       {
-        duration: 10000, // 10 segundos
-        id: `reminder-${reminder.id}`, // Para no duplicar
+        duration: 10000,
+        id: `reminder-${reminder.id}`,
       },
     );
-  };
+  });
 
   useEffect(() => {
     pendingReminders.forEach((reminder) => {
