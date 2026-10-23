@@ -24,6 +24,7 @@ export function PersonalTab({ lead }: Props) {
             label="Seguro social"
             maskedValue={lead.ssn}
             revealUrl={`/api/leads/${lead.id}/ssn`}
+            responseKey="ssn"
           />
           <InfoField
             label="Fecha de nacimiento"

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuthParams, badRequest, forbidden, notFound } from "@/lib/api";
 import { canAccessLead, canManagePayments } from "@/lib/permissions";
-import { findLeadProduct } from "@/lib/leadService";
+import { findLeadProduct, maskPaymentMethod } from "@/lib/leadService";
 import { accountDetailsSchema, cardDetailsSchema } from "@/lib/validations/product";
 import { encryptRandom, decrypt } from "@/lib/crypto";
 import { logAudit, getRequestMeta } from "@/lib/audit";
@@ -81,10 +81,6 @@ export const PATCH = withAuthParams<{ id: string; productId: string }>(
       ...getRequestMeta(req),
     });
 
-    return NextResponse.json({
-      ...updated,
-      accountNumber: decrypt(updated.accountNumber),
-      routingNumber: decrypt(updated.routingNumber),
-    });
+    return NextResponse.json(maskPaymentMethod(updated));
   },
 );

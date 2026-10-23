@@ -2,8 +2,22 @@ import { InstallmentStatus, Prisma, Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { UserFacingError } from "@/lib/errors";
 import { isCollectableProduct } from "@/lib/collections";
+import { decrypt } from "@/lib/crypto";
+import { maskLastFour } from "@/utils/helpers/format";
 
 const MAX_INT4 = 2_147_483_647;
+
+export function maskPaymentMethod<
+  T extends { lastFour: string | null; accountNumber: string | null; routingNumber: string | null },
+>(method: T): T {
+  return {
+    ...method,
+    accountNumber: method.accountNumber
+      ? maskLastFour(method.lastFour ?? decrypt(method.accountNumber))
+      : null,
+    routingNumber: maskLastFour(decrypt(method.routingNumber)),
+  };
+}
 
 export function findDuplicatePhone(excludeLeadId: number | null, phone: string) {
   return prisma.lead.findFirst({

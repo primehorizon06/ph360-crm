@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuthParams, badRequest, forbidden, notFound } from "@/lib/api";
 import { canAccessLead, canCreateProduct } from "@/lib/permissions";
-import { encryptRandom, decrypt } from "@/lib/crypto";
+import { encryptRandom } from "@/lib/crypto";
 import { productSchema } from "@/lib/validations/product";
 import { checkPlanTotal } from "@/lib/validations/productCatalog";
-import { parseInstallments } from "@/lib/leadService";
+import { maskPaymentMethod, parseInstallments } from "@/lib/leadService";
 import { logAudit, getRequestMeta } from "@/lib/audit";
 import { isWeekendDate, WEEKEND_DATE_ERROR } from "@/lib/businessDays";
 import { notifyLeadReviewers } from "@/lib/approvalService";
@@ -50,20 +50,11 @@ export const GET = withAuthParams<{ id: string }>(
       orderBy: { createdAt: "asc" },
     });
 
-    const decrypted = products.map((p) =>
-      p.paymentMethod
-        ? {
-            ...p,
-            paymentMethod: {
-              ...p.paymentMethod,
-              accountNumber: decrypt(p.paymentMethod.accountNumber),
-              routingNumber: decrypt(p.paymentMethod.routingNumber),
-            },
-          }
-        : p,
+    const masked = products.map((p) =>
+      p.paymentMethod ? { ...p, paymentMethod: maskPaymentMethod(p.paymentMethod) } : p,
     );
 
-    return NextResponse.json(decrypted);
+    return NextResponse.json(masked);
   },
 );
 
@@ -185,11 +176,7 @@ export const POST = withAuthParams<{ id: string }>(
       {
         ...leadProduct,
         paymentMethod: leadProduct.paymentMethod
-          ? {
-              ...leadProduct.paymentMethod,
-              accountNumber: paymentMethod.accountNumber ?? null,
-              routingNumber: paymentMethod.routingNumber ?? null,
-            }
+          ? maskPaymentMethod(leadProduct.paymentMethod)
           : leadProduct.paymentMethod,
       },
       { status: 201 },

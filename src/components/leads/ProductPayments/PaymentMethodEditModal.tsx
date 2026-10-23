@@ -1,5 +1,6 @@
 "use client";
 
+import useSWR, { SWRConfig } from "swr";
 import { useForm, Controller, FieldValues, Path, Control, UseFormRegister, FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -11,6 +12,12 @@ import {
   CardDetailsFormData,
 } from "@/lib/validations/product";
 import { PaymentMethod } from "@/utils/interfaces/products";
+import { postFetcher } from "@/lib/fetcher";
+
+interface BankNumbers {
+  accountNumber: string | null;
+  routingNumber: string | null;
+}
 
 interface Props {
   leadId: string | number;
@@ -114,6 +121,21 @@ async function save(leadId: string | number, productId: number, data: object) {
 }
 
 function AccountForm({ leadId, productId, method, onClose, onSaved }: Props) {
+  const { data: bankNumbers } = useSWR<BankNumbers>(
+    `/api/leads/${leadId}/products/${productId}/payment-method/reveal`,
+    postFetcher,
+    {
+      revalidateIfStale: false,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      shouldRetryOnError: false,
+      onError: (err: Error) => {
+        toast.error(err.message || "No se pudo cargar la cuenta bancaria");
+        onClose();
+      },
+    },
+  );
+
   const {
     register,
     control,
@@ -124,11 +146,23 @@ function AccountForm({ leadId, productId, method, onClose, onSaved }: Props) {
     defaultValues: {
       accountBank: method.accountBank ?? "",
       accountHolder: method.accountHolder ?? "",
-      routingNumber: method.routingNumber ?? "",
-      accountNumber: method.accountNumber ?? "",
       accountType: method.accountType,
     },
+    values: bankNumbers && ({
+      accountBank: method.accountBank ?? "",
+      accountHolder: method.accountHolder ?? "",
+      routingNumber: bankNumbers.routingNumber ?? "",
+      accountNumber: bankNumbers.accountNumber ?? "",
+      accountType: method.accountType,
+    } as AccountDetailsFormData),
   });
+
+  if (!bankNumbers)
+    return (
+      <div className="flex justify-center py-8">
+        <Loader2 size={20} className="animate-spin text-on-surface-variant" />
+      </div>
+    );
 
   return (
     <form
@@ -242,7 +276,13 @@ export function PaymentMethodEditModal(props: Props) {
             <X size={16} />
           </button>
         </div>
-        {isAccount ? <AccountForm {...props} /> : <CardForm {...props} />}
+        {isAccount ? (
+          <SWRConfig value={{ provider: () => new Map() }}>
+            <AccountForm {...props} />
+          </SWRConfig>
+        ) : (
+          <CardForm {...props} />
+        )}
       </div>
     </div>
   );

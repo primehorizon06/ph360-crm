@@ -62,6 +62,7 @@ import {
 import { postAction } from "@/lib/postAction";
 import { confirmToast } from "@/lib/confirmToast";
 import { PaymentMethodEditModal } from "@/components/leads/ProductPayments/PaymentMethodEditModal";
+import { BankNumbersField } from "../SensitiveField";
 import { InstallmentModal } from "@/components/leads/ProductPayments/InstallmentModal";
 
 // ─── Installment status helpers ───────────────────────────────────────────────
@@ -291,6 +292,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
   const [pendingData, setPendingData] = useState<ProductFormData | null>(null);
   const [resubmitting, setResubmitting] = useState<number | null>(null);
   const [editingMethod, setEditingMethod] = useState<Product | null>(null);
+  const [methodRevision, setMethodRevision] = useState(0);
   const [installmentModal, setInstallmentModal] = useState<{
     productId: number;
     /** Producto aprobado y activo: se puede confirmar, suspender y reprogramar. */
@@ -406,15 +408,25 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
 
   async function handleResubmit(productId: number) {
     setResubmitting(productId);
-    await fetch(`/api/leads/${leadId}/products/${productId}/approval`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "RESUBMIT" }),
-    });
-    setResubmitting(null);
-    toast.success("Producto reenviado para aprobación");
-    reloadProducts();
-    onProductCreated?.();
+    try {
+      const res = await fetch(`/api/leads/${leadId}/products/${productId}/approval`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "RESUBMIT" }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error ?? "No se pudo reenviar el producto");
+        return;
+      }
+      toast.success("Producto reenviado para aprobación");
+      reloadProducts();
+      onProductCreated?.();
+    } catch {
+      toast.error("No se pudo reenviar el producto");
+    } finally {
+      setResubmitting(null);
+    }
   }
 
   async function handleSoarSync(productId: number) {
@@ -862,17 +874,17 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                         </>
                       ) : (
                         <>
-                          <p className="text-white/90 text-lg font-medium truncate">
-                            Cuenta: {lp.paymentMethod.accountNumber}
-                          </p>
+                          <BankNumbersField
+                            key={methodRevision}
+                            maskedAccount={lp.paymentMethod.accountNumber}
+                            maskedRouting={lp.paymentMethod.routingNumber}
+                            revealUrl={`/api/leads/${leadId}/products/${lp.id}/payment-method/reveal`}
+                          />
                           <p className="text-white/90 text-lg truncate">
                             Titular: {lp.paymentMethod.accountHolder}
                           </p>
                           <p className="text-white/90 text-lg truncate">
                             Banco: {lp.paymentMethod.accountBank}
-                          </p>
-                          <p className="text-white/90 text-lg truncate">
-                            Ruta: {lp.paymentMethod.routingNumber}
                           </p>
                           <p className="text-white/90 text-lg truncate">
                             Tipo:{" "}
@@ -1017,6 +1029,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
           onClose={() => setEditingMethod(null)}
           onSaved={() => {
             setEditingMethod(null);
+            setMethodRevision((r) => r + 1);
             reloadProducts();
           }}
         />
