@@ -12,7 +12,7 @@ export function Loading({
   return (
     <div
       className={`flex items-center justify-center bg-background z-50 ${
-        fullScreen ? "fixed inset-0" : "w-full h-full"
+        fullScreen ? "fixed inset-0" : "w-full flex-1"
       }`}
     >
       <div className="flex flex-col items-center gap-4">
