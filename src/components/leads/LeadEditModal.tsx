@@ -39,7 +39,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
       lastName: lead.lastName ?? "",
       phone1: lead.phone1,
       phone2: lead.phone2 ?? "",
-      ssn: lead.ssn ?? "",
+      ssn: "",
       address: lead.address ?? "",
       city: lead.city ?? "",
       state: lead.state ?? "",
@@ -60,6 +60,8 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
   const age = calculateAge(birthDateValue);
   const requiresEmancipationLetter = age !== null && age >= 18 && age <= 20;
 
+  const [removeSsn, setRemoveSsn] = useState(false);
+  const canRemoveSsn = role === UserRole.ADMIN && !!lead.ssn;
   const [status, setStatus] = useState(lead.status);
   const [customerStatus, setCustomerStatus] = useState(
     lead.customerStatus ?? "",
@@ -85,10 +87,11 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
     setValue("ssn", formatSsn(e.target.value), { shouldValidate: true });
   }
 
-  async function onSubmit(data: LeadFormData) {
+  async function onSubmit({ ssn, ...data }: LeadFormData) {
+    const ssnPatch = removeSsn ? { ssn: "" } : ssn ? { ssn } : {};
     const body = isCustomer
-      ? { ...data, customerStatus, companyId, teamId, assignedToId }
-      : { ...data, status, companyId, teamId, assignedToId };
+      ? { ...data, ...ssnPatch, customerStatus, companyId, teamId, assignedToId }
+      : { ...data, ...ssnPatch, status, companyId, teamId, assignedToId };
 
     const res = await fetch(`/api/leads/${lead.id}`, {
       method: "PATCH",
@@ -196,12 +199,30 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
                 <input
                   type="text"
                   inputMode="numeric"
-                  placeholder="000-00-0000"
+                  placeholder={lead.ssn ? `${lead.ssn} (sin cambios)` : "000-00-0000"}
                   maxLength={11}
-                  value={ssnValue}
+                  value={removeSsn ? "" : ssnValue}
                   onChange={handleSsnChange}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50 tracking-widest"
+                  disabled={removeSsn}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50 tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
                 />
+                {lead.ssn && !removeSsn && (
+                  <p className="text-on-surface-variant text-sm mt-1">
+                    Escribe un número solo si quieres reemplazarlo.
+                  </p>
+                )}
+                {canRemoveSsn && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRemoveSsn((r) => !r);
+                      setValue("ssn", "");
+                    }}
+                    className="text-sm mt-1 text-red-400/80 hover:text-red-400 transition-colors"
+                  >
+                    {removeSsn ? "Deshacer: se eliminará al guardar" : "Eliminar seguro social"}
+                  </button>
+                )}
                 {errors.ssn && (
                   <p className="text-red-400 text-sm mt-1">
                     {errors.ssn.message}

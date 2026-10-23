@@ -11,6 +11,7 @@ import { encryptDeterministic, decrypt } from "@/lib/crypto";
 import { leadObjectSchema } from "@/lib/validations/lead";
 import { logAudit, getRequestMeta } from "@/lib/audit";
 import { optionalField, optionalDate } from "@/lib/patchFields";
+import { maskSsn } from "@/utils/helpers/format";
 import {
   findDuplicatePhone,
   findDuplicateSsn,
@@ -39,7 +40,7 @@ export const GET = withAuthParams<{ id: string }>(
     if (!lead) return notFound("Lead no encontrado");
     if (!canAccessLead(session.user, lead)) return forbidden();
 
-    return NextResponse.json({ ...lead, ssn: decrypt(lead.ssn) });
+    return NextResponse.json({ ...lead, ssn: maskSsn(decrypt(lead.ssn)) });
   },
 );
 
@@ -61,16 +62,19 @@ export const PATCH = withAuthParams<{ id: string }>(
     if (!canAccessLead(user, existing)) return forbidden();
     if (!canEditLead(role)) return forbidden();
 
-    if (role !== UserRole.ADMIN && existing.ssn && !body.ssn) {
+    const ssnProvided = Object.prototype.hasOwnProperty.call(rawBody, "ssn");
+    if (ssnProvided && role !== UserRole.ADMIN && existing.ssn && !body.ssn) {
       return forbidden(
         "Solo un administrador puede eliminar el número de seguro social",
       );
     }
-    const ssnValue = body.ssn
-      ? encryptDeterministic(body.ssn)
-      : role === UserRole.ADMIN
-        ? null
-        : existing.ssn;
+    const ssnValue = !ssnProvided
+      ? undefined
+      : body.ssn
+        ? encryptDeterministic(body.ssn)
+        : role === UserRole.ADMIN
+          ? null
+          : existing.ssn;
 
     const transfer = isGlobalCustomerService(role)
       ? {
@@ -234,6 +238,6 @@ export const PATCH = withAuthParams<{ id: string }>(
       });
     }
 
-    return NextResponse.json({ ...lead, ssn: decrypt(lead.ssn) });
+    return NextResponse.json({ ...lead, ssn: maskSsn(decrypt(lead.ssn)) });
   },
 );

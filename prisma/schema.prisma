@@ -540,6 +540,7 @@ enum AuditAction {
   TEAM_DELETED
   ACCESS_DENIED
   ATTACHMENTS_UPLOADED
+  SSN_REVEALED
 }
 
 model AuditLog {

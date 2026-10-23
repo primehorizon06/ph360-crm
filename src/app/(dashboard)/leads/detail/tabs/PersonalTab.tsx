@@ -1,5 +1,6 @@
 import { Lead } from "@/utils/interfaces/leads";
 import { InfoField } from "../InfoField";
+import { SensitiveField } from "../SensitiveField";
 import { calculateAge } from "@/utils/helpers/format";
 
 interface Props {
@@ -18,7 +19,11 @@ export function PersonalTab({ lead }: Props) {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <InfoField label="Nombres" value={lead.firstName} />
           <InfoField label="Apellidos" value={lead.lastName} />
-          <InfoField label="Seguro social" value={lead.ssn} />
+          <SensitiveField
+            label="Seguro social"
+            maskedValue={lead.ssn}
+            revealUrl={`/api/leads/${lead.id}/ssn`}
+          />
           <InfoField
             label="Fecha de nacimiento"
             value={

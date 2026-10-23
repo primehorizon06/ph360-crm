@@ -7,6 +7,7 @@ import { encryptDeterministic } from "@/lib/crypto";
 import { leadSchema } from "@/lib/validations/lead";
 import { logAudit, getRequestMeta } from "@/lib/audit";
 import { addDays, isYmd, startOfDay } from "@/lib/businessDays";
+import { maskSsn } from "@/utils/helpers/format";
 import {
   findDuplicatePhone,
   findDuplicateSsn,
@@ -191,5 +192,5 @@ export const POST = withAuth(async (req, session) => {
     ...getRequestMeta(req),
   });
 
-  return NextResponse.json({ ...lead, ssn }, { status: 201 });
+  return NextResponse.json({ ...lead, ssn: maskSsn(ssn) }, { status: 201 });
 });

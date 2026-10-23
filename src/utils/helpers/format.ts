@@ -75,6 +75,11 @@ export function formatSsn(value: string): string {
   return digits;
 }
 
+export function maskSsn(value: string | null | undefined): string | null {
+  if (!value) return null;
+  return `***-**-${value.replace(/\D/g, "").slice(-4)}`;
+}
+
 export function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, "").slice(0, 10);
   if (digits.length > 6)
