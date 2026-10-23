@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { AuditAction, Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { env } from "@/env";
 
 interface AuditActor {
   id: string | number;
@@ -22,10 +23,18 @@ export function auditActor(user: AuditActor): AuditActor {
   return { id: user.id, role: user.role, name: user.name };
 }
 
+export function clientIp(header: (name: string) => string | null | undefined): string | null {
+  const forwarded = header("x-forwarded-for")
+    ?.split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const hops = env.TRUSTED_PROXY_HOPS;
+  const fromProxy = hops > 0 && forwarded ? forwarded[Math.max(0, forwarded.length - hops)] : undefined;
+  return fromProxy || header("x-real-ip") || null;
+}
+
 export function getRequestMeta(req: NextRequest): { ip: string | null; userAgent: string | null } {
-  const forwarded = req.headers.get("x-forwarded-for");
-  const ip = forwarded ? forwarded.split(",")[0].trim() : req.headers.get("x-real-ip");
-  return { ip, userAgent: req.headers.get("user-agent") };
+  return { ip: clientIp((name) => req.headers.get(name)), userAgent: req.headers.get("user-agent") };
 }
 
 export async function logAudit({

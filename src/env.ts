@@ -12,6 +12,10 @@ const schema = z.object({
     ),
   NEXT_PUBLIC_API_URL: z.string().url().default("http://localhost:3000"),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+  // Proxies de confianza que agregan una entrada al final de X-Forwarded-For
+  // (Render: 1). La IP del cliente para el límite de login es la entrada
+  // número TRUSTED_PROXY_HOPS contando desde el final; 0 ignora la cabecera.
+  TRUSTED_PROXY_HOPS: z.coerce.number().int().min(0).default(1),
   SUPABASE_URL: z.string().url().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
   // SOAR (ACH). Sin token, en desarrollo se usa un cliente simulado; en

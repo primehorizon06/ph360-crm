@@ -6,28 +6,48 @@ import { Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { env } from "@/env";
-import { logAudit } from "@/lib/audit";
+import { logAudit, clientIp } from "@/lib/audit";
 
 const MAX_ATTEMPTS = 5;
+const MAX_IP_ATTEMPTS = 20;
 const WINDOW_MS = 15 * 60 * 1000;
+const MAX_TRACKED_KEYS = 10_000;
+const INVALID_CREDENTIALS = "Credenciales inválidas";
+const DUMMY_HASH = bcrypt.hashSync("dummy-password-for-timing", 10);
 
 // Bloqueo simple en memoria por usuario. Suficiente para un solo proceso;
 // si la app pasa a correr en varias instancias hará falta un store compartido (Redis).
 const loginAttempts = new Map<string, { count: number; firstAttemptAt: number }>();
 
-function isLockedOut(key: string): boolean {
+function isExpired(entry: { firstAttemptAt: number }): boolean {
+  return Date.now() - entry.firstAttemptAt > WINDOW_MS;
+}
+
+function isLockedOut(key: string, limit: number): boolean {
   const entry = loginAttempts.get(key);
   if (!entry) return false;
-  if (Date.now() - entry.firstAttemptAt > WINDOW_MS) {
+  if (isExpired(entry)) {
     loginAttempts.delete(key);
     return false;
   }
-  return entry.count >= MAX_ATTEMPTS;
+  return entry.count >= limit;
+}
+
+function makeRoomForAttempt(): void {
+  for (const [key, entry] of loginAttempts) {
+    if (isExpired(entry)) loginAttempts.delete(key);
+  }
+  for (const key of loginAttempts.keys()) {
+    if (loginAttempts.size < MAX_TRACKED_KEYS) break;
+    loginAttempts.delete(key);
+  }
 }
 
 function registerFailedAttempt(key: string): void {
   const entry = loginAttempts.get(key);
-  if (!entry || Date.now() - entry.firstAttemptAt > WINDOW_MS) {
+  if (!entry || isExpired(entry)) {
+    loginAttempts.delete(key);
+    if (loginAttempts.size >= MAX_TRACKED_KEYS) makeRoomForAttempt();
     loginAttempts.set(key, { count: 1, firstAttemptAt: Date.now() });
     return;
   }
@@ -49,17 +69,21 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials, req) {
         const ip =
-          (req?.headers?.["x-forwarded-for"] as string | undefined)?.split(",")[0]?.trim() ??
-          (req?.headers?.["x-real-ip"] as string | undefined) ??
-          null;
+          clientIp((name) => req?.headers?.[name] as string | undefined) ?? "unknown";
         const userAgent = (req?.headers?.["user-agent"] as string | undefined) ?? null;
 
         if (!credentials?.username || !credentials?.password) {
-          throw new Error("Credenciales inválidas");
+          throw new Error(INVALID_CREDENTIALS);
         }
 
-        const attemptKey = credentials.username.toLowerCase();
-        if (isLockedOut(attemptKey)) {
+        const userKey = `user:${credentials.username.toLowerCase()}:${ip}`;
+        const ipKey = `ip:${ip}`;
+        const registerFailure = () => {
+          registerFailedAttempt(userKey);
+          registerFailedAttempt(ipKey);
+        };
+
+        if (isLockedOut(userKey, MAX_ATTEMPTS) || isLockedOut(ipKey, MAX_IP_ATTEMPTS)) {
           await logAudit({
             action: "LOGIN_LOCKED_OUT",
             entityType: "User",
@@ -87,7 +111,8 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user || !user.password) {
-          registerFailedAttempt(attemptKey);
+          await bcrypt.compare(credentials.password, DUMMY_HASH);
+          registerFailure();
           await logAudit({
             action: "LOGIN_FAILED",
             entityType: "User",
@@ -95,11 +120,7 @@ export const authOptions: NextAuthOptions = {
             ip,
             userAgent,
           });
-          throw new Error("Usuario no encontrado");
-        }
-
-        if (!user.active) {
-          throw new Error("Usuario inactivo");
+          throw new Error(INVALID_CREDENTIALS);
         }
 
         const isValid = await bcrypt.compare(
@@ -107,21 +128,21 @@ export const authOptions: NextAuthOptions = {
           user.password,
         );
 
-        if (!isValid) {
-          registerFailedAttempt(attemptKey);
+        if (!isValid || !user.active) {
+          registerFailure();
           await logAudit({
             action: "LOGIN_FAILED",
             actor: { id: user.id, role: user.role, name: user.name },
             entityType: "User",
             entityId: user.id,
-            metadata: { reason: "wrong_password" },
+            metadata: { reason: isValid ? "inactive" : "wrong_password" },
             ip,
             userAgent,
           });
-          throw new Error("Contraseña incorrecta");
+          throw new Error(INVALID_CREDENTIALS);
         }
 
-        clearAttempts(attemptKey);
+        clearAttempts(userKey);
 
         await logAudit({
           action: "LOGIN_SUCCESS",
