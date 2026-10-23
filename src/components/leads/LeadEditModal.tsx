@@ -15,7 +15,9 @@ import { Props } from "@/utils/interfaces/leadEditModal";
 import { CUSTOMER_STATUS, LEAD_FIELDS, STATUS } from "@/utils/constants/leads";
 import { formatPhone, formatSsn, calculateAge } from "@/utils/helpers/format";
 import { UserRole } from "@/utils/constants/roles";
-import { canEditMainPhone, canTransferLead } from "@/lib/permissions";
+import { canEditMainPhone, canSuspendLead, canTransferLead } from "@/lib/permissions";
+
+const SUSPENDED_STATUS = "suspended";
 import { fetcher } from "@/lib/fetcher";
 
 export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
@@ -26,6 +28,11 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
   const canReassign =
     canTransfer || role === UserRole.SUPERVISOR || role === UserRole.COACH;
   const isAgent = role === UserRole.AGENT;
+  const canSuspend = canSuspendLead(role ?? "");
+  const suspensionLocked = !canSuspend && lead.status === SUSPENDED_STATUS;
+  const statusOptions = Object.entries(STATUS).filter(
+    ([key]) => canSuspend || key !== SUSPENDED_STATUS,
+  );
   const isCustomer = type === "customer";
 
   const {
@@ -294,7 +301,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
                 <label className="text-sm text-on-surface-variant mb-1 block">
                   Status
                 </label>
-                {isAgent ? (
+                {isAgent || (!isCustomer && suspensionLocked) ? (
                   <input
                     type="text"
                     value={
@@ -318,8 +325,8 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
                     name="status"
                     value={STATUS[status]}
                     onChange={(v) => setStatus(v as typeof status)}
-                    options={Object.keys(STATUS)}
-                    labels={Object.values(STATUS)}
+                    options={statusOptions.map(([key]) => key)}
+                    labels={statusOptions.map(([, label]) => label)}
                   />
                 )}
               </div>

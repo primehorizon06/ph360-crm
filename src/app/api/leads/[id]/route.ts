@@ -5,8 +5,10 @@ import { UserRole } from "@/utils/constants/roles";
 import {
   canAccessLead,
   canEditLead,
+  canSuspendLead,
   isGlobalCustomerService,
 } from "@/lib/permissions";
+import { LeadStatus } from "@prisma/client";
 import { encryptDeterministic, decrypt } from "@/lib/crypto";
 import { leadObjectSchema } from "@/lib/validations/lead";
 import { logAudit, getRequestMeta } from "@/lib/audit";
@@ -62,6 +64,16 @@ export const PATCH = withAuthParams<{ id: string }>(
     if (!canAccessLead(user, existing)) return forbidden();
     if (!canEditLead(role)) return forbidden();
 
+    const canChangeStatus = role !== UserRole.AGENT;
+
+    const suspensionChange =
+      canChangeStatus &&
+      body.status !== undefined &&
+      body.status !== existing.status &&
+      (body.status === LeadStatus.suspended || existing.status === LeadStatus.suspended);
+    if (suspensionChange && !canSuspendLead(role))
+      return forbidden("Solo un supervisor o administrador puede suspender o reactivar el lead");
+
     const ssnProvided = Object.prototype.hasOwnProperty.call(rawBody, "ssn");
     if (ssnProvided && role !== UserRole.ADMIN && existing.ssn && !body.ssn) {
       return forbidden(
@@ -85,8 +97,6 @@ export const PATCH = withAuthParams<{ id: string }>(
             : existing.assignedToId,
         }
       : null;
-
-    const canChangeStatus = role !== UserRole.AGENT;
 
     const baseData = {
       firstName: body.firstName,
