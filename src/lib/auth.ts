@@ -143,6 +143,7 @@ export const authOptions: NextAuthOptions = {
           teamId: user.teamId,
           teamName: user.team?.name,
           avatar: user.avatar,
+          sessionVersion: user.sessionVersion,
         };
       },
     }),
@@ -159,6 +160,7 @@ export const authOptions: NextAuthOptions = {
         token.teamId = user.teamId;
         token.teamName = user.teamName;
         token.avatar = user.avatar;
+        token.sessionVersion = user.sessionVersion ?? 0;
         return token;
       }
 
@@ -167,9 +169,10 @@ export const authOptions: NextAuthOptions = {
       try {
         const current = await prisma.user.findUnique({
           where: { id: Number(token.id) },
-          select: { active: true, name: true, role: true, avatar: true, companyId: true, teamId: true },
+          select: { active: true, name: true, role: true, avatar: true, companyId: true, teamId: true, sessionVersion: true },
         });
         if (!current?.active) return {} as JWT;
+        if ((token.sessionVersion ?? 0) !== current.sessionVersion) return {} as JWT;
 
         if (current.companyId !== token.companyId) {
           token.companyName = current.companyId
@@ -210,6 +213,29 @@ export const authOptions: NextAuthOptions = {
         session.user.avatar = token.avatar as string;
       }
       return session;
+    },
+  },
+  events: {
+    async signOut({ token }) {
+      if (!token?.id) return;
+      try {
+        const { count } = await prisma.user.updateMany({
+          where: { id: Number(token.id), sessionVersion: token.sessionVersion ?? 0 },
+          data: { sessionVersion: { increment: 1 } },
+        });
+        if (!count) return;
+        await logAudit({
+          action: "LOGOUT",
+          actor: { id: Number(token.id), role: token.role, name: token.name },
+          entityType: "User",
+          entityId: Number(token.id),
+        });
+      } catch (error) {
+        console.error(
+          "No se pudo revocar la sesión al cerrar sesión:",
+          error instanceof Error ? error.message : error,
+        );
+      }
     },
   },
   session: {

@@ -12,6 +12,7 @@ declare module "next-auth" {
     teamId?: number | null;
     teamName?: string | null;
     avatar?: string | null;
+    sessionVersion?: number;
   }
 
   interface Session {
@@ -29,5 +30,6 @@ declare module "next-auth/jwt" {
     companyName?: string | null;
     teamId?: number | null;
     teamName?: string | null;
+    sessionVersion?: number;
   }
 }

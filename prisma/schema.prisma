@@ -95,6 +95,7 @@ model User {
   companyId Int?
   teamId    Int?
   avatar    String?
+  sessionVersion Int @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -507,6 +508,7 @@ enum AuditAction {
   LOGIN_SUCCESS
   LOGIN_FAILED
   LOGIN_LOCKED_OUT
+  LOGOUT
   USER_CREATED
   USER_UPDATED
   USER_DELETED
