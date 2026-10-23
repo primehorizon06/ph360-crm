@@ -12,7 +12,7 @@ export async function postAction(
     success,
     error = "No se pudo completar la acción",
     method = "POST",
-  }: { success?: string; error?: string; method?: "POST" | "PATCH" },
+  }: { success?: string; error?: string; method?: "POST" | "PATCH" | "DELETE" },
 ): Promise<boolean> {
   let res: Response;
   try {

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef } from "react";
+import useSWR from "swr";
 import {
   Paperclip,
   Search,
@@ -16,14 +17,18 @@ import { toast } from "sonner";
 import { ListSkeleton } from "@/components/ui/Skeleton";
 import { AttachmentPreview } from "@/components/notes/AttachmentPreview";
 import { ATTACHMENT_LIMITS_HINT } from "@/lib/fileValidation";
+import { fetcher } from "@/lib/fetcher";
 import {
   Attachment,
   PropsAttachmentsTab,
 } from "@/utils/interfaces/attachments";
 
 export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    data: attachments = [],
+    isLoading: loading,
+    mutate: reloadAttachments,
+  } = useSWR<Attachment[]>(`/api/leads/${leadId}/notes/attachments`, fetcher);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [authorSearch, setAuthorSearch] = useState("");
@@ -32,18 +37,6 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState("");
-
-  async function loadAttachments() {
-    setLoading(true);
-    const res = await fetch(`/api/leads/${leadId}/notes/attachments`);
-    setAttachments(await res.json());
-    setLoading(false);
-  }
-
-  useEffect(() => {
-    loadAttachments();
-  }, [leadId]);
 
   const filtered = useMemo(() => {
     return attachments.filter((att) => {
@@ -78,7 +71,6 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const selected = Array.from(e.target.files ?? []);
     setFiles((prev) => [...prev, ...selected]);
-    setUploadError("");
     e.target.value = "";
   }
 
@@ -89,7 +81,6 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
   async function handleUpload() {
     if (!files.length) return;
     setUploading(true);
-    setUploadError("");
 
     const formData = new FormData();
     files.forEach((f) => formData.append("files", f));
@@ -102,7 +93,7 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
       });
     } catch {
       setUploading(false);
-      setUploadError("No se pudo conectar. Revisa tu conexión e intenta de nuevo.");
+      toast.error("No se pudo conectar. Revisa tu conexión e intenta de nuevo.");
       return;
     }
 
@@ -110,13 +101,13 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setUploadError(data.error ?? "Error al subir archivos");
+      toast.error(data.error ?? "Error al subir archivos");
       return;
     }
 
     toast.success(files.length === 1 ? "1 archivo subido" : `${files.length} archivos subidos`);
     setFiles([]);
-    loadAttachments();
+    void reloadAttachments();
   }
 
   return (
@@ -251,10 +242,6 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
                 </button>
               </div>
             ))}
-
-            {uploadError && (
-              <p role="alert" className="text-error text-sm px-1">{uploadError}</p>
-            )}
 
             <button
               type="button"

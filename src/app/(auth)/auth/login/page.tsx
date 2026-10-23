@@ -25,7 +25,6 @@ function SearchParamsWatcher() {
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -36,7 +35,6 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
 
     try {
       const result = await signIn("credentials", {
@@ -46,13 +44,13 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError("Credenciales inválidas");
+        toast.error("Credenciales inválidas");
         setIsLoading(false);
       } else {
         window.location.href = "/";
       }
     } catch (error) {
-      setError("Error al iniciar sesión");
+      toast.error("Error al iniciar sesión");
       console.error("Login error:", error);
       setIsLoading(false);
     }
@@ -127,9 +125,6 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
-            {error && (
-              <div className="text-red-500 text-lg text-center">{error}</div>
-            )}
             <button
               className="w-full btn-satin py-4 rounded-lg font-headline font-bold text-on-primary tracking-tight text-lg flex items-center justify-center space-x-2 active:scale-[0.98] transition-transform shadow-lg shadow-primary-container/20 cursor-pointer pointer-events-auto disabled:opacity-50 disabled:pointer-events-none"
               type="submit"

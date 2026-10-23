@@ -22,8 +22,8 @@ const GoalFormModal = dynamic(
 import { Plus } from "lucide-react";
 import { GoalsData } from "@/utils/interfaces/goals";
 import { fetcher } from "@/lib/fetcher";
-import { toast } from "sonner";
 import { confirmToast } from "@/lib/confirmToast";
+import { postAction } from "@/lib/postAction";
 import { UserRole } from "@/utils/constants/roles";
 import { ListSkeleton, PageSkeleton } from "@/components/ui/Skeleton";
 
@@ -54,15 +54,12 @@ export default function GoalsPage() {
     confirmToast("¿Eliminar esta meta?", async () => {
       setDeleting(id);
       try {
-        const res = await fetch("/api/goals", {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id }),
-        });
-        const json = await res.json();
-        if (!res.ok) { toast.error(json.error); return; }
-        toast.success("Meta eliminada");
-        void mutate();
+        const ok = await postAction(
+          "/api/goals",
+          { id },
+          { method: "DELETE", success: "Meta eliminada", error: "Error al eliminar la meta" },
+        );
+        if (ok) void mutate();
       } finally {
         setDeleting(null);
       }
@@ -181,9 +178,7 @@ export default function GoalsPage() {
             </div>
           )}
         </>
-      ) : (
-        <p className="text-center text-white/90 py-16">Error cargando datos</p>
-      )}
+      ) : null}
 
       <GoalFormModal
         open={modalOpen}
