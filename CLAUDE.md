@@ -43,7 +43,7 @@ Data is scoped across a four-level hierarchy: **Company → Team → User → Le
 - `COACH`: own team within company
 - `AGENT`: only their assigned leads
 
-All Prisma queries that return user-visible data must go through `buildScopeFilter()` in [src/lib/permissions.ts](src/lib/permissions.ts). Bypassing it leaks cross-tenant data. Use `canAccessLead()` for single-record access checks.
+All Prisma queries that return user-visible data must be scoped with the filters in [src/lib/permissions.ts](src/lib/permissions.ts): `buildScopeFilter()` for leads and `buildTeamScopeFilter()` for teams. Bypassing them leaks cross-tenant data. Use `canAccessLead()` for single-record access checks. All three derive from `getRoleScope()`, so role visibility changes go there.
 
 ### API route pattern
 
