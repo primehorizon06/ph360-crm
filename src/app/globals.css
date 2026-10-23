@@ -211,6 +211,26 @@ button {
   color: rgba(255, 255, 255, 0.2) !important;
 }
 
+.react-datepicker__day--selected {
+  background-color: color-mix(in srgb, var(--color-tertiary) 20%, transparent) !important;
+  color: var(--color-tertiary) !important;
+  font-weight: 600 !important;
+}
+
+.react-datepicker__day--disabled {
+  color: rgba(255, 255, 255, 0.2) !important;
+  cursor: not-allowed !important;
+}
+
+.react-datepicker__day--disabled:hover {
+  background-color: transparent !important;
+}
+
+.calendar-weekdays .react-datepicker__day--weekend,
+.calendar-weekdays .react-datepicker__day-name:nth-child(n + 6) {
+  display: none !important;
+}
+
 /* Contenedor de la hora */
 .react-datepicker__time-container {
   border-left: 1px solid rgba(255, 255, 255, 0.1) !important;

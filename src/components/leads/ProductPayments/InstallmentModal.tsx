@@ -1,10 +1,11 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { CalendarClock, PauseCircle, XCircle } from "lucide-react";
 import { Modal, ModalFooter, modalInputClass } from "@/components/ui/Modal";
+import { WeekdayDateField } from "@/components/ui/WeekdayDateField";
 import {
   installmentFormSchema,
   InstallmentFormData,
@@ -67,6 +68,7 @@ export function InstallmentModal({
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<InstallmentFormData>({
@@ -149,12 +151,21 @@ export function InstallmentModal({
         )}
 
         <div className="space-y-1">
-          <label className="text-lg text-on-surface-variant">Fecha</label>
-          <input
-            {...register("date")}
-            type="date"
-            disabled={!fieldsEditable}
-            className={`${modalInputClass} disabled:opacity-60`}
+          <label htmlFor="installmentDate" className="text-lg text-on-surface-variant">
+            Fecha
+          </label>
+          <Controller
+            control={control}
+            name="date"
+            render={({ field }) => (
+              <WeekdayDateField
+                id="installmentDate"
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                disabled={!fieldsEditable}
+              />
+            )}
           />
           {errors.date && <p className="text-error text-sm">{errors.date.message}</p>}
         </div>

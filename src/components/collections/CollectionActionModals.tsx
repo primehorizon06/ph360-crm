@@ -1,9 +1,10 @@
 "use client";
 
 import { FormEvent, ReactNode, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Modal, ModalFooter, modalInputClass } from "@/components/ui/Modal";
+import { WeekdayDateField } from "@/components/ui/WeekdayDateField";
 import { postAction } from "@/lib/postAction";
 import {
   cancelSchema,
@@ -14,7 +15,7 @@ import {
   SuspendFormData,
 } from "@/lib/validations/installment";
 import { fromInputDate } from "@/utils/helpers/dateInput";
-import { isWeekend, todayYmd } from "@/lib/businessDays";
+import { isWeekend, nextBusinessDay, todayYmd } from "@/lib/businessDays";
 import { formatAmount, formatDate, formatYmd } from "@/utils/helpers/format";
 
 export interface ActionTarget {
@@ -177,13 +178,13 @@ export function CancelModal({ target, onClose, onDone }: Props) {
 export function RescheduleModal({ target, onClose, onDone }: Props) {
   const today = todayYmd();
   const {
-    register,
+    control,
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
   } = useForm<RescheduleFormData>({
     resolver: zodResolver(rescheduleFormSchema),
-    defaultValues: { date: today },
+    defaultValues: { date: isWeekend(today) ? nextBusinessDay(today) : today },
   });
 
   return (
@@ -210,8 +211,22 @@ export function RescheduleModal({ target, onClose, onDone }: Props) {
         className="space-y-3"
       >
         <div className="space-y-1">
-          <label className="text-lg text-on-surface-variant">Nueva fecha de cobro</label>
-          <input {...register("date")} type="date" min={today} className={modalInputClass} />
+          <label htmlFor="rescheduleDate" className="text-lg text-on-surface-variant">
+            Nueva fecha de cobro
+          </label>
+          <Controller
+            control={control}
+            name="date"
+            render={({ field }) => (
+              <WeekdayDateField
+                id="rescheduleDate"
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                minDate={today}
+              />
+            )}
+          />
           {errors.date && <p className="text-error text-sm">{errors.date.message}</p>}
         </div>
         <ModalFooter onClose={onClose} saving={isSubmitting} label="Reprogramar" />

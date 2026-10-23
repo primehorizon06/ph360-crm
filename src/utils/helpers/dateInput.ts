@@ -8,6 +8,11 @@ export function toInputDate(iso: string | Date): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+export function inputDateToDate(value: string): Date {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
 /** Valor de un <input type="date"> → ISO de la medianoche local. */
 export function fromInputDate(value: string): string {
   return new Date(`${value}T00:00:00`).toISOString();

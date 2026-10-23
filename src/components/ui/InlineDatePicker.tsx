@@ -24,6 +24,7 @@ export function InlineDatePicker({ onChange, highlightDates = [] }: Props) {
           onChange={onChange}
           highlightDates={highlightDates}
           calendarStartDay={1}
+          calendarClassName="calendar-weekdays"
           locale="es"
           minDate={new Date()}
           // Las cuotas nunca caen en sábado ni domingo.
