@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import useSWR from "swr";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useRowNavigation, useUrlFilters } from "@/hooks/useUrlFilters";
 import {
   Ban,
   CalendarCheck,
   DollarSign,
+  Inbox,
   RefreshCw,
   Search,
 } from "lucide-react";
@@ -14,8 +16,9 @@ import { confirmToast } from "@/lib/confirmToast";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { CustomSelect } from "@/components/ui/Select";
 import { PageSkeleton } from "@/components/ui/Skeleton";
+import { DEFAULT_PAGE_SIZE, Pagination } from "@/components/ui/Pagination";
 import { fetcher } from "@/lib/fetcher";
-import { formatAmount, formatDate, formatFullName, formatYmd } from "@/utils/helpers/format";
+import { formatAmount, formatFullName, formatShortDate, formatYmd } from "@/utils/helpers/format";
 import { postAction } from "@/lib/postAction";
 import { productColorClass } from "@/utils/constants/products";
 import {
@@ -24,50 +27,60 @@ import {
   CollectionView,
 } from "@/lib/collections";
 import { startOfToday, todayYmd, ymdOf } from "@/lib/businessDays";
+import { inputDateToDate } from "@/utils/helpers/dateInput";
 import {
   ActionTarget,
   ChargeModal,
 } from "@/components/collections/CollectionActionModals";
 import { CollectionDatePicker } from "@/components/collections/CollectionDatePicker";
 
-const LIMIT = 50;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const TABS: { view: CollectionView; label: string; empty: string; countStyle: string }[] = [
+const TABS: {
+  view: CollectionView;
+  label: string;
+  description: string;
+  empty: string;
+  countStyle: string;
+}[] = [
   {
     view: "transfer",
     label: "Transfer",
+    description: "Pagos confirmados de todas las franquicias, listos para cobrar",
     empty: "No hay pagos confirmados para esta fecha",
     countStyle: "bg-warning/10 text-warning",
   },
   {
     view: "approved",
     label: "Aprobados",
+    description: "Pagos aprobados en la fecha elegida",
     empty: "No hay pagos aprobados en esta fecha",
     countStyle: "bg-success/10 text-success",
   },
   {
     view: "scheduled",
     label: "Programado",
+    description: "Débitos programados en SOAR para una fecha futura",
     empty: "No hay débitos programados",
     countStyle: "bg-secondary/10 text-secondary",
   },
   {
     view: "processing",
     label: "SOAR Processed",
+    description: "Débitos enviados a SOAR a la espera de su resultado",
     empty: "No hay débitos procesados por SOAR",
     countStyle: "bg-tertiary/10 text-tertiary",
   },
   {
     view: "fallen",
     label: "Caída",
+    description: "Pagos suspendidos o devueltos por el banco",
     empty: "No hay pagos suspendidos ni devueltos",
     countStyle: "bg-error/10 text-error",
   },
 ];
 
-const TAB_ACTIVE = "border-tertiary/50 bg-tertiary/10 text-tertiary";
-const TAB_IDLE = "border-white/10 bg-white/5 text-on-surface-variant hover:text-white/60";
+const COUNT_IDLE = "bg-surface-container-high text-on-surface-variant";
 
 const ACTION_BUTTON =
   "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-white/10 text-sm text-on-surface-variant transition-colors disabled:opacity-50";
@@ -122,33 +135,35 @@ function daysLate(date: string) {
 }
 
 export function CollectionsQueue() {
-  const router = useRouter();
-  const [view, setView] = useState<CollectionView>("transfer");
-  // Fecha elegida por pestaña; sin elegir, el backend usa la primera de la
-  // ventana (Transfer) o hoy (Aprobados).
-  const [dates, setDates] = useState<Partial<Record<CollectionView, string>>>({});
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [companyId, setCompanyId] = useState("");
-  const [agentId, setAgentId] = useState("");
-  const [page, setPage] = useState(1);
+  const {
+    searchParams,
+    updateParams,
+    query: debouncedSearch,
+    search,
+    setSearch,
+    page,
+    pageSize,
+  } = useUrlFilters();
+  const openRowHref = useRowNavigation();
+  const viewParam = searchParams.get("view");
+  const view: CollectionView = TABS.some((t) => t.view === viewParam)
+    ? (viewParam as CollectionView)
+    : "transfer";
+  // Sin fecha elegida, el backend usa la primera de la ventana (Transfer) o hoy (Aprobados).
+  const selectedDate = searchParams.get("date") ?? "";
+  const companyId = searchParams.get("company") ?? "";
+  const agentId = searchParams.get("agent") ?? "";
   const [charging, setCharging] = useState<ActionTarget | null>(null);
   const [busyAttempt, setBusyAttempt] = useState<number | null>(null);
 
-  // Debounce búsqueda: el setState ocurre en el callback del timer, no directo en el efecto
-  useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(search), 300);
-    return () => clearTimeout(t);
-  }, [search]);
-
   const queueKey = useMemo(() => {
-    const params = new URLSearchParams({ view, page: String(page), limit: String(LIMIT) });
-    if (dates[view]) params.set("date", dates[view]);
+    const params = new URLSearchParams({ view, page: String(page), limit: String(pageSize) });
+    if (selectedDate) params.set("date", selectedDate);
     if (debouncedSearch) params.set("search", debouncedSearch);
     if (companyId) params.set("companyId", companyId);
     if (agentId) params.set("agentId", agentId);
     return `/api/collections?${params}`;
-  }, [view, dates, page, debouncedSearch, companyId, agentId]);
+  }, [view, selectedDate, page, pageSize, debouncedSearch, companyId, agentId]);
 
   const { data, isLoading, mutate } = useSWR<QueueResponse>(queueKey, fetcher, {
     keepPreviousData: true,
@@ -165,13 +180,36 @@ export function CollectionsQueue() {
 
   const items = data?.data ?? [];
   const tab = TABS.find((t) => t.view === view)!;
-  const shownDate = data?.date ?? dates[view] ?? null;
+  const shownDate = data?.date ?? (selectedDate || null);
   // Suspender y reprogramar se hacen desde el plan de pagos del cliente.
   const hasActions = view === "transfer" || view === "scheduled" || view === "processing";
+  const total = data?.total ?? 0;
+  const totalPages = data?.totalPages ?? 0;
+
+  const nextDate = useMemo(() => {
+    if (view !== "transfer") return null;
+    const withPayments = (data?.window ?? []).filter((d) => d.count > 0 && d.date !== shownDate);
+    return (
+      withPayments.find((d) => !shownDate || d.date > shownDate)?.date ??
+      withPayments[0]?.date ??
+      null
+    );
+  }, [view, data?.window, shownDate]);
 
   function selectDate(ymd: string) {
-    setDates((prev) => ({ ...prev, [view]: ymd }));
-    setPage(1);
+    updateParams({ date: ymd });
+  }
+
+  function selectView(next: CollectionView) {
+    updateParams({ view: next === "transfer" ? "" : next, date: "" });
+  }
+
+  function leadHref(item: QueueItem) {
+    return `/${item.lead.type === "customer" ? "customers" : "leads"}/${item.lead.id}`;
+  }
+
+  function openRow(e: React.MouseEvent, item: QueueItem) {
+    openRowHref(e, leadHref(item));
   }
 
   function toTarget(item: QueueItem): ActionTarget {
@@ -212,10 +250,6 @@ export function CollectionsQueue() {
       () => attemptAction(attempt.id, "void", "Débito anulado"),
       "Anular",
     );
-  }
-
-  function openLead(item: QueueItem) {
-    router.push(`/${item.lead.type === "customer" ? "customers" : "leads"}/${item.lead.id}`);
   }
 
   function handleDone() {
@@ -302,7 +336,7 @@ export function CollectionsQueue() {
           )}
           {item.confirmedAt && (
             <p className="text-sm text-on-surface-variant">
-              Pago confirmado {formatDate(item.confirmedAt)}
+              Confirmado {formatShortDate(item.confirmedAt)}
               {item.confirmedBy && ` · ${item.confirmedBy.name}`}
             </p>
           )}
@@ -310,7 +344,7 @@ export function CollectionsQueue() {
       );
     }
     if (view === "approved" && item.paidAt)
-      return <p className="text-sm text-success">Pagada {formatDate(item.paidAt)}</p>;
+      return <p className="text-sm text-success">Pagada {formatShortDate(item.paidAt)}</p>;
     if ((view === "scheduled" || view === "processing") && attempt) {
       if (attempt.unconfirmed)
         return (
@@ -318,15 +352,16 @@ export function CollectionsQueue() {
             Sin confirmar · buscar en SOAR el memo {attempt.memo}
           </p>
         );
-      if (attempt.scheduledFor && ymdOf(new Date(attempt.scheduledFor)) > todayYmd())
+      const scheduledYmd = attempt.scheduledFor ? ymdOf(new Date(attempt.scheduledFor)) : null;
+      if (scheduledYmd && scheduledYmd > todayYmd())
         return (
           <p className="text-sm text-tertiary">
-            Programado para el {formatYmd(ymdOf(new Date(attempt.scheduledFor)))}
+            Programado para el {formatShortDate(inputDateToDate(scheduledYmd))}
           </p>
         );
       return (
         <p className="text-sm text-on-surface-variant">
-          Enviado {formatDate(attempt.createdAt)} · SOAR: {attempt.rawStatus ?? "—"}
+          Enviado {formatShortDate(attempt.createdAt)} · SOAR: {attempt.rawStatus ?? "—"}
         </p>
       );
     }
@@ -353,26 +388,41 @@ export function CollectionsQueue() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Cobros" description="Pagos confirmados de todas las franquicias" />
+      <PageHeader title="Cobros" description={tab.description} />
 
       {/* Pestañas */}
-      <div className="flex flex-wrap gap-2">
-        {TABS.map((t) => (
-          <button
-            key={t.view}
-            type="button"
-            onClick={() => {
-              setView(t.view);
-              setPage(1);
-            }}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-lg font-medium transition-all ${view === t.view ? TAB_ACTIVE : TAB_IDLE}`}
-          >
-            {t.label}
-            <span className={`text-sm px-2 py-0.5 rounded-full ${t.countStyle}`}>
-              {data?.counts[t.view] ?? 0}
-            </span>
-          </button>
-        ))}
+      <div
+        role="tablist"
+        aria-label="Estado de los cobros"
+        className="border-b border-white/10 overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        <div className="flex gap-1 min-w-max">
+          {TABS.map((t) => {
+            const count = data?.counts[t.view] ?? 0;
+            const active = view === t.view;
+            return (
+              <button
+                key={t.view}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => selectView(t.view)}
+                className={`flex items-center gap-2 px-4 py-2.5 text-lg font-medium whitespace-nowrap border-b-2 -mb-px transition-colors ${
+                  active
+                    ? "border-tertiary text-tertiary"
+                    : "border-transparent text-on-surface-variant hover:text-on-surface"
+                }`}
+              >
+                {t.label}
+                <span
+                  className={`text-sm px-2 py-0.5 rounded-full tabular-nums ${count > 0 ? t.countStyle : COUNT_IDLE}`}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Filtros */}
@@ -381,30 +431,24 @@ export function CollectionsQueue() {
           <CollectionDatePicker value={shownDate} onChange={selectDate} window={data?.window ?? []} />
         )}
         {view === "approved" && (
-          <CollectionDatePicker value={shownDate} onChange={selectDate} count={data?.total} />
+          <CollectionDatePicker value={shownDate} onChange={selectDate} />
         )}
-        <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2 flex-1">
+        <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2 flex-1 focus-within:border-tertiary/50 transition-colors">
           <Search size={16} className="text-on-surface-variant shrink-0" />
           <input
             type="text"
+            aria-label="Buscar cobros"
             placeholder="Buscar por cliente, teléfono o ID..."
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            className="bg-transparent text-lg text-white/70 placeholder:text-white/90 outline-none w-full"
+            onChange={(e) => setSearch(e.target.value)}
+            className="bg-transparent text-lg text-on-surface placeholder:text-on-surface-variant outline-none w-full"
           />
         </div>
         <CustomSelect
           name="filterCompany"
           aria-label="Filtrar por franquicia"
           value={companies.find((c) => String(c.id) === companyId)?.name ?? "Todas las franquicias"}
-          onChange={(val) => {
-            setCompanyId(val);
-            setAgentId("");
-            setPage(1);
-          }}
+          onChange={(val) => updateParams({ company: val, agent: "" })}
           options={["", ...companies.map((c) => String(c.id))]}
           labels={["Todas las franquicias", ...companies.map((c) => c.name)]}
         />
@@ -413,10 +457,7 @@ export function CollectionsQueue() {
           aria-label="Filtrar por agente"
           searchable
           value={agents.find((a) => String(a.id) === agentId)?.name ?? "Todos los agentes"}
-          onChange={(val) => {
-            setAgentId(val);
-            setPage(1);
-          }}
+          onChange={(val) => updateParams({ agent: val })}
           options={["", ...agents.map((a) => String(a.id))]}
           labels={[
             "Todos los agentes",
@@ -442,7 +483,7 @@ export function CollectionsQueue() {
                 ].map((h) => (
                   <th
                     key={h}
-                    className="text-left px-4 py-3 text-sm text-on-surface-variant font-medium uppercase tracking-wider"
+                    className={`${h === "Monto" ? "text-right" : "text-left"} px-4 py-3 text-sm text-on-surface-variant font-medium uppercase tracking-wider`}
                   >
                     {h}
                   </th>
@@ -453,39 +494,47 @@ export function CollectionsQueue() {
               {items.map((item) => (
                 <tr
                   key={item.id}
-                  onClick={() => openLead(item)}
+                  onClick={(e) => openRow(e, item)}
+                  onAuxClick={(e) => openRow(e, item)}
                   className="hover:bg-white/5 transition-colors cursor-pointer"
                 >
-                  <td className="px-4 py-3">
-                    <p className="text-lg text-white font-medium">{formatFullName(item.lead)}</p>
+                  <td className="px-4 py-2.5 whitespace-nowrap">
+                    <Link
+                      href={leadHref(item)}
+                      className="text-lg text-white font-medium rounded outline-none hover:underline focus-visible:underline focus-visible:ring-2 focus-visible:ring-tertiary/60"
+                    >
+                      {formatFullName(item.lead)}
+                    </Link>
                     <p className="text-sm text-on-surface-variant">
                       #{item.lead.id}
                     </p>
                   </td>
-                  <td className="px-4 py-3 text-lg text-white/90">
-                    <p>{item.lead.company?.name ?? "—"}</p>
+                  <td className="px-4 py-2.5 text-lg text-white/90 max-w-[16rem]">
+                    <p className="truncate" title={item.lead.company?.name}>
+                      {item.lead.company?.name ?? "—"}
+                    </p>
                     {item.lead.assignedTo && (
-                      <p className="text-sm text-on-surface-variant">{item.lead.assignedTo.name}</p>
+                      <p className="text-sm text-on-surface-variant truncate">{item.lead.assignedTo.name}</p>
                     )}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-2.5">
                     <span
                       className={`text-sm px-2 py-0.5 rounded-full border font-medium whitespace-nowrap ${productColorClass(item.product.color)}`}
                     >
                       {item.product.name}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-lg text-white/90">
-                    <p className="whitespace-nowrap">{formatDate(item.date)}</p>
+                  <td className="px-4 py-2.5 text-lg text-white/90 whitespace-nowrap">
+                    <p>{formatShortDate(item.date)}</p>
                     {renderDetail(item)}
                   </td>
-                  <td className="px-4 py-3 text-lg text-white font-medium whitespace-nowrap">
+                  <td className="px-4 py-2.5 text-lg text-white font-medium whitespace-nowrap text-right tabular-nums">
                     $ {formatAmount(item.amount)}
                   </td>
                   {view === "fallen" && (
-                    <td className="px-4 py-3 text-lg max-w-xs">{renderReason(item)}</td>
+                    <td className="px-4 py-2.5 text-lg max-w-xs">{renderReason(item)}</td>
                   )}
-                  {hasActions && <td className="px-4 py-3">{renderActions(item)}</td>}
+                  {hasActions && <td className="px-4 py-2.5">{renderActions(item)}</td>}
                 </tr>
               ))}
             </tbody>
@@ -497,23 +546,28 @@ export function CollectionsQueue() {
           {items.map((item) => (
             <div
               key={item.id}
-              onClick={() => openLead(item)}
+              onClick={(e) => openRow(e, item)}
               className="p-4 space-y-2 cursor-pointer hover:bg-white/5 transition-colors"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="text-white font-medium text-lg truncate">{formatFullName(item.lead)}</p>
+                  <Link
+                    href={leadHref(item)}
+                    className="block text-white font-medium text-lg truncate outline-none focus-visible:underline"
+                  >
+                    {formatFullName(item.lead)}
+                  </Link>
                   <p className="text-on-surface-variant text-sm">
                     #{item.lead.id}
                   </p>
                 </div>
-                <span className="text-white font-medium text-lg shrink-0">
+                <span className="text-white font-medium text-lg shrink-0 tabular-nums">
                   $ {formatAmount(item.amount)}
                 </span>
               </div>
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-on-surface-variant">
                 <span>{item.product.name}</span>
-                <span>{formatDate(item.date)}</span>
+                <span>{formatShortDate(item.date)}</span>
                 {item.lead.company?.name && <span>{item.lead.company.name}</span>}
                 {item.lead.assignedTo && <span>Asesor: {item.lead.assignedTo.name}</span>}
               </div>
@@ -524,33 +578,34 @@ export function CollectionsQueue() {
         </div>
 
         {items.length === 0 && !isLoading && (
-          <div className="text-center py-12 text-white/90 text-lg">{tab.empty}</div>
+          <div className="flex flex-col items-center gap-3 px-4 py-12 text-center">
+            <Inbox size={32} className="text-on-surface-variant" aria-hidden="true" />
+            <p className="text-lg text-on-surface">{tab.empty}</p>
+            {nextDate && (
+              <button
+                type="button"
+                onClick={() => selectDate(nextDate)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-tertiary/30 text-sm text-tertiary hover:bg-tertiary/10 transition-colors"
+              >
+                <CalendarCheck size={14} />
+                Ir a la próxima fecha con pagos · {formatYmd(nextDate, "short")}
+              </button>
+            )}
+          </div>
         )}
 
         {/* Paginación */}
-        {data && data.totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-white/10">
-            <span className="text-sm text-on-surface-variant">
-              {(page - 1) * LIMIT + 1}–{Math.min(page * LIMIT, data.total)} de {data.total}
-            </span>
-            <div className="flex gap-2">
-              <button
-                disabled={page === 1}
-                onClick={() => setPage((p) => p - 1)}
-                className="px-3 py-1 text-sm rounded border border-white/10 text-white/60 disabled:opacity-30 hover:bg-white/5 transition-colors"
-              >
-                Anterior
-              </button>
-              <button
-                disabled={page >= data.totalPages}
-                onClick={() => setPage((p) => p + 1)}
-                className="px-3 py-1 text-sm rounded border border-white/10 text-white/60 disabled:opacity-30 hover:bg-white/5 transition-colors"
-              >
-                Siguiente
-              </button>
-            </div>
-          </div>
-        )}
+        <Pagination
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          totalPages={totalPages}
+          itemLabel={{ singular: "cuota", plural: "cuotas" }}
+          onPageChange={(p) => updateParams({ page: String(p) })}
+          onPageSizeChange={(size) =>
+            updateParams({ size: size === DEFAULT_PAGE_SIZE ? "" : String(size) })
+          }
+        />
       </div>
 
       {charging && (

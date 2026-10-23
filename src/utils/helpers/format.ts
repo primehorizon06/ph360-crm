@@ -30,6 +30,19 @@ export function formatDate(iso: string | Date): string {
   return `${day}/${month}/${year}`;
 }
 
+export function formatShortDate(iso: string | Date): string {
+  const date = new Date(iso);
+  const sameYear = date.getFullYear() === new Date().getFullYear();
+  return date
+    .toLocaleDateString("es-CO", {
+      day: "numeric",
+      month: "short",
+      ...(sameYear ? {} : { year: "numeric" }),
+    })
+    .replace(/\./g, "")
+    .replace(/ de /g, " ");
+}
+
 export function formatAmount(amount: number): string {
   return amount.toLocaleString("es-CO", {
     minimumFractionDigits: 2,
