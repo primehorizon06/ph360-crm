@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { withAuth, forbidden, badRequest } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
 import { getScopedCompanyId } from "@/lib/permissions";
+import { goalCreateSchema } from "@/lib/validations/goal";
 
 type SessionUser = {
   id: string;
@@ -85,29 +86,21 @@ export const POST = withAuth(async (req, session) => {
   if (!([UserRole.ADMIN, UserRole.SUPERVISOR] as UserRole[]).includes(user.role))
     return forbidden();
 
-  const body = await req.json();
-  const { year, month, quincena, amount, companyId, teamId, userId } = body;
-
-  const scopeCount = [companyId, teamId, userId].filter(Boolean).length;
-  if (scopeCount !== 1)
-    return badRequest(
-      "Debe definir exactamente un scope: companyId, teamId o userId",
-    );
-  if (!amount || amount <= 0) return badRequest("El monto debe ser mayor a 0");
+  const parsed = goalCreateSchema.safeParse(await req.json());
+  if (!parsed.success)
+    return badRequest(parsed.error.issues[0]?.message ?? "Datos inválidos");
+  const { year, month, quincena, amount, companyId, teamId, userId } = parsed.data;
 
   const createdById = parseInt(user.id ?? "0");
 
   if (companyId) {
-    if (
-      user.role === UserRole.SUPERVISOR &&
-      user.companyId !== parseInt(companyId)
-    )
+    if (user.role === UserRole.SUPERVISOR && user.companyId !== companyId)
       return forbidden();
   }
 
   if (teamId) {
     const team = await prisma.team.findUnique({
-      where: { id: parseInt(teamId) },
+      where: { id: teamId },
     });
     if (!team) return badRequest("Equipo no encontrado");
     if (user.role === UserRole.SUPERVISOR && team.companyId !== user.companyId)
@@ -125,7 +118,7 @@ export const POST = withAuth(async (req, session) => {
         month,
         quincena,
         team: { companyId: team.companyId },
-        teamId: { not: parseInt(teamId) },
+        teamId: { not: teamId },
       },
     });
     const otherTeamsSum = otherTeamGoals.reduce(
@@ -142,10 +135,12 @@ export const POST = withAuth(async (req, session) => {
 
   if (userId) {
     const agent = await prisma.user.findUnique({
-      where: { id: parseInt(userId) },
+      where: { id: userId },
     });
     if (!agent || !agent.teamId)
       return badRequest("Asesor no encontrado o sin equipo");
+    if (user.role === UserRole.SUPERVISOR && agent.companyId !== user.companyId)
+      return forbidden();
 
     const teamGoal = await prisma.goal.findFirst({
       where: { year, month, quincena, teamId: agent.teamId },
@@ -158,7 +153,7 @@ export const POST = withAuth(async (req, session) => {
         month,
         quincena,
         user: { teamId: agent.teamId },
-        userId: { not: parseInt(userId) },
+        userId: { not: userId },
       },
     });
     const otherAgentsSum = otherAgentGoals.reduce(
@@ -179,7 +174,7 @@ export const POST = withAuth(async (req, session) => {
           year,
           month,
           quincena,
-          companyId: parseInt(companyId),
+          companyId: companyId,
         },
       }
     : teamId
@@ -188,7 +183,7 @@ export const POST = withAuth(async (req, session) => {
             year,
             month,
             quincena,
-            teamId: parseInt(teamId),
+            teamId: teamId,
           },
         }
       : {
@@ -196,7 +191,7 @@ export const POST = withAuth(async (req, session) => {
             year,
             month,
             quincena,
-            userId: parseInt(userId),
+            userId: userId,
           },
         };
 
@@ -208,9 +203,9 @@ export const POST = withAuth(async (req, session) => {
       month,
       quincena,
       amount,
-      companyId: companyId ? parseInt(companyId) : null,
-      teamId: teamId ? parseInt(teamId) : null,
-      userId: userId ? parseInt(userId) : null,
+      companyId: companyId ? companyId : null,
+      teamId: teamId ? teamId : null,
+      userId: userId ? userId : null,
       createdById,
     },
   });
