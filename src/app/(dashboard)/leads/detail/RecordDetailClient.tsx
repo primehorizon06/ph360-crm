@@ -5,29 +5,51 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import useSWR from "swr";
 import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { DetailSkeleton } from "@/components/ui/Skeleton";
+import { Lead, TABS_NAME } from "@/utils/interfaces/leads";
+import { Product } from "@/utils/interfaces/products";
+import { VALID_TABS } from "@/utils/constants/leads";
+import { fetcher } from "@/lib/fetcher";
+import { canViewProductChecklist } from "@/lib/permissions";
+import { ProductChecklist } from "@/components/leads/ProductChecklist/ProductChecklist";
+import { LeadDetailHeader } from "./LeadDetailHeader";
+import { LeadDetailTabs } from "./LeadDetailTabs";
+import { PersonalTab } from "./tabs/PersonalTab";
+import { NotesTab } from "./tabs/NotesTab";
+import { RemindersTab } from "./tabs/RemindersTab";
+import { AttachmentsTab } from "./tabs/AttachmentsTab";
+import { ProductsTab } from "./tabs/ProductsTab";
 
 const LeadEditModal = dynamic(
   () => import("@/components/leads/LeadEditModal").then((m) => m.LeadEditModal),
   { ssr: false },
 );
-import { Lead, TABS_NAME } from "@/utils/interfaces/leads";
-import { LeadDetailHeader } from "../detail/LeadDetailHeader";
-import { LeadDetailTabs } from "../detail/LeadDetailTabs";
-import { PersonalTab } from "../detail/tabs/PersonalTab";
-import { NotesTab } from "../detail/tabs/NotesTab";
-import { RemindersTab } from "../detail/tabs/RemindersTab";
-import { AttachmentsTab } from "../detail/tabs/AttachmentsTab";
-import { ProductsTab } from "../detail/tabs/ProductsTab";
-import { ProductChecklist } from "@/components/leads/ProductChecklist/ProductChecklist";
-import { VALID_TABS } from "@/utils/constants/leads";
-import { Product } from "@/utils/interfaces/products";
-import { fetcher } from "@/lib/fetcher";
-import { toast } from "sonner";
-import { canViewProductChecklist } from "@/lib/permissions";
 
-export function LeadDetailClient() {
+const RECORD_TYPES = {
+  lead: {
+    label: "Lead",
+    basePath: "/leads",
+    suspendPrompt: "¿Suspender este lead?",
+    suspendError: "Error al suspender el lead",
+    suspendSuccess: "Lead suspendido",
+  },
+  customer: {
+    label: "Cliente",
+    basePath: "/customers",
+    suspendPrompt: "¿Estas seguro de que quieres suspender este Cliente?",
+    suspendError: "Error al suspender el cliente",
+    suspendSuccess: "Cliente suspendido",
+  },
+} as const;
+
+interface Props {
+  type: keyof typeof RECORD_TYPES;
+}
+
+export function RecordDetailClient({ type }: Props) {
+  const config = RECORD_TYPES[type];
   const { id } = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -44,7 +66,9 @@ export function LeadDetailClient() {
   );
 
   usePageTitle(
-    lead?.firstName ? `${lead.firstName} ${lead.lastName} - Lead` : "Lead",
+    lead?.firstName
+      ? `${[lead.firstName, lead.lastName].filter(Boolean).join(" ")} - ${config.label}`
+      : config.label,
   );
 
   const tabFromUrl = searchParams.get("tab") as TABS_NAME;
@@ -54,15 +78,18 @@ export function LeadDetailClient() {
   );
 
   useEffect(() => {
-    if (leadError) router.push("/leads");
-  }, [leadError, router]);
+    if (leadError) router.push(config.basePath);
+    if (type === "customer" && lead && lead.type !== "customer") {
+      router.push(config.basePath);
+    }
+  }, [lead, leadError, router, type, config.basePath]);
 
   async function handleApprovalChange() {
     await Promise.all([mutateLead(), mutateProducts()]);
   }
 
   function handleSuspend() {
-    toast("¿Suspender este lead?", {
+    toast(config.suspendPrompt, {
       action: {
         label: "Suspender",
         onClick: async () => {
@@ -73,10 +100,10 @@ export function LeadDetailClient() {
           });
           if (!res.ok) {
             const data = await res.json().catch(() => ({}));
-            toast.error(data.error ?? "Error al suspender el lead");
+            toast.error(data.error ?? config.suspendError);
             return;
           }
-          toast.success("Lead suspendido");
+          toast.success(config.suspendSuccess);
           void mutateLead();
         },
       },
@@ -89,7 +116,7 @@ export function LeadDetailClient() {
     const params = new URLSearchParams(searchParams);
     params.set("tab", tab);
     startTransition(() => {
-      router.push(`/leads/${id}?${params.toString()}`, { scroll: false });
+      router.push(`${config.basePath}/${id}?${params.toString()}`, { scroll: false });
     });
   };
 
@@ -141,6 +168,7 @@ export function LeadDetailClient() {
 
       {editing && (
         <LeadEditModal
+          type={type}
           key={lead.id}
           lead={lead}
           onClose={() => setEditing(false)}

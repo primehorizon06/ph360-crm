@@ -1,11 +1,11 @@
 import { Suspense } from "react";
 import { DetailSkeleton } from "@/components/ui/Skeleton";
-import { LeadDetailClient } from "./LeadDetailClient";
+import { RecordDetailClient } from "../detail/RecordDetailClient";
 
 export default function LeadDetailPage() {
   return (
     <Suspense fallback={<DetailSkeleton />}>
-      <LeadDetailClient />
+      <RecordDetailClient type="lead" />
     </Suspense>
   );
 }
