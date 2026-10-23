@@ -162,7 +162,6 @@ export function LeadsListView({ type }: Props) {
     <div className="space-y-6">
       <PageHeader
         title={isLead ? "Leads" : "Clientes"}
-        description={`${total} ${label.toLowerCase()}${total !== 1 ? "s" : ""}`}
         action={
           isLead && canCreateLead(session?.user?.role ?? "")
             ? {
@@ -443,27 +442,34 @@ export function LeadsListView({ type }: Props) {
         )}
 
         {/* Paginación */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-white/10">
+        {total > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-t border-white/10">
             <span className="text-sm text-on-surface-variant">
-              {(page - 1) * LIMIT + 1}–{Math.min(page * LIMIT, total)} de {total}
+              {(page - 1) * LIMIT + 1}–{Math.min(page * LIMIT, total)} de {total}{" "}
+              {label.toLowerCase()}
+              {total !== 1 ? "s" : ""}
             </span>
-            <div className="flex gap-2">
-              <button
-                disabled={page === 1}
-                onClick={() => updateParams({ page: String(page - 1) })}
-                className="px-3 py-1 text-sm rounded border border-white/10 text-white/60 disabled:opacity-30 hover:bg-white/5 transition-colors"
-              >
-                Anterior
-              </button>
-              <button
-                disabled={page >= totalPages}
-                onClick={() => updateParams({ page: String(page + 1) })}
-                className="px-3 py-1 text-sm rounded border border-white/10 text-white/60 disabled:opacity-30 hover:bg-white/5 transition-colors"
-              >
-                Siguiente
-              </button>
-            </div>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-on-surface-variant">
+                  Página {page} de {totalPages}
+                </span>
+                <button
+                  disabled={page === 1}
+                  onClick={() => updateParams({ page: String(page - 1) })}
+                  className="px-3 py-1 text-sm rounded border border-white/10 text-white/60 disabled:opacity-30 hover:bg-white/5 transition-colors"
+                >
+                  Anterior
+                </button>
+                <button
+                  disabled={page >= totalPages}
+                  onClick={() => updateParams({ page: String(page + 1) })}
+                  className="px-3 py-1 text-sm rounded border border-white/10 text-white/60 disabled:opacity-30 hover:bg-white/5 transition-colors"
+                >
+                  Siguiente
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
