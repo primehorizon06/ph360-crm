@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { User } from "@/app/(dashboard)/users/page";
 import { Pencil } from "lucide-react";
 import { Switch } from "@/components/ui/Switch";
+import { Avatar } from "@/components/ui/Avatar";
 import { ROLE_COLORS, roleLabel } from "@/utils/constants/roles";
 import { Role } from "@prisma/client";
 
@@ -15,14 +17,23 @@ const TABLE_HEADERS = [
   "Acciones",
 ];
 
+const LINK_CLASS = "hover:text-primary hover:underline underline-offset-4";
+
 interface Props {
   users: User[];
   onEdit: (user: User) => void;
   onToggleActive: (user: User) => void;
   footer?: React.ReactNode;
+  emptyState?: React.ReactNode;
 }
 
-export function UserTable({ users, onEdit, onToggleActive, footer }: Props) {
+export function UserTable({
+  users,
+  onEdit,
+  onToggleActive,
+  footer,
+  emptyState,
+}: Props) {
   return (
     <div className="bg-surface rounded-xl border border-white/10 overflow-hidden">
       {/* Vista desktop — tabla */}
@@ -60,10 +71,28 @@ export function UserTable({ users, onEdit, onToggleActive, footer }: Props) {
                   </span>
                 </td>
                 <td className="px-4 py-3 text-lg text-white/90">
-                  {user.company?.name ?? "—"}
+                  {user.companyId && user.company ? (
+                    <Link
+                      href={`/companies?open=${user.companyId}`}
+                      className={LINK_CLASS}
+                    >
+                      {user.company.name}
+                    </Link>
+                  ) : (
+                    "—"
+                  )}
                 </td>
                 <td className="px-4 py-3 text-lg text-white/90">
-                  {user.team?.name ?? "—"}
+                  {user.companyId && user.team ? (
+                    <Link
+                      href={`/companies?open=${user.companyId}`}
+                      className={LINK_CLASS}
+                    >
+                      {user.team.name}
+                    </Link>
+                  ) : (
+                    "—"
+                  )}
                 </td>
                 <td className="px-4 py-3">
                   <Switch
@@ -77,9 +106,10 @@ export function UserTable({ users, onEdit, onToggleActive, footer }: Props) {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => onEdit(user)}
+                      aria-label={`Editar usuario ${user.name}`}
                       className="p-1.5 rounded-lg text-on-surface-variant hover:text-white hover:bg-white/10 transition-colors"
                     >
-                      <Pencil size={14} />
+                      <Pencil size={14} aria-hidden />
                     </button>
                   </div>
                 </td>
@@ -97,8 +127,8 @@ export function UserTable({ users, onEdit, onToggleActive, footer }: Props) {
             className="p-4 flex items-start justify-between gap-3"
           >
             <div className="flex items-start gap-3 min-w-0">
-              <div className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-black font-bold text-lg shrink-0">
-                {user.name[0].toUpperCase()}
+              <div className="shrink-0">
+                <Avatar name={user.name} avatar={user.avatar} size="sm" />
               </div>
               <div className="min-w-0">
                 <p className="text-white font-medium text-lg truncate">
@@ -112,20 +142,24 @@ export function UserTable({ users, onEdit, onToggleActive, footer }: Props) {
                     {roleLabel(user.role)}
                   </span>
                 </div>
-                {user.company?.name && (
-                  <p className="text-white/90 text-sm mt-1">
+                {user.companyId && user.company?.name && (
+                  <Link
+                    href={`/companies?open=${user.companyId}`}
+                    className={`block text-white/90 text-sm mt-1 ${LINK_CLASS}`}
+                  >
                     {user.company.name}{" "}
                     {user.team?.name ? `· ${user.team.name}` : ""}
-                  </p>
+                  </Link>
                 )}
               </div>
             </div>
             <div className="flex items-center gap-1 shrink-0">
               <button
                 onClick={() => onEdit(user)}
+                aria-label={`Editar usuario ${user.name}`}
                 className="p-1.5 rounded-lg text-on-surface-variant hover:text-white hover:bg-white/10 transition-colors"
               >
-                <Pencil size={14} />
+                <Pencil size={14} aria-hidden />
               </button>
               <Switch
                 checked={user.active}
@@ -137,11 +171,12 @@ export function UserTable({ users, onEdit, onToggleActive, footer }: Props) {
         ))}
       </div>
 
-      {users.length === 0 && (
-        <div className="text-center py-12 text-white/90 text-lg">
-          No hay usuarios registrados
-        </div>
-      )}
+      {users.length === 0 &&
+        (emptyState ?? (
+          <div className="text-center py-12 text-white/90 text-lg">
+            No hay usuarios registrados
+          </div>
+        ))}
 
       {footer}
     </div>

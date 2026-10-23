@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
 import { useSession } from "next-auth/react";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PageSkeleton } from "@/components/ui/Skeleton";
 import dynamic from "next/dynamic";
 import { UserTable } from "@/components/users/UserTable";
@@ -13,7 +13,7 @@ const UserModal = dynamic(
   () => import("@/components/users/UserModal").then((m) => m.UserModal),
   { ssr: false },
 );
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, X } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { CustomSelect } from "@/components/ui/Select";
 import { UserRole } from "@/utils/constants/roles";
@@ -46,24 +46,84 @@ interface UserListResponse {
   totalPages: number;
 }
 
+const ID_PATTERN = /^\d+$/;
+
 export default function UsersPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <UsersPageContent />
+    </Suspense>
+  );
+}
+
+function UsersPageContent() {
   usePageTitle("Usuarios");
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [filterCompany, setFilterCompany] = useState("");
-  const [filterTeam, setFilterTeam] = useState("");
-  const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
-  // Debounce búsqueda: el setState ocurre en el callback del timer, no directo en el efecto
+  const urlSearch = searchParams.get("search") ?? "";
+  const rawCompany = searchParams.get("companyId") ?? "";
+  const rawTeam = searchParams.get("teamId") ?? "";
+  const rawPage = searchParams.get("page") ?? "";
+  const filterCompany = ID_PATTERN.test(rawCompany) ? rawCompany : "";
+  const filterTeam =
+    filterCompany && ID_PATTERN.test(rawTeam) ? rawTeam : "";
+  const page =
+    ID_PATTERN.test(rawPage) && Number(rawPage) >= 1 ? Number(rawPage) : 1;
+
+  const [search, setSearch] = useState(urlSearch);
+  const [prevUrlSearch, setPrevUrlSearch] = useState(urlSearch);
+  if (urlSearch !== prevUrlSearch) {
+    setPrevUrlSearch(urlSearch);
+    setSearch(urlSearch);
+  }
+
+  const updateParams = useCallback(
+    (changes: Record<string, string | null>, mode: "push" | "replace") => {
+      const params = new URLSearchParams(searchParams);
+      for (const [key, value] of Object.entries(changes)) {
+        if (value) params.set(key, value);
+        else params.delete(key);
+      }
+      const qs = params.toString();
+      const url = qs ? `/users?${qs}` : "/users";
+      if (mode === "push") window.history.pushState(null, "", url);
+      else window.history.replaceState(null, "", url);
+    },
+    [searchParams],
+  );
+
+  // Debounce búsqueda: la URL se actualiza en el callback del timer, no directo en el efecto
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(search), 300);
+    if (search === urlSearch) return;
+    const t = setTimeout(
+      () => updateParams({ search, page: null }, "replace"),
+      300,
+    );
     return () => clearTimeout(t);
-  }, [search]);
+  }, [search, urlSearch, updateParams]);
+
+  const teamsKey = filterCompany
+    ? `/api/teams?companyId=${filterCompany}`
+    : null;
+
+  const { data: companies = [] } = useSWR<{ id: number; name: string }[]>(
+    "/api/companies?simple=true",
+    fetcher,
+  );
+  const { data: teamsData } = useSWR<{ id: number; name: string }[]>(
+    teamsKey,
+    fetcher,
+  );
+  const teams = teamsData ?? [];
+  const selectedCompany = companies.find((c) => String(c.id) === filterCompany);
+  const selectedTeam = teams.find((t) => String(t.id) === filterTeam);
+  const effectiveTeam =
+    filterTeam && (teamsData === undefined || selectedTeam) ? filterTeam : "";
 
   const usersKey = useMemo(() => {
     if (status !== "authenticated") return null;
@@ -72,26 +132,14 @@ export default function UsersPage() {
       page: String(page),
       limit: String(pageSize),
     });
-    if (debouncedSearch) params.set("search", debouncedSearch);
+    if (urlSearch) params.set("search", urlSearch);
     if (filterCompany) params.set("companyId", filterCompany);
-    if (filterTeam) params.set("teamId", filterTeam);
+    if (effectiveTeam) params.set("teamId", effectiveTeam);
     return `/api/users?${params}`;
-  }, [status, page, pageSize, debouncedSearch, filterCompany, filterTeam]);
-
-  const teamsKey = filterCompany
-    ? `/api/teams?companyId=${filterCompany}`
-    : null;
+  }, [status, page, pageSize, urlSearch, filterCompany, effectiveTeam]);
 
   const { data, isLoading: loadingUsers, mutate: mutateUsers } =
-    useSWR<UserListResponse>(usersKey, fetcher);
-  const { data: companies = [] } = useSWR<{ id: number; name: string }[]>(
-    "/api/companies?simple=true",
-    fetcher,
-  );
-  const { data: teams = [] } = useSWR<{ id: number; name: string }[]>(
-    teamsKey,
-    fetcher,
-  );
+    useSWR<UserListResponse>(usersKey, fetcher, { keepPreviousData: true });
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/auth/login");
@@ -100,6 +148,22 @@ export default function UsersPage() {
   }, [status, session, router]);
 
   const users = data?.data ?? [];
+  const totalPages = data?.totalPages ?? 0;
+  const hasFilters = Boolean(urlSearch || filterCompany || effectiveTeam);
+
+  const handlePageChange = useCallback(
+    (p: number) =>
+      updateParams(
+        { page: p === 1 ? null : String(p) },
+        totalPages > 0 && page > totalPages ? "replace" : "push",
+      ),
+    [updateParams, totalPages, page],
+  );
+
+  function clearFilters() {
+    setSearch("");
+    window.history.pushState(null, "", "/users");
+  }
 
   function handleToggleActive(user: User) {
     const activating = !user.active;
@@ -171,11 +235,8 @@ export default function UsersPage() {
             type="text"
             placeholder="Buscar por nombre o usuario..."
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            className="bg-transparent text-lg text-white/70 placeholder:text-white/90 outline-none w-full"
+            onChange={(e) => setSearch(e.target.value)}
+            className="bg-transparent text-lg text-white/70 placeholder:text-on-surface-variant outline-none w-full"
           />
         </div>
 
@@ -188,15 +249,10 @@ export default function UsersPage() {
         <CustomSelect
           name="filterCompany"
           aria-label="Filtrar por franquicia"
-          value={
-            companies.find((c) => String(c.id) === filterCompany)?.name ??
-            "Todas las franquicias"
+          value={selectedCompany?.name ?? "Todas las franquicias"}
+          onChange={(val) =>
+            updateParams({ companyId: val, teamId: null, page: null }, "push")
           }
-          onChange={(val) => {
-            setFilterCompany(val);
-            setFilterTeam("");
-            setPage(1);
-          }}
           options={["", ...companies.map((c) => String(c.id))]}
           labels={["Todas las franquicias", ...companies.map((c) => c.name)]}
         />
@@ -205,35 +261,67 @@ export default function UsersPage() {
         <CustomSelect
           name="filterTeam"
           aria-label="Filtrar por equipo"
-          value={
-            teams.find((t) => String(t.id) === filterTeam)?.name ??
-            "Todos los equipos"
-          }
-          onChange={(val) => {
-            setFilterTeam(val);
-            setPage(1);
-          }}
+          value={selectedTeam?.name ?? "Todos los equipos"}
+          onChange={(val) => updateParams({ teamId: val, page: null }, "push")}
           options={["", ...teams.map((t) => String(t.id))]}
           labels={["Todos los equipos", ...teams.map((t) => t.name)]}
         />
       </div>
+
+      {selectedCompany && (
+        <div>
+          <span className="inline-flex max-w-full items-center gap-2 rounded-full bg-primary/15 border border-primary/30 text-on-surface text-sm pl-3 pr-1 py-1">
+            <span className="truncate">
+              {selectedCompany.name}
+              {selectedTeam ? ` · ${selectedTeam.name}` : ""}
+            </span>
+            <button
+              onClick={() =>
+                updateParams(
+                  { companyId: null, teamId: null, page: null },
+                  "push",
+                )
+              }
+              aria-label="Quitar filtro de franquicia y equipo"
+              className="shrink-0 p-1 rounded-full hover:bg-primary/20 transition-colors"
+            >
+              <X size={14} aria-hidden />
+            </button>
+          </span>
+        </div>
+      )}
 
       {/* Tabla */}
       <UserTable
         users={users}
         onEdit={handleEdit}
         onToggleActive={handleToggleActive}
+        emptyState={
+          hasFilters ? (
+            <div className="text-center py-12 space-y-3">
+              <p className="text-white/90 text-lg">
+                Ningún usuario coincide con los filtros
+              </p>
+              <button
+                onClick={clearFilters}
+                className="text-primary hover:text-primary/80 text-lg transition-colors"
+              >
+                Limpiar filtros
+              </button>
+            </div>
+          ) : undefined
+        }
         footer={
           <Pagination
             page={page}
             pageSize={pageSize}
             total={data?.total ?? 0}
-            totalPages={data?.totalPages ?? 0}
+            totalPages={totalPages}
             itemLabel={{ singular: "usuario", plural: "usuarios" }}
-            onPageChange={setPage}
+            onPageChange={handlePageChange}
             onPageSizeChange={(size) => {
               setPageSize(size);
-              setPage(1);
+              updateParams({ page: null }, "replace");
             }}
           />
         }
@@ -246,6 +334,14 @@ export default function UsersPage() {
           user={editingUser}
           onClose={() => setModalOpen(false)}
           onSave={handleSave}
+          defaults={
+            editingUser
+              ? undefined
+              : {
+                  companyId: selectedCompany ? filterCompany : "",
+                  teamId: selectedTeam ? filterTeam : "",
+                }
+          }
         />
       )}
     </div>

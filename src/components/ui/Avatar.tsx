@@ -23,7 +23,7 @@ export function Avatar({ name, avatar, size = "sm" }: AvatarProps) {
 
   return (
     <div
-      className={`${sizes[size]} bg-cyan-500 rounded-full flex items-center justify-center text-black font-bold`}
+      className={`${sizes[size]} bg-primary rounded-full flex items-center justify-center text-on-primary font-bold`}
     >
       {name?.[0]?.toUpperCase()}
     </div>

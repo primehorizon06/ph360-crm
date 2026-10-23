@@ -1,18 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import useSWR from "swr";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import useSWR, { useSWRConfig } from "swr";
+import { useSearchParams } from "next/navigation";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { PageSkeleton } from "@/components/ui/Skeleton";
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  ChevronDown,
-  ChevronRight,
-  Users,
-  Search,
-} from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const CompanyModal = dynamic(
@@ -25,15 +18,31 @@ const TeamModal = dynamic(
 );
 import { CustomSelect } from "@/components/ui/Select";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Avatar } from "@/components/ui/Avatar";
+import { CompanyRow } from "@/components/companies/CompanyRow";
 import { CompanyGoals, Team } from "@/utils/interfaces/companies";
 import { fetcher } from "@/lib/fetcher";
 import { toast } from "sonner";
 import { confirmToast } from "@/lib/confirmToast";
 
+const ID_PATTERN = /^\d+$/;
+
 export default function CompaniesPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <CompaniesPageContent />
+    </Suspense>
+  );
+}
+
+function CompaniesPageContent() {
   usePageTitle("Franquicias y Equipos");
-  const [expanded, setExpanded] = useState<number[]>([]);
+  const searchParams = useSearchParams();
+  const rawOpen = searchParams.get("open") ?? "";
+  const openId = ID_PATTERN.test(rawOpen) ? Number(rawOpen) : null;
+  const [expanded, setExpanded] = useState<number[]>(
+    openId !== null ? [openId] : [],
+  );
+  const scrolledToOpen = useRef(false);
   const [companyModal, setCompanyModal] = useState<{
     open: boolean;
     company: CompanyGoals | null;
@@ -52,19 +61,20 @@ export default function CompaniesPage() {
     "/api/companies",
     fetcher,
   );
+  const { mutate: mutateKey } = useSWRConfig();
 
-  async function toggleExpand(company: CompanyGoals) {
-    if (expanded.includes(company.id)) {
-      setExpanded((prev) => prev.filter((id) => id !== company.id));
-      return;
+  const [openChecked, setOpenChecked] = useState(false);
+  if (!openChecked && !isLoading && openId !== null) {
+    setOpenChecked(true);
+    if (!companies.some((c) => c.id === openId)) {
+      setExpanded((prev) => prev.filter((id) => id !== openId));
     }
-    const res = await fetch(`/api/teams?companyId=${company.id}`);
-    const teams = await res.json();
-    void mutate(
-      companies.map((c) => (c.id === company.id ? { ...c, teams } : c)),
-      { revalidate: false },
+  }
+
+  function toggleExpand(id: number) {
+    setExpanded((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
-    setExpanded((prev) => [...prev, company.id]);
   }
 
   function handleDeleteCompany(id: number) {
@@ -77,24 +87,6 @@ export default function CompaniesPage() {
       }
       toast.success("Franquicia eliminada");
       void mutate();
-    });
-  }
-
-  function handleDeleteTeam(id: number, companyId: number) {
-    confirmToast("¿Eliminar este equipo?", async () => {
-      const deleteRes = await fetch(`/api/teams/${id}`, { method: "DELETE" });
-      if (!deleteRes.ok) {
-        const json = await deleteRes.json().catch(() => ({}));
-        toast.error(json.error ?? "Error al eliminar equipo");
-        return;
-      }
-      toast.success("Equipo eliminado");
-      const res = await fetch(`/api/teams?companyId=${companyId}`);
-      const teams = await res.json();
-      void mutate(
-        companies.map((c) => (c.id === companyId ? { ...c, teams } : c)),
-        { revalidate: false },
-      );
     });
   }
 
@@ -115,10 +107,30 @@ export default function CompaniesPage() {
     [companies, search, filterActive],
   );
 
+  useEffect(() => {
+    if (scrolledToOpen.current || openId === null || isLoading) return;
+    if (!filtered.some((c) => c.id === openId)) return;
+    scrolledToOpen.current = true;
+    document
+      .getElementById(`company-row-${openId}`)
+      ?.scrollIntoView({ block: "center" });
+  }, [openId, isLoading, filtered]);
+
   if (isLoading) return <PageSkeleton />;
 
   return (
     <div className="space-y-6">
+      {/* Header */}
+      <PageHeader
+        title="Franquicias"
+        description={`${filtered.length} de ${companies.length} franquicias registradas`}
+        action={{
+          label: "Nueva Franquicia",
+          icon: Plus,
+          onClick: () => setCompanyModal({ open: true, company: null }),
+        }}
+      />
+
       {/* Buscador y filtros */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2 flex-1">
@@ -128,7 +140,7 @@ export default function CompaniesPage() {
             placeholder="Buscar franquicia..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="bg-transparent text-lg text-white/70 placeholder:text-white/90 outline-none w-full"
+            className="bg-transparent text-lg text-white/70 placeholder:text-on-surface-variant outline-none w-full"
           />
         </div>
         <CustomSelect
@@ -147,135 +159,46 @@ export default function CompaniesPage() {
           labels={["Todas", "Activas", "Inactivas"]}
         />
       </div>
-      {/* Header */}
-      <PageHeader
-        title="Franquicias"
-        description={`${filtered.length} de ${companies.length} franquicias registradas`}
-        action={{
-          label: "Nueva Franquicia",
-          icon: Plus,
-          onClick: () => setCompanyModal({ open: true, company: null }),
-        }}
-      />
 
       {/* Lista acordeón */}
       <div className="space-y-2">
         {filtered.map((company) => (
-          <div
+          <CompanyRow
             key={company.id}
-            className="bg-surface border border-white/10 rounded-xl overflow-hidden"
-          >
-            {/* Franquicia */}
-            <div className="flex items-start justify-between px-4 py-3 gap-2">
-              <button
-                onClick={() => toggleExpand(company)}
-                className="flex items-start gap-3 flex-1 text-left min-w-0"
-              >
-                {expanded.includes(company.id) ? (
-                  <ChevronDown
-                    size={16}
-                    className="text-cyan-400 mt-0.5 shrink-0"
-                  />
-                ) : (
-                  <ChevronRight
-                    size={16}
-                    className="text-on-surface-variant mt-0.5 shrink-0"
-                  />
-                )}
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Avatar name={company.name} avatar={company.logo} size="sm" />
-                    <p className="text-white font-medium truncate">
-                      {company.name}
-                    </p>
-                    <span
-                      className={`text-sm px-2 py-0.5 rounded-full shrink-0 ${company.active ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}
-                    >
-                      {company.active ? "Activa" : "Inactiva"}
-                    </span>
-                  </div>
-                  <p className="text-on-surface-variant text-sm mt-0.5">
-                    {company._count.teams} equipos · {company._count.users}{" "}
-                    usuarios
-                  </p>
-                </div>
-              </button>
-
-              <div className="flex items-center gap-1 shrink-0">
-                <button
-                  onClick={() => setCompanyModal({ open: true, company })}
-                  className="p-1.5 rounded-lg text-on-surface-variant hover:text-white hover:bg-white/10 transition-colors"
-                >
-                  <Pencil size={14} />
-                </button>
-                <button
-                  onClick={() => handleDeleteCompany(company.id)}
-                  className="p-1.5 rounded-lg text-on-surface-variant hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            </div>
-
-            {/* Equipos */}
-            {expanded.includes(company.id) && (
-              <div className="border-t border-white/5 px-4 py-3 space-y-2">
-                {company.teams?.map((team) => (
-                  <div
-                    key={team.id}
-                    className="flex items-center justify-between bg-white/5 rounded-lg px-3 py-2"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Users size={14} className="text-on-surface-variant" />
-                      <span className="text-lg text-white/70">{team.name}</span>
-                      <span className="text-sm text-white/90">
-                        {team._count.users} usuarios
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() =>
-                          setTeamModal({
-                            open: true,
-                            team,
-                            companyId: company.id,
-                          })
-                        }
-                        className="p-1 rounded text-on-surface-variant hover:text-white hover:bg-white/10 transition-colors"
-                      >
-                        <Pencil size={12} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteTeam(team.id, company.id)}
-                        className="p-1 rounded text-on-surface-variant hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-
-                <button
-                  onClick={() =>
-                    setTeamModal({
-                      open: true,
-                      team: null,
-                      companyId: company.id,
-                    })
-                  }
-                  className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 text-lg transition-colors mt-1"
-                >
-                  <Plus size={14} />
-                  Nuevo equipo
-                </button>
-              </div>
-            )}
-          </div>
+            company={company}
+            isOpen={expanded.includes(company.id)}
+            onToggle={() => toggleExpand(company.id)}
+            onEdit={() => setCompanyModal({ open: true, company })}
+            onDelete={() => handleDeleteCompany(company.id)}
+            onEditTeam={(team) =>
+              setTeamModal({ open: true, team, companyId: company.id })
+            }
+            onNewTeam={() =>
+              setTeamModal({ open: true, team: null, companyId: company.id })
+            }
+          />
         ))}
 
         {companies.length === 0 && (
           <div className="text-center py-12 text-white/90 text-lg">
             No hay franquicias registradas
+          </div>
+        )}
+
+        {companies.length > 0 && filtered.length === 0 && (
+          <div className="text-center py-12 space-y-3">
+            <p className="text-white/90 text-lg">
+              Ninguna franquicia coincide con la búsqueda
+            </p>
+            <button
+              onClick={() => {
+                setSearch("");
+                setFilterActive("all");
+              }}
+              className="text-primary hover:text-primary/80 text-lg transition-colors"
+            >
+              Limpiar filtros
+            </button>
           </div>
         )}
       </div>
@@ -301,18 +224,12 @@ export default function CompaniesPage() {
           onClose={() =>
             setTeamModal({ open: false, team: null, companyId: null })
           }
-          onSave={async () => {
+          onSave={() => {
             const companyId = teamModal.companyId;
             setTeamModal({ open: false, team: null, companyId: null });
             if (companyId) {
-              const res = await fetch(`/api/teams?companyId=${companyId}`);
-              const teams = await res.json();
-              void mutate(
-                companies.map((c) =>
-                  c.id === companyId ? { ...c, teams } : c,
-                ),
-                { revalidate: false },
-              );
+              void mutateKey(`/api/teams?companyId=${companyId}`);
+              void mutate();
             }
           }}
         />

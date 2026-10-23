@@ -23,9 +23,10 @@ interface Props {
   user: User | null;
   onClose: () => void;
   onSave: () => void;
+  defaults?: { companyId?: string; teamId?: string };
 }
 
-export function UserModal({ user, onClose, onSave }: Props) {
+export function UserModal({ user, onClose, onSave, defaults }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -44,8 +45,10 @@ export function UserModal({ user, onClose, onSave }: Props) {
       password: "",
       confirmPassword: "",
       role: (user?.role as UserFormData["role"]) ?? UserRole.AGENT,
-      companyId: user?.companyId ? String(user.companyId) : "",
-      teamId: user?.teamId ? String(user.teamId) : "",
+      companyId: user?.companyId
+        ? String(user.companyId)
+        : (defaults?.companyId ?? ""),
+      teamId: user?.teamId ? String(user.teamId) : (defaults?.teamId ?? ""),
       active: user?.active ?? true,
     },
   });
