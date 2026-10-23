@@ -13,7 +13,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Loading } from "@/components/ui/Loading";
+import { ListSkeleton } from "@/components/ui/Skeleton";
 import { AttachmentPreview } from "@/components/notes/AttachmentPreview";
 import { ATTACHMENT_LIMITS_HINT } from "@/lib/fileValidation";
 import {
@@ -277,9 +277,7 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
 
       {/* List */}
       {loading ? (
-        <div className="text-center py-8 text-white/90 text-lg">
-          <Loading />
-        </div>
+        <ListSkeleton />
       ) : filtered.length === 0 ? (
         <div className="bg-surface border border-white/10 rounded-xl p-12 flex flex-col items-center justify-center gap-2">
           <Paperclip size={32} className="text-white/20" />

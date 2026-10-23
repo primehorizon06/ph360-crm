@@ -10,7 +10,7 @@ const ReminderModal = dynamic(
   { ssr: false },
 );
 import { useReminders } from "@/hooks/useReminders";
-import { Loading } from "@/components/ui/Loading";
+import { ListSkeleton } from "@/components/ui/Skeleton";
 
 export function RemindersTab({ leadId }: { leadId: number }) {
   const { reminders, loading, upcoming, past, reload } = useReminders(leadId);
@@ -33,7 +33,7 @@ export function RemindersTab({ leadId }: { leadId: number }) {
       </div>
 
       {loading ? (
-        <Loading />
+        <ListSkeleton />
       ) : reminders.length === 0 ? (
         <div className="text-center">
           <Bell />

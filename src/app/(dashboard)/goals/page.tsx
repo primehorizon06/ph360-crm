@@ -25,7 +25,7 @@ import { fetcher } from "@/lib/fetcher";
 import { toast } from "sonner";
 import { confirmToast } from "@/lib/confirmToast";
 import { UserRole } from "@/utils/constants/roles";
-import { Loading } from "@/components/ui/Loading";
+import { ListSkeleton, PageSkeleton } from "@/components/ui/Skeleton";
 
 export default function GoalsPage() {
   const { data: session, status } = useSession();
@@ -70,7 +70,7 @@ export default function GoalsPage() {
   }
 
   if (status === "loading" || permLoading) {
-    return <Loading fullScreen={false} message="Cargando metas quincenales..." />;
+    return <PageSkeleton />;
   }
 
   if (!session) { router.push("/auth/login"); return null; }
@@ -153,11 +153,7 @@ export default function GoalsPage() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 bg-white/5 rounded-xl animate-pulse" />
-          ))}
-        </div>
+        <ListSkeleton rowClassName="h-24" />
       ) : data ? (
         <>
           {isAdmin ? (

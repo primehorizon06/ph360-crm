@@ -13,7 +13,7 @@ const NoteModal = dynamic(
   () => import("@/components/notes/NoteModal").then((m) => m.NoteModal),
   { ssr: false },
 );
-import { Loading } from "@/components/ui/Loading";
+import { ListSkeleton } from "@/components/ui/Skeleton";
 
 export function NotesTab({ leadId }: PropsNotesTab) {
   const [modalOpen, setModalOpen] = useState(false);
@@ -52,9 +52,7 @@ export function NotesTab({ leadId }: PropsNotesTab) {
       </div>
 
       {isLoading ? (
-        <div className="text-center py-8 text-white/90 text-lg">
-          <Loading />
-        </div>
+        <ListSkeleton />
       ) : notes.length === 0 ? (
         <div className="bg-surface border border-white/10 rounded-xl p-12 flex flex-col items-center justify-center gap-2">
           <FileText size={32} className="text-white/20" />

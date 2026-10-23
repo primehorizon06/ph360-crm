@@ -5,7 +5,7 @@ import useSWR from "swr";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import { Loading } from "@/components/ui/Loading";
+import { PageSkeleton } from "@/components/ui/Skeleton";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { CustomSelect } from "@/components/ui/Select";
 import { roleLabel, UserRole } from "@/utils/constants/roles";
@@ -93,7 +93,7 @@ export default function AuditPage() {
 
   const { data, isLoading } = useSWR<AuditLogResponse>(key, fetcher);
 
-  if (status === "loading" || (isLoading && !data)) return <Loading />;
+  if (status === "loading" || (isLoading && !data)) return <PageSkeleton />;
 
   const logs = data?.data ?? [];
 

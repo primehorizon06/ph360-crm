@@ -1,10 +1,10 @@
 import { Suspense } from "react";
-import { Loading } from "@/components/ui/Loading";
+import { DetailSkeleton } from "@/components/ui/Skeleton";
 import { LeadDetailClient } from "./LeadDetailClient";
 
 export default function LeadDetailPage() {
   return (
-    <Suspense fallback={<Loading fullScreen={false} />}>
+    <Suspense fallback={<DetailSkeleton />}>
       <LeadDetailClient />
     </Suspense>
   );

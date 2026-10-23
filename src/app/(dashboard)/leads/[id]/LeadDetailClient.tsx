@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 import useSWR from "swr";
 import { useSession } from "next-auth/react";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import { Loading } from "@/components/ui/Loading";
+import { DetailSkeleton } from "@/components/ui/Skeleton";
 
 const LeadEditModal = dynamic(
   () => import("@/components/leads/LeadEditModal").then((m) => m.LeadEditModal),
@@ -104,7 +104,7 @@ export function LeadDetailClient() {
     return () => window.removeEventListener("popstate", handlePopState);
   }, [searchParams]);
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <DetailSkeleton />;
   if (!lead) return null;
 
   return (

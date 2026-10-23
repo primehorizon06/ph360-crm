@@ -5,7 +5,7 @@ import useSWR from "swr";
 import { useSession } from "next-auth/react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useRouter } from "next/navigation";
-import { Loading } from "@/components/ui/Loading";
+import { PageSkeleton } from "@/components/ui/Skeleton";
 import dynamic from "next/dynamic";
 import { UserTable } from "@/components/users/UserTable";
 
@@ -147,7 +147,7 @@ export default function UsersPage() {
     void mutateUsers();
   }
 
-  if (status === "loading" || (loadingUsers && !data)) return <Loading />;
+  if (status === "loading" || (loadingUsers && !data)) return <PageSkeleton />;
 
   return (
     <div className="space-y-6">

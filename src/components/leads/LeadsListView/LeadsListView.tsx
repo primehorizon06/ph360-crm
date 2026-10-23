@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
 import { useSession } from "next-auth/react";
-import { Loading } from "@/components/ui/Loading";
+import { PageSkeleton } from "@/components/ui/Skeleton";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Plus, Search, X } from "lucide-react";
 import { useSidebar } from "@/components/layout/SidebarContext";
@@ -134,7 +134,7 @@ export function LeadsListView({ type }: Props) {
     }
   }, [isLead, mutate, setOnLeadCreated]);
 
-  if (isLoading && leads.length === 0) return <Loading />;
+  if (isLoading && leads.length === 0) return <PageSkeleton />;
 
   return (
     <div className="space-y-6">

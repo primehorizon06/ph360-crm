@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import useSWR from "swr";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import { Loading } from "@/components/ui/Loading";
+import { PageSkeleton } from "@/components/ui/Skeleton";
 import {
   Plus,
   Pencil,
@@ -115,7 +115,7 @@ export default function CompaniesPage() {
     [companies, search, filterActive],
   );
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <PageSkeleton />;
 
   return (
     <div className="space-y-6">

@@ -13,7 +13,7 @@ import {
 import { confirmToast } from "@/lib/confirmToast";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { CustomSelect } from "@/components/ui/Select";
-import { Loading } from "@/components/ui/Loading";
+import { PageSkeleton } from "@/components/ui/Skeleton";
 import { fetcher } from "@/lib/fetcher";
 import { formatAmount, formatDate, formatFullName, formatYmd } from "@/utils/helpers/format";
 import { postAction } from "@/lib/postAction";
@@ -349,7 +349,7 @@ export function CollectionsQueue() {
     return null;
   }
 
-  if (isLoading && !data) return <Loading />;
+  if (isLoading && !data) return <PageSkeleton />;
 
   return (
     <div className="space-y-6">

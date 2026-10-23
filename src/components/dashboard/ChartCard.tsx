@@ -1,5 +1,7 @@
 "use client";
 
+import { Skeleton } from "@/components/ui/Skeleton";
+
 export function ChartCard({
   title,
   subtitle,
@@ -27,19 +29,19 @@ export function ChartCard({
 
 export function SkeletonCard() {
   return (
-    <div className="bg-surface-container border border-outline-variant rounded-xl p-4 animate-pulse">
-      <div className="h-3 w-24 bg-surface-container-high rounded mb-3" />
-      <div className="h-8 w-32 bg-surface-container-high rounded mb-2" />
-      <div className="h-2 w-20 bg-surface-container-high rounded" />
+    <div className="bg-surface-container border border-outline-variant rounded-xl p-4">
+      <Skeleton className="h-3 w-24 mb-3" />
+      <Skeleton className="h-8 w-32 mb-2" />
+      <Skeleton className="h-2 w-20" />
     </div>
   );
 }
 
 export function SkeletonChart() {
   return (
-    <div className="bg-surface-container border border-outline-variant rounded-xl p-4 animate-pulse">
-      <div className="h-3 w-32 bg-surface-container-high rounded mb-4" />
-      <div className="h-40 bg-surface-container-high rounded" />
+    <div className="bg-surface-container border border-outline-variant rounded-xl p-4">
+      <Skeleton className="h-3 w-32 mb-4" />
+      <Skeleton className="h-40" />
     </div>
   );
 }

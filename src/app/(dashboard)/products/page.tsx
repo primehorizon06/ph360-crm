@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 import { Plus, Pencil, Search, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import { Loading } from "@/components/ui/Loading";
+import { PageSkeleton } from "@/components/ui/Skeleton";
 import { CustomSelect } from "@/components/ui/Select";
 import { Switch } from "@/components/ui/Switch";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -91,7 +91,7 @@ export default function ProductsPage() {
 
   const activeCount = products.filter((p) => p.active).length;
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <PageSkeleton />;
 
   return (
     <div className="space-y-6">

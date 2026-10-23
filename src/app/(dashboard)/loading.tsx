@@ -1,5 +1,5 @@
-import { Loading } from "@/components/ui/Loading";
+import { PageSkeleton } from "@/components/ui/Skeleton";
 
 export default function DashboardLoading() {
-  return <Loading fullScreen={false} />;
+  return <PageSkeleton />;
 }

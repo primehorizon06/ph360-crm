@@ -18,7 +18,7 @@ import {
   Pencil,
   CheckCircle2,
 } from "lucide-react";
-import { Loading } from "@/components/ui/Loading";
+import { ListSkeleton } from "@/components/ui/Skeleton";
 import { ProductFormData, productSchema } from "@/lib/validations/product";
 import {
   CardType,
@@ -769,9 +769,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
       )}
 
       {loading ? (
-        <div className="text-center py-8">
-          <Loading />
-        </div>
+        <ListSkeleton />
       ) : products.length === 0 ? (
         <div className="bg-surface border border-white/10 rounded-xl p-12 flex flex-col items-center justify-center gap-2">
           <ShoppingBag size={32} className="text-white/20" />
