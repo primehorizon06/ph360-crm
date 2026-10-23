@@ -31,28 +31,16 @@ Antes de comenzar, asegúrate de tener instalados:
 2. **Instala las dependencias:**
    ```bash
    npm install
-   # o
-   yarn install
-   # o
-   pnpm install
    ```
 
 3. **Configura las variables de entorno:**
-   Crea un archivo `.env.local` en la raíz del proyecto:
-   ```env
-   # Base de datos
-   DATABASE_URL="postgresql://username:password@localhost:5432/crm_db"
-   DIRECT_URL="postgresql://username:password@localhost:5432/crm_db"
-
-   # NextAuth
-   NEXTAUTH_SECRET="tu-secreto-super-seguro-aqui"
-   NEXTAUTH_URL="http://localhost:3000"
-
-   # Opcional: Credenciales de base de datos para Docker
-   DB_USER=postgres
-   DB_PASSWORD=postgres
-   DB_NAME=crm_db
+   Copia `.env.example` a `.env.local` y completa los valores; cada variable está documentada ahí.
+   ```bash
+   cp .env.example .env.local
    ```
+   El CLI de Prisma no lee `.env.local`: para ejecutarlo fuera de Docker, crea también un `.env` solo con `DATABASE_URL`.
+
+   Con `npm run docker:up` no hace falta ninguno de los dos: `docker-compose.yml` define todas las variables. Las credenciales del sandbox de SOAR, si las necesitas, van en `.env.soar`.
 
 ## 🗄️ Configuración de la Base de Datos
 
