@@ -46,6 +46,8 @@ export function Header() {
           {/* Hamburguesa móvil */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
+            aria-expanded={mobileOpen}
             className="text-white/90 hover:text-white transition-colors lg:hidden"
           >
             <Menu size={20} />
