@@ -19,9 +19,10 @@ interface Props {
   users: User[];
   onEdit: (user: User) => void;
   onToggleActive: (user: User) => void;
+  footer?: React.ReactNode;
 }
 
-export function UserTable({ users, onEdit, onToggleActive }: Props) {
+export function UserTable({ users, onEdit, onToggleActive, footer }: Props) {
   return (
     <div className="bg-surface rounded-xl border border-white/10 overflow-hidden">
       {/* Vista desktop — tabla */}
@@ -141,6 +142,8 @@ export function UserTable({ users, onEdit, onToggleActive }: Props) {
           No hay usuarios registrados
         </div>
       )}
+
+      {footer}
     </div>
   );
 }

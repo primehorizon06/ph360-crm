@@ -20,8 +20,8 @@ import { UserRole } from "@/utils/constants/roles";
 import { fetcher } from "@/lib/fetcher";
 import { toast } from "sonner";
 import { confirmToast } from "@/lib/confirmToast";
+import { DEFAULT_PAGE_SIZE, Pagination } from "@/components/ui/Pagination";
 
-const LIMIT = 20;
 
 export interface User {
   id: number;
@@ -57,6 +57,7 @@ export default function UsersPage() {
   const [filterCompany, setFilterCompany] = useState("");
   const [filterTeam, setFilterTeam] = useState("");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   // Debounce búsqueda: el setState ocurre en el callback del timer, no directo en el efecto
   useEffect(() => {
@@ -69,13 +70,13 @@ export default function UsersPage() {
     const params = new URLSearchParams({
       paginated: "true",
       page: String(page),
-      limit: String(LIMIT),
+      limit: String(pageSize),
     });
     if (debouncedSearch) params.set("search", debouncedSearch);
     if (filterCompany) params.set("companyId", filterCompany);
     if (filterTeam) params.set("teamId", filterTeam);
     return `/api/users?${params}`;
-  }, [status, page, debouncedSearch, filterCompany, filterTeam]);
+  }, [status, page, pageSize, debouncedSearch, filterCompany, filterTeam]);
 
   const teamsKey = filterCompany
     ? `/api/teams?companyId=${filterCompany}`
@@ -154,7 +155,6 @@ export default function UsersPage() {
       {/* Header */}
       <PageHeader
         title="Usuarios"
-        description={`${data?.total ?? 0} usuarios registrados`}
         action={{
           label: "Nuevo Usuario",
           icon: Plus,
@@ -219,30 +219,25 @@ export default function UsersPage() {
       </div>
 
       {/* Tabla */}
-      <UserTable users={users} onEdit={handleEdit} onToggleActive={handleToggleActive} />
-
-      {/* Paginación */}
-      {data && data.totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page <= 1}
-            className="px-3 py-1.5 rounded-lg bg-white/5 text-white/60 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            Anterior
-          </button>
-          <span className="text-on-surface-variant text-lg">
-            Página {data.page} de {data.totalPages}
-          </span>
-          <button
-            onClick={() => setPage((p) => Math.min(data.totalPages, p + 1))}
-            disabled={page >= data.totalPages}
-            className="px-3 py-1.5 rounded-lg bg-white/5 text-white/60 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            Siguiente
-          </button>
-        </div>
-      )}
+      <UserTable
+        users={users}
+        onEdit={handleEdit}
+        onToggleActive={handleToggleActive}
+        footer={
+          <Pagination
+            page={page}
+            pageSize={pageSize}
+            total={data?.total ?? 0}
+            totalPages={data?.totalPages ?? 0}
+            itemLabel={{ singular: "usuario", plural: "usuarios" }}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPage(1);
+            }}
+          />
+        }
+      />
 
       {/* Modal */}
       {modalOpen && (

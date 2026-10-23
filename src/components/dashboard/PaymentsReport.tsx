@@ -10,6 +10,7 @@ import { fetcher } from "@/lib/fetcher";
 import { formatAmount, formatDate, formatFullName } from "@/utils/helpers/format";
 import { productColorClass } from "@/utils/constants/products";
 import { PaymentCards } from "@/components/dashboard/PaymentCards";
+import { DEFAULT_PAGE_SIZE, Pagination } from "@/components/ui/Pagination";
 import {
   GROUP_STYLES,
   PaymentGroup,
@@ -17,7 +18,6 @@ import {
   quincenaLabel,
 } from "@/components/dashboard/paymentGroups";
 
-const LIMIT = 20;
 const FILTER_LABEL = "block text-sm text-on-surface-variant";
 
 interface PaymentRow {
@@ -68,6 +68,7 @@ export function PaymentsReport({ initialGroup, year, month, quincena, initialCom
   const [agentId, setAgentId] = useState("");
   const [catalogId, setCatalogId] = useState("");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   const key = useMemo(() => {
     const params = new URLSearchParams({
@@ -76,13 +77,13 @@ export function PaymentsReport({ initialGroup, year, month, quincena, initialCom
       quincena: String(quincena),
       group,
       page: String(page),
-      limit: String(LIMIT),
+      limit: String(pageSize),
     });
     if (companyId) params.set("companyId", companyId);
     if (agentId) params.set("agentId", agentId);
     if (catalogId) params.set("catalogId", catalogId);
     return `/api/dashboard/payments?${params}`;
-  }, [year, month, quincena, group, page, companyId, agentId, catalogId]);
+  }, [year, month, quincena, group, page, pageSize, companyId, agentId, catalogId]);
 
   const { data, isLoading } = useSWR<PaymentsResponse>(key, fetcher, { keepPreviousData: true });
   const { data: companies = [] } = useSWR<{ id: number; name: string }[]>(
@@ -264,29 +265,18 @@ export function PaymentsReport({ initialGroup, year, month, quincena, initialCom
           <div className="text-center py-10 text-white/90 text-lg">{style.empty}</div>
         )}
 
-        {data && data.totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-white/10">
-            <span className="text-sm text-on-surface-variant">
-              {(page - 1) * LIMIT + 1}–{Math.min(page * LIMIT, data.total)} de {data.total}
-            </span>
-            <div className="flex gap-2">
-              <button
-                disabled={page === 1}
-                onClick={() => setPage((p) => p - 1)}
-                className="px-3 py-1 text-sm rounded border border-white/10 text-white/60 disabled:opacity-30 hover:bg-white/5 transition-colors"
-              >
-                Anterior
-              </button>
-              <button
-                disabled={page >= data.totalPages}
-                onClick={() => setPage((p) => p + 1)}
-                className="px-3 py-1 text-sm rounded border border-white/10 text-white/60 disabled:opacity-30 hover:bg-white/5 transition-colors"
-              >
-                Siguiente
-              </button>
-            </div>
-          </div>
-        )}
+        <Pagination
+          page={page}
+          pageSize={pageSize}
+          total={data?.total ?? 0}
+          totalPages={data?.totalPages ?? 0}
+          itemLabel={{ singular: "pago", plural: "pagos" }}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setPage(1);
+          }}
+        />
       </div>
     </div>
   );

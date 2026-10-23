@@ -1,14 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import useSWR from "swr";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { PageSkeleton } from "@/components/ui/Skeleton";
+import { DEFAULT_PAGE_SIZE, Pagination } from "@/components/ui/Pagination";
+import { useRowNavigation, useUrlFilters } from "@/hooks/useUrlFilters";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Plus, Search, X } from "lucide-react";
 import { useSidebar } from "@/components/layout/SidebarContext";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Lead } from "@/utils/interfaces/leads";
 import {
   CUSTOMER_STATUS,
@@ -22,7 +23,6 @@ import { UserRole } from "@/utils/constants/roles";
 import { canCreateLead, isGlobalRole } from "@/lib/permissions";
 import { fetcher } from "@/lib/fetcher";
 
-const LIMIT = 50;
 const FILTER_LABEL = "block text-sm text-on-surface-variant";
 
 interface LeadsResponse {
@@ -40,17 +40,21 @@ interface Props {
 export function LeadsListView({ type }: Props) {
   const { data: session, status } = useSession();
   const { setLeadsModalOpen, setOnLeadCreated } = useSidebar();
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const page = Math.max(1, Number(searchParams.get("page")) || 1);
-  const debouncedSearch = searchParams.get("q") ?? "";
+  const {
+    searchParams,
+    updateParams,
+    query: debouncedSearch,
+    search,
+    setSearch,
+    page,
+    pageSize,
+  } = useUrlFilters();
+  const openRow = useRowNavigation();
   const filterStatus = searchParams.get("status") ?? "ALL";
   const filterAgent = searchParams.get("agent") ?? "";
   const filterProduct = searchParams.get("product") ?? "";
   const dateFrom = searchParams.get("from") ?? "";
   const dateTo = searchParams.get("to") ?? "";
-  const [search, setSearch] = useState(debouncedSearch);
   const isAdmin = session?.user?.role === UserRole.ADMIN;
   // Un agente solo ve sus propios leads: no necesita filtrar por agente.
   const canFilterAgent = status === "authenticated" && session?.user?.role !== UserRole.AGENT;
@@ -62,39 +66,9 @@ export function LeadsListView({ type }: Props) {
   const basePath = isLead ? "/leads" : "/customers";
   const statusOptions = isLead ? STATUS : CUSTOMER_STATUS;
 
-  const updateParams = useCallback(
-    (patch: Record<string, string>) => {
-      const params = new URLSearchParams(searchParams);
-      for (const [key, value] of Object.entries(patch)) {
-        if (value && value !== "ALL") params.set(key, value);
-        else params.delete(key);
-      }
-      if (!("page" in patch) || patch.page === "1") params.delete("page");
-      const qs = params.toString();
-      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-    },
-    [searchParams, pathname, router],
-  );
-
-  // Debounce search: la URL se actualiza en el callback del timer, no directo en el efecto
-  useEffect(() => {
-    if (search === debouncedSearch) return;
-    const t = setTimeout(() => updateParams({ q: search }), 300);
-    return () => clearTimeout(t);
-  }, [search, debouncedSearch, updateParams]);
-
-  function openRow(e: React.MouseEvent, href: string) {
-    if ((e.target as HTMLElement).closest("a")) return;
-    if (e.metaKey || e.ctrlKey || e.button === 1) {
-      window.open(href, "_blank", "noopener");
-      return;
-    }
-    router.push(href);
-  }
-
   const swrKey = useMemo(() => {
     if (status !== "authenticated") return null;
-    const params = new URLSearchParams({ type, page: String(page), limit: String(LIMIT) });
+    const params = new URLSearchParams({ type, page: String(page), limit: String(pageSize) });
     if (debouncedSearch) params.set("search", debouncedSearch);
     if (filterStatus !== "ALL") params.set("status", filterStatus);
     if (filterAgent) params.set("agentId", filterAgent);
@@ -102,7 +76,7 @@ export function LeadsListView({ type }: Props) {
     if (dateFrom) params.set("dateFrom", dateFrom);
     if (dateTo) params.set("dateTo", dateTo);
     return `/api/leads?${params}`;
-  }, [status, type, page, debouncedSearch, filterStatus, filterAgent, filterProduct, dateFrom, dateTo]);
+  }, [status, type, page, pageSize, debouncedSearch, filterStatus, filterAgent, filterProduct, dateFrom, dateTo]);
 
   const { data, isLoading, mutate } = useSWR<LeadsResponse>(swrKey, fetcher, {
     keepPreviousData: true,
@@ -442,36 +416,17 @@ export function LeadsListView({ type }: Props) {
         )}
 
         {/* Paginación */}
-        {total > 0 && (
-          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-t border-white/10">
-            <span className="text-sm text-on-surface-variant">
-              {(page - 1) * LIMIT + 1}–{Math.min(page * LIMIT, total)} de {total}{" "}
-              {label.toLowerCase()}
-              {total !== 1 ? "s" : ""}
-            </span>
-            {totalPages > 1 && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-on-surface-variant">
-                  Página {page} de {totalPages}
-                </span>
-                <button
-                  disabled={page === 1}
-                  onClick={() => updateParams({ page: String(page - 1) })}
-                  className="px-3 py-1 text-sm rounded border border-white/10 text-white/60 disabled:opacity-30 hover:bg-white/5 transition-colors"
-                >
-                  Anterior
-                </button>
-                <button
-                  disabled={page >= totalPages}
-                  onClick={() => updateParams({ page: String(page + 1) })}
-                  className="px-3 py-1 text-sm rounded border border-white/10 text-white/60 disabled:opacity-30 hover:bg-white/5 transition-colors"
-                >
-                  Siguiente
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+        <Pagination
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          totalPages={totalPages}
+          itemLabel={{ singular: label.toLowerCase(), plural: `${label.toLowerCase()}s` }}
+          onPageChange={(p) => updateParams({ page: String(p) })}
+          onPageSizeChange={(size) =>
+            updateParams({ size: size === DEFAULT_PAGE_SIZE ? "" : String(size) })
+          }
+        />
       </div>
     </div>
   );

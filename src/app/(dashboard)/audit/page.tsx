@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { PageSkeleton } from "@/components/ui/Skeleton";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { DEFAULT_PAGE_SIZE, Pagination } from "@/components/ui/Pagination";
 import { CustomSelect } from "@/components/ui/Select";
 import { roleLabel, UserRole } from "@/utils/constants/roles";
 import { fetcher } from "@/lib/fetcher";
@@ -80,6 +81,7 @@ export default function AuditPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [action, setAction] = useState("");
 
   useEffect(() => {
@@ -90,7 +92,7 @@ export default function AuditPage() {
 
   const key =
     status === "authenticated" && session.user.role === UserRole.ADMIN
-      ? `/api/audit-logs?page=${page}${action ? `&action=${action}` : ""}`
+      ? `/api/audit-logs?page=${page}&limit=${pageSize}${action ? `&action=${action}` : ""}`
       : null;
 
   const { data, isLoading } = useSWR<AuditLogResponse>(key, fetcher);
@@ -101,10 +103,7 @@ export default function AuditPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Auditoría"
-        description={`${data?.total ?? 0} eventos registrados`}
-      />
+      <PageHeader title="Auditoría" />
 
       <div className="flex flex-col sm:flex-row gap-3">
         <CustomSelect
@@ -174,29 +173,20 @@ export default function AuditPage() {
             No hay eventos registrados
           </div>
         )}
-      </div>
 
-      {data && data.totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page <= 1}
-            className="px-3 py-1.5 rounded-lg bg-white/5 text-white/60 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            Anterior
-          </button>
-          <span className="text-on-surface-variant text-lg">
-            Página {data.page} de {data.totalPages}
-          </span>
-          <button
-            onClick={() => setPage((p) => Math.min(data.totalPages, p + 1))}
-            disabled={page >= data.totalPages}
-            className="px-3 py-1.5 rounded-lg bg-white/5 text-white/60 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            Siguiente
-          </button>
-        </div>
-      )}
+        <Pagination
+          page={page}
+          pageSize={pageSize}
+          total={data?.total ?? 0}
+          totalPages={data?.totalPages ?? 0}
+          itemLabel={{ singular: "evento", plural: "eventos" }}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setPage(1);
+          }}
+        />
+      </div>
     </div>
   );
 }
