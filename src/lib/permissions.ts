@@ -90,24 +90,60 @@ export function canTransferLead(role: string): boolean {
   return role === UserRole.ADMIN || isGlobalCustomerService(role);
 }
 
+type RoleScope =
+  | { kind: "all" }
+  | { kind: "company"; companyId: number }
+  | { kind: "team"; teamId: number }
+  | { kind: "self"; userId: number };
+
+function getRoleScope(user: ScopeUser): RoleScope | null {
+  switch (user.role) {
+    case UserRole.ADMIN:
+    case UserRole.CUSTOMER_SERVICE_HOLDING:
+      return { kind: "all" };
+    case UserRole.SUPERVISOR:
+    case UserRole.CUSTOMER_SERVICE:
+      return { kind: "company", companyId: Number(user.companyId) };
+    case UserRole.COACH:
+      return { kind: "team", teamId: Number(user.teamId) };
+    case UserRole.AGENT:
+      return { kind: "self", userId: Number(user.id) };
+    default:
+      return null;
+  }
+}
+
 /**
  * Returns a Prisma WHERE fragment scoping a Lead/Customer list query to what
  * the user is allowed to see. Returns null when the role has no list access.
  */
 export function buildScopeFilter(user: ScopeUser): Prisma.LeadWhereInput | null {
-  switch (user.role) {
-    case UserRole.ADMIN:
-    case UserRole.CUSTOMER_SERVICE_HOLDING:
+  const scope = getRoleScope(user);
+  if (!scope) return null;
+  switch (scope.kind) {
+    case "all":
       return {};
-    case UserRole.SUPERVISOR:
-    case UserRole.CUSTOMER_SERVICE:
-      return { companyId: Number(user.companyId) };
-    case UserRole.COACH:
-      return { assignedTo: { teamId: Number(user.teamId) } };
-    case UserRole.AGENT:
-      return { assignedToId: Number(user.id) };
-    default:
-      return null;
+    case "company":
+      return { companyId: scope.companyId };
+    case "team":
+      return { assignedTo: { teamId: scope.teamId } };
+    case "self":
+      return { assignedToId: scope.userId };
+  }
+}
+
+export function buildTeamScopeFilter(user: ScopeUser): Prisma.TeamWhereInput | null {
+  const scope = getRoleScope(user);
+  if (!scope) return null;
+  switch (scope.kind) {
+    case "all":
+      return {};
+    case "company":
+      return { companyId: scope.companyId };
+    case "team":
+      return { id: scope.teamId };
+    case "self":
+      return { id: Number(user.teamId) };
   }
 }
 
@@ -120,19 +156,17 @@ export function canAccessLead(
   user: ScopeUser,
   resource: { companyId: number; teamId: number; assignedToId: number },
 ): boolean {
-  switch (user.role) {
-    case UserRole.ADMIN:
-    case UserRole.CUSTOMER_SERVICE_HOLDING:
+  const scope = getRoleScope(user);
+  if (!scope) return false;
+  switch (scope.kind) {
+    case "all":
       return true;
-    case UserRole.SUPERVISOR:
-    case UserRole.CUSTOMER_SERVICE:
-      return resource.companyId === Number(user.companyId);
-    case UserRole.COACH:
-      return resource.teamId === Number(user.teamId);
-    case UserRole.AGENT:
-      return resource.assignedToId === Number(user.id);
-    default:
-      return false;
+    case "company":
+      return resource.companyId === scope.companyId;
+    case "team":
+      return resource.teamId === scope.teamId;
+    case "self":
+      return resource.assignedToId === scope.userId;
   }
 }
 

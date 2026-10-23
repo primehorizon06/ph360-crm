@@ -2,14 +2,22 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth, forbidden, badRequest } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
+import { buildTeamScopeFilter } from "@/lib/permissions";
 import { logAudit, getRequestMeta } from "@/lib/audit";
 
-export const GET = withAuth(async (req) => {
+export const GET = withAuth(async (req, session) => {
+  const scope = buildTeamScopeFilter(session.user);
+  if (!scope) return forbidden();
+
   const { searchParams } = new URL(req.url);
   const companyId = searchParams.get("companyId");
+  if (companyId && !/^\d+$/.test(companyId))
+    return badRequest("Franquicia inválida");
 
   const teams = await prisma.team.findMany({
-    where: companyId ? { companyId: Number(companyId) } : undefined,
+    where: {
+      AND: [scope, companyId ? { companyId: Number(companyId) } : {}],
+    },
     select: {
       id: true,
       name: true,
