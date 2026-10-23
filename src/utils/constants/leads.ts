@@ -59,7 +59,7 @@ export const LEAD_FIELDS = [
   { label: "Apellidos", name: "lastName", type: "text", required: false },
   { label: "Dirección", name: "address", type: "text", required: false },
   { label: "Ciudad", name: "city", type: "text", required: false },
-  { label: "Estado/Provincia", name: "state", type: "text", required: false },
+  { label: "Estado", name: "state", type: "select", required: false },
   { label: "Código Postal", name: "zipCode", type: "text", required: false },
   { label: "Email", name: "email", type: "email", required: false },
   {

@@ -2,6 +2,7 @@ import { Lead } from "@/utils/interfaces/leads";
 import { InfoField } from "../InfoField";
 import { SensitiveField } from "../SensitiveField";
 import { calculateAge } from "@/utils/helpers/format";
+import { stateLabel } from "@/utils/constants/usStates";
 
 interface Props {
   lead: Lead;
@@ -58,7 +59,7 @@ export function PersonalTab({ lead }: Props) {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <InfoField label="Dirección" value={lead.address} />
           <InfoField label="Ciudad" value={lead.city} />
-          <InfoField label="Estado" value={lead.state} />
+          <InfoField label="Estado" value={stateLabel(lead.state) ?? lead.state} />
           <InfoField label="Código Postal" value={lead.zipCode} />
         </div>
       </div>

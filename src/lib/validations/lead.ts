@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { calculateAge } from "@/utils/helpers/format";
+import { US_STATE_CODES } from "@/utils/constants/usStates";
 
 export const leadObjectSchema = z.object({
   firstName: z.string().min(2, "Mínimo 2 caracteres"),
@@ -20,7 +21,9 @@ export const leadObjectSchema = z.object({
     .or(z.literal("")),
   address: z.string().optional().or(z.literal("")),
   city: z.string().optional().or(z.literal("")),
-  state: z.string().optional().or(z.literal("")),
+  state: z
+    .enum(["", ...US_STATE_CODES], { message: "Selecciona un estado de la lista" })
+    .optional(),
   zipCode: z.string().optional().or(z.literal("")),
   email: z.string().email("Email inválido").optional().or(z.literal("")),
   birthDate: z.string().optional().or(z.literal("")),

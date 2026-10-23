@@ -7,6 +7,7 @@ import { leadSchema, LeadFormData } from "@/lib/validations/lead";
 import { X } from "lucide-react";
 import { LEAD_FIELDS, STATUS } from "@/utils/constants/leads";
 import { CustomSelect } from "../ui/Select";
+import { LeadFieldInput } from "./LeadFieldInput";
 import { formatPhone, formatSsn, calculateAge } from "@/utils/helpers/format";
 
 interface Props {
@@ -141,11 +142,7 @@ export function LeadModal({ onClose, onSave }: Props) {
                       <span className="text-red-400 ml-1">*</span>
                     )}
                   </label>
-                  <input
-                    type={field.type}
-                    {...register(field.name as keyof LeadFormData)}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50"
-                  />
+                  <LeadFieldInput field={field} register={register} control={control} idPrefix="newLead" />
                   {errors[field.name as keyof LeadFormData] && (
                     <p className="text-red-400 text-sm mt-1">
                       {errors[field.name as keyof LeadFormData]?.message}

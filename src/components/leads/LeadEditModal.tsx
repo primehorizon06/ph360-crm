@@ -9,6 +9,8 @@ import { leadSchema, LeadFormData } from "@/lib/validations/lead";
 import { X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { CustomSelect } from "../ui/Select";
+import { LeadFieldInput } from "./LeadFieldInput";
+import { toKnownStateCode } from "@/utils/constants/usStates";
 import { Props } from "@/utils/interfaces/leadEditModal";
 import { CUSTOMER_STATUS, LEAD_FIELDS, STATUS } from "@/utils/constants/leads";
 import { formatPhone, formatSsn, calculateAge } from "@/utils/helpers/format";
@@ -31,7 +33,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
     handleSubmit,
     control,
     setValue,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, dirtyFields },
   } = useForm<LeadFormData>({
     resolver: zodResolver(leadSchema),
     defaultValues: {
@@ -42,7 +44,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
       ssn: "",
       address: lead.address ?? "",
       city: lead.city ?? "",
-      state: lead.state ?? "",
+      state: toKnownStateCode(lead.state),
       zipCode: lead.zipCode ?? "",
       email: lead.email ?? "",
       birthDate: lead.birthDate ? lead.birthDate.split("T")[0] : "",
@@ -87,11 +89,12 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
     setValue("ssn", formatSsn(e.target.value), { shouldValidate: true });
   }
 
-  async function onSubmit({ ssn, ...data }: LeadFormData) {
+  async function onSubmit({ ssn, state, ...data }: LeadFormData) {
     const ssnPatch = removeSsn ? { ssn: "" } : ssn ? { ssn } : {};
+    const statePatch = dirtyFields.state ? { state } : {};
     const body = isCustomer
-      ? { ...data, ...ssnPatch, customerStatus, companyId, teamId, assignedToId }
-      : { ...data, ...ssnPatch, status, companyId, teamId, assignedToId };
+      ? { ...data, ...ssnPatch, ...statePatch, customerStatus, companyId, teamId, assignedToId }
+      : { ...data, ...ssnPatch, ...statePatch, status, companyId, teamId, assignedToId };
 
     const res = await fetch(`/api/leads/${lead.id}`, {
       method: "PATCH",
@@ -237,11 +240,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
                         <span className="text-red-400 ml-1">*</span>
                       )}
                     </label>
-                    <input
-                      type={field.type}
-                      {...register(field.name as keyof LeadFormData)}
-                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50"
-                    />
+                    <LeadFieldInput field={field} register={register} control={control} idPrefix="editLead" />
                     {errors[field.name as keyof LeadFormData] && (
                       <p className="text-red-400 text-sm mt-1">
                         {errors[field.name as keyof LeadFormData]?.message}
