@@ -23,7 +23,7 @@ export function canSuspendLead(role: string): boolean {
 }
 
 export function canResubmitProduct(role: string): boolean {
-  return role === UserRole.COACH || role === UserRole.ADMIN;
+  return role === UserRole.AGENT || role === UserRole.COACH || role === UserRole.ADMIN;
 }
 
 // ── Customer Service ───────────────────────────────────────────────────────────

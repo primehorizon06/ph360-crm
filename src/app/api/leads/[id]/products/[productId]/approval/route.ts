@@ -2,7 +2,7 @@ import { NextResponse, after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuthParams, forbidden, badRequest, notFound } from "@/lib/api";
 import { UserRole } from "@/utils/constants/roles";
-import { canAccessLead } from "@/lib/permissions";
+import { canAccessLead, canResubmitProduct } from "@/lib/permissions";
 import { findLeadProduct } from "@/lib/leadService";
 import { applyApprovalDecision, notifyReviewersOfResubmit } from "@/lib/approvalService";
 import { logAudit, getRequestMeta, auditActor } from "@/lib/audit";
@@ -20,23 +20,28 @@ export const PATCH = withAuthParams<{ id: string; productId: string }>(
     if (!match) return notFound("Producto no encontrado");
     if (!canAccessLead(session.user, match.lead)) return forbidden();
 
-    // ── RESUBMIT — solo agente o admin ───────────────────────────────────────
+    const approval = await prisma.productApproval.findUnique({
+      where: { productId: Number(productId) },
+    });
+
+    if (!approval) return notFound("Aprobación no encontrada");
+
+    // ── RESUBMIT — agente, coach o admin ─────────────────────────────────────
     if (action === "RESUBMIT") {
-      if (
-        session.user.role !== UserRole.AGENT &&
-        session.user.role !== UserRole.ADMIN
-      )
-        return forbidden();
-
-      await prisma.productApproval.update({
-        where: { productId: Number(productId) },
-        data: { status: "PENDING", note: null, approvedAt: null },
+      if (!canResubmitProduct(session.user.role)) return forbidden();
+      const resubmitted = await prisma.$transaction(async (tx) => {
+        const { count } = await tx.productApproval.updateMany({
+          where: { productId: Number(productId), status: "REJECTED" },
+          data: { status: "PENDING", note: null, approvedAt: null },
+        });
+        if (count === 0) return false;
+        await tx.product.update({
+          where: { id: Number(productId) },
+          data: { status: "ACTIVE" },
+        });
+        return true;
       });
-
-      await prisma.product.update({
-        where: { id: Number(productId) },
-        data: { status: "ACTIVE" },
-      });
+      if (!resubmitted) return badRequest("Solo se puede reenviar un producto rechazado");
 
       await notifyReviewersOfResubmit(Number(id), Number(productId));
 
@@ -54,19 +59,18 @@ export const PATCH = withAuthParams<{ id: string; productId: string }>(
     if (action === "REJECT" && !note?.trim())
       return badRequest("El motivo de rechazo es requerido");
 
-    const approval = await prisma.productApproval.findUnique({
-      where: { productId: Number(productId) },
-    });
-
-    if (!approval) return notFound("Aprobación no encontrada");
-
-    const updated = await prisma.productApproval.update({
-      where: { productId: Number(productId) },
+    const { count } = await prisma.productApproval.updateMany({
+      where: { productId: Number(productId), status: "PENDING" },
       data: {
         status: action === "APPROVE" ? "APPROVED" : "REJECTED",
         note: action === "REJECT" ? note : null,
         approvedAt: action === "APPROVE" ? new Date() : null,
       },
+    });
+    if (count === 0) return badRequest("Este producto ya fue revisado");
+
+    const updated = await prisma.productApproval.findUniqueOrThrow({
+      where: { productId: Number(productId) },
     });
 
     await applyApprovalDecision({
