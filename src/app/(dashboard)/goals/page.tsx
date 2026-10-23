@@ -81,7 +81,7 @@ export default function GoalsPage() {
     "text-sm px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white focus:outline-none focus:border-cyan-500/50 cursor-pointer";
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 sm:px-8 pt-8 pb-16 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>

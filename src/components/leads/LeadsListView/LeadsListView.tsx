@@ -137,7 +137,7 @@ export function LeadsListView({ type }: Props) {
   if (isLoading && leads.length === 0) return <Loading />;
 
   return (
-    <div className="w-full  mx-auto px-4 sm:px-8 pt-8 pb-16 space-y-6">
+    <div className="space-y-6">
       <PageHeader
         title={isLead ? "Leads" : "Clientes"}
         description={`${total} ${label.toLowerCase()}${total !== 1 ? "s" : ""}`}

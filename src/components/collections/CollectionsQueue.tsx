@@ -352,7 +352,7 @@ export function CollectionsQueue() {
   if (isLoading && !data) return <Loading />;
 
   return (
-    <div className="w-full mx-auto px-4 sm:px-8 pt-8 pb-16 space-y-6">
+    <div className="space-y-6">
       <PageHeader title="Cobros" description="Pagos confirmados de todas las franquicias" />
 
       {/* Pestañas */}

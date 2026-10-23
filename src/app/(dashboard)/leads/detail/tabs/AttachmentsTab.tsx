@@ -140,7 +140,7 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
 
       {/* Filters */}
       <div className="bg-surface border border-white/10 rounded-xl p-4 space-y-3">
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="space-y-1">
             <label className="flex items-center gap-1.5 text-sm text-on-surface-variant">
               <Calendar size={11} />

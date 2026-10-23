@@ -15,7 +15,7 @@ export function PersonalTab({ lead }: Props) {
         <h2 className="text-white font-semibold mb-4 pb-3 border-b border-white/10">
           Información Personal
         </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <InfoField label="Nombres" value={lead.firstName} />
           <InfoField label="Apellidos" value={lead.lastName} />
           <InfoField label="Seguro social" value={lead.ssn} />
@@ -39,7 +39,7 @@ export function PersonalTab({ lead }: Props) {
         <h2 className="text-white font-semibold mb-4 pb-3 border-b border-white/10">
           Contacto
         </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <InfoField label="Teléfono 1" value={lead.phone1} />
           <InfoField label="Teléfono 2" value={lead.phone2} />
           <InfoField label="Hora de contacto" value={lead.contactTime} />
@@ -50,7 +50,7 @@ export function PersonalTab({ lead }: Props) {
         <h2 className="text-white font-semibold mb-4 pb-3 border-b border-white/10">
           Dirección
         </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <InfoField label="Dirección" value={lead.address} />
           <InfoField label="Ciudad" value={lead.city} />
           <InfoField label="Estado" value={lead.state} />
@@ -62,7 +62,7 @@ export function PersonalTab({ lead }: Props) {
         <h2 className="text-white font-semibold mb-4 pb-3 border-b border-white/10">
           Registro
         </h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <InfoField
             label="Creado"
             value={new Date(lead.createdAt).toLocaleString("es-CO")}

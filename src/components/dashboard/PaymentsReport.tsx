@@ -115,7 +115,7 @@ export function PaymentsReport({ initialGroup, year, month, quincena, initialCom
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-8 pt-8 pb-16 space-y-6">
+    <div className="space-y-6">
       <div className="space-y-1">
         <Link
           href="/"
