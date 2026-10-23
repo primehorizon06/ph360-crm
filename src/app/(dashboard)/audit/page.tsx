@@ -53,6 +53,7 @@ const ACTIONS = [
   "TEAM_CREATED",
   "TEAM_UPDATED",
   "TEAM_DELETED",
+  "ATTACHMENTS_UPLOADED",
 ];
 
 const ACTION_COLORS: Record<string, string> = {

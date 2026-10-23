@@ -9,6 +9,7 @@ import { CustomSelect } from "@/components/ui/Select";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import { NoteFormData, noteSchema, Props } from "@/utils/interfaces/notes";
 import { NOTE_TITLES } from "@/utils/constants/notes";
+import { ATTACHMENT_LIMITS_HINT } from "@/lib/fileValidation";
 
 export function NoteModal({ leadId, onClose, onSave }: Props) {
   const [files, setFiles] = useState<File[]>([]);
@@ -128,8 +129,9 @@ export function NoteModal({ leadId, onClose, onSave }: Props) {
 
           <div>
             <label className="text-sm text-on-surface-variant mb-1 block">
-              Adjuntos (imágenes y PDF)
+              Adjuntos
             </label>
+            <p className="text-sm text-on-surface-variant mb-2">{ATTACHMENT_LIMITS_HINT}</p>
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}

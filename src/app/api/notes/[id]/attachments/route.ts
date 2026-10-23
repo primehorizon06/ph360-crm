@@ -1,57 +1,42 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withAuthParams, badRequest, notFound, forbidden } from "@/lib/api";
+import { withAuthParams, notFound, forbidden } from "@/lib/api";
 import { canAccessLead } from "@/lib/permissions";
-import { sniffAttachmentType, MAX_ATTACHMENT_SIZE } from "@/lib/fileValidation";
-import { saveAttachmentFile, deleteAttachmentFile } from "@/lib/storage";
+import { logAudit, getRequestMeta, auditActor } from "@/lib/audit";
+import {
+  readAttachmentUploads,
+  withStoredAttachments,
+  attachmentResponse,
+} from "@/lib/noteAttachments";
 
 export const POST = withAuthParams<{ id: string }>(async (req, session, { id }) => {
+  const noteId = Number(id);
   const note = await prisma.note.findUnique({
-    where: { id: Number(id) },
-    select: { lead: { select: { companyId: true, teamId: true, assignedToId: true } } },
+    where: { id: noteId },
+    select: {
+      leadId: true,
+      lead: { select: { companyId: true, teamId: true, assignedToId: true } },
+    },
   });
   if (!note) return notFound("Nota no encontrada");
   if (!canAccessLead(session.user, note.lead)) return forbidden();
 
-  const formData = await req.formData();
-  const files = formData.getAll("files") as File[];
+  const uploads = await readAttachmentUploads(req);
 
-  if (!files.length) return badRequest("No se enviaron archivos");
+  const attachments = await withStoredAttachments(`note-${noteId}`, uploads, (stored) =>
+    prisma.$transaction(
+      stored.map((data) => prisma.noteAttachment.create({ data: { ...data, noteId } })),
+    ),
+  );
 
-  const attachments = [];
+  await logAudit({
+    action: "ATTACHMENTS_UPLOADED",
+    actor: auditActor(session.user),
+    entityType: "Lead",
+    entityId: note.leadId,
+    metadata: { noteId, count: uploads.length, mimeTypes: uploads.map((u) => u.mime) },
+    ...getRequestMeta(req),
+  });
 
-  for (const file of files) {
-    if (file.size > MAX_ATTACHMENT_SIZE)
-      return badRequest(`Archivo demasiado grande: ${file.name}. Máximo 10MB`);
-
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    const detected = sniffAttachmentType(buffer);
-    if (!detected)
-      return badRequest(`Tipo no permitido: ${file.name}. Solo JPEG, PNG, WebP o PDF`);
-
-    const filename = `note-${id}-${Date.now()}-${Math.random().toString(36).slice(2)}.${detected.ext}`;
-    const url = await saveAttachmentFile(filename, buffer, detected.mime);
-
-    let attachment;
-    try {
-      attachment = await prisma.noteAttachment.create({
-        data: {
-          noteId: Number(id),
-          name: file.name,
-          url,
-          mimeType: detected.mime,
-          size: file.size,
-        },
-      });
-    } catch (err) {
-      await deleteAttachmentFile(filename).catch(() => {});
-      throw err;
-    }
-
-    attachments.push({ ...attachment, url: `/api/attachments/${attachment.id}` });
-  }
-
-  return NextResponse.json(attachments, { status: 201 });
+  return NextResponse.json(attachments.map(attachmentResponse), { status: 201 });
 });

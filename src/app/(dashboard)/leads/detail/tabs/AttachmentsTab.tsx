@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 import { Loading } from "@/components/ui/Loading";
 import { AttachmentPreview } from "@/components/notes/AttachmentPreview";
+import { ATTACHMENT_LIMITS_HINT } from "@/lib/fileValidation";
 import {
   Attachment,
   PropsAttachmentsTab,
@@ -93,15 +94,22 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
     const formData = new FormData();
     files.forEach((f) => formData.append("files", f));
 
-    const res = await fetch(`/api/leads/${leadId}/attachments`, {
-      method: "POST",
-      body: formData,
-    });
+    let res: Response;
+    try {
+      res = await fetch(`/api/leads/${leadId}/attachments`, {
+        method: "POST",
+        body: formData,
+      });
+    } catch {
+      setUploading(false);
+      setUploadError("No se pudo conectar. Revisa tu conexión e intenta de nuevo.");
+      return;
+    }
 
     setUploading(false);
 
     if (!res.ok) {
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       setUploadError(data.error ?? "Error al subir archivos");
       return;
     }
@@ -204,6 +212,7 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
           <Paperclip size={16} />
           Seleccionar archivos
         </button>
+        <p className="text-sm text-on-surface-variant">{ATTACHMENT_LIMITS_HINT}</p>
         <input
           ref={fileInputRef}
           type="file"
@@ -244,7 +253,7 @@ export function AttachmentsTab({ leadId }: PropsAttachmentsTab) {
             ))}
 
             {uploadError && (
-              <p className="text-red-400 text-sm px-1">{uploadError}</p>
+              <p role="alert" className="text-error text-sm px-1">{uploadError}</p>
             )}
 
             <button

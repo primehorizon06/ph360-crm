@@ -1,8 +1,8 @@
-// Detección de tipo de archivo por firma binaria (magic bytes), no por
-// Content-Type ni por el nombre del archivo, ambos controlables por el cliente.
-
 export const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
-export const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
+export const MAX_ATTACHMENT_SIZE = 5 * 1024 * 1024;
+export const MAX_ATTACHMENT_FILES = 5;
+export const MAX_ATTACHMENT_TOTAL_SIZE = MAX_ATTACHMENT_SIZE * MAX_ATTACHMENT_FILES;
+export const ATTACHMENT_LIMITS_HINT = `Hasta ${MAX_ATTACHMENT_FILES} archivos de ${MAX_ATTACHMENT_SIZE / 1024 / 1024}MB cada uno (JPEG, PNG, WebP o PDF)`;
 
 type DetectedFile = { mime: string; ext: string };
 
