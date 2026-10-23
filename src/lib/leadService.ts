@@ -5,22 +5,23 @@ import { isCollectableProduct } from "@/lib/collections";
 
 const MAX_INT4 = 2_147_483_647;
 
-const DUPLICATE_OWNER_SELECT = {
-  company: { select: { name: true } },
-} as const;
-
-type DuplicateOwner = {
-  company: { name: string };
-};
-
 export function findDuplicatePhone(excludeLeadId: number | null, phone: string) {
   return prisma.lead.findFirst({
     where: {
       ...(excludeLeadId !== null ? { id: { not: excludeLeadId } } : {}),
       OR: [{ phone1: phone }, { phone2: phone }],
     },
-    select: { phone1: true, ...DUPLICATE_OWNER_SELECT },
+    select: { id: true },
   });
+}
+
+export function uniqueViolationMessage(error: unknown): string | null {
+  if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2002") return null;
+  const target = error.meta?.target;
+  const fields = (Array.isArray(target) ? target : [target]).map(String);
+  if (fields.some((f) => f.includes("ssn"))) return "El seguro social ya está registrado";
+  if (fields.some((f) => f.includes("phone"))) return "El teléfono ya está registrado";
+  return null;
 }
 
 export function findDuplicateSsn(excludeLeadId: number | null, encryptedSsn: string) {
@@ -29,14 +30,8 @@ export function findDuplicateSsn(excludeLeadId: number | null, encryptedSsn: str
       ...(excludeLeadId !== null ? { id: { not: excludeLeadId } } : {}),
       ssn: encryptedSsn,
     },
-    select: DUPLICATE_OWNER_SELECT,
+    select: { id: true },
   });
-}
-
-export function describeDuplicateOwner(dup: DuplicateOwner) {
-  return {
-    franquicia: dup.company.name,
-  };
 }
 
 export async function resolveLeadOwnership(assignedToId: number) {

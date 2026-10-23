@@ -7,7 +7,7 @@ import { leadSchema, LeadFormData } from "@/lib/validations/lead";
 import { X } from "lucide-react";
 import { LEAD_FIELDS, STATUS } from "@/utils/constants/leads";
 import { CustomSelect } from "../ui/Select";
-import { formatPhone, formatSsn, formatDuplicateOwner, calculateAge } from "@/utils/helpers/format";
+import { formatPhone, formatSsn, calculateAge } from "@/utils/helpers/format";
 
 interface Props {
   onClose: () => void;
@@ -49,10 +49,7 @@ export function LeadModal({ onClose, onSave }: Props) {
     });
     if (!res.ok) {
       const json = await res.json();
-      const detail = formatDuplicateOwner(json.registeredTo);
-      toast.error(
-        detail ? `${json.error ?? "Error al guardar"} — ${detail}` : json.error ?? "Error al guardar",
-      );
+      toast.error(json.error ?? "Error al guardar");
       return;
     }
     toast.success("Lead creado exitosamente");

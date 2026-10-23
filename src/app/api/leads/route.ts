@@ -11,8 +11,8 @@ import { maskSsn } from "@/utils/helpers/format";
 import {
   findDuplicatePhone,
   findDuplicateSsn,
-  describeDuplicateOwner,
   buildLeadSearchFilter,
+  uniqueViolationMessage,
 } from "@/lib/leadService";
 
 const LIMIT_DEFAULT = 50;
@@ -149,39 +149,47 @@ export const POST = withAuth(async (req, session) => {
 
   const existingPhone = await findDuplicatePhone(null, phone1);
   if (existingPhone)
-    return conflict("El teléfono ya está registrado", {
-      registeredTo: describeDuplicateOwner(existingPhone),
-    });
+    return conflict("El teléfono ya está registrado");
+
+  if (phone2) {
+    const existingPhone2 = await findDuplicatePhone(null, phone2);
+    if (existingPhone2) return conflict("El teléfono 2 ya está registrado");
+  }
 
   const encryptedSsn = ssn ? encryptDeterministic(ssn) : null;
 
   if (encryptedSsn) {
     const existingSsn = await findDuplicateSsn(null, encryptedSsn);
     if (existingSsn)
-      return conflict("El seguro social ya está registrado", {
-        registeredTo: describeDuplicateOwner(existingSsn),
-      });
+      return conflict("El seguro social ya está registrado");
   }
 
-  const lead = await prisma.lead.create({
-    data: {
-      firstName,
-      lastName: lastName || null,
-      phone1,
-      phone2: phone2 || null,
-      ssn: encryptedSsn,
-      address: address || null,
-      city: city || null,
-      state: state || null,
-      zipCode: zipCode || null,
-      email: email || null,
-      birthDate: birthDate ? new Date(birthDate) : null,
-      contactTime: contactTime || null,
-      companyId,
-      teamId,
-      assignedToId,
-    },
-  });
+  let lead;
+  try {
+    lead = await prisma.lead.create({
+      data: {
+        firstName,
+        lastName: lastName || null,
+        phone1,
+        phone2: phone2 || null,
+        ssn: encryptedSsn,
+        address: address || null,
+        city: city || null,
+        state: state || null,
+        zipCode: zipCode || null,
+        email: email || null,
+        birthDate: birthDate ? new Date(birthDate) : null,
+        contactTime: contactTime || null,
+        companyId,
+        teamId,
+        assignedToId,
+      },
+    });
+  } catch (error) {
+    const message = uniqueViolationMessage(error);
+    if (message) return conflict(message);
+    throw error;
+  }
 
   await logAudit({
     action: "LEAD_CREATED",

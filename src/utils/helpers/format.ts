@@ -61,11 +61,6 @@ export function formatTotalAmount(installments: Installment[]): string {
   });
 }
 
-export function formatDuplicateOwner(info?: { franquicia: string } | null): string {
-  if (!info) return "";
-  return `Franquicia: ${info.franquicia}`;
-}
-
 export function calculateAge(birthDate: string): number | null {
   if (!birthDate) return null;
   const birth = new Date(birthDate);

@@ -15,8 +15,8 @@ import { maskSsn } from "@/utils/helpers/format";
 import {
   findDuplicatePhone,
   findDuplicateSsn,
-  describeDuplicateOwner,
   resolveLeadOwnership,
+  uniqueViolationMessage,
 } from "@/lib/leadService";
 
 const leadPatchSchema = leadObjectSchema.partial().passthrough();
@@ -166,42 +166,35 @@ export const PATCH = withAuthParams<{ id: string }>(
 
     if (body.phone1 && body.phone1 !== existing.phone1) {
       const dup = await findDuplicatePhone(leadId, body.phone1);
-      if (dup)
-        return conflict(
-          dup.phone1 === body.phone1
-            ? "El teléfono ya está registrado"
-            : "El teléfono 1 ya está registrado como teléfono 2 en otro cliente",
-          { registeredTo: describeDuplicateOwner(dup) },
-        );
+      if (dup) return conflict("El teléfono ya está registrado");
     }
 
     if (body.phone2 && body.phone2 !== existing.phone2) {
       const dup = await findDuplicatePhone(leadId, body.phone2);
-      if (dup)
-        return conflict(
-          dup.phone1 === body.phone2
-            ? "El teléfono 2 ya está registrado como teléfono 1 en otro cliente"
-            : "El teléfono 2 ya está registrado en otro cliente",
-          { registeredTo: describeDuplicateOwner(dup) },
-        );
+      if (dup) return conflict("El teléfono 2 ya está registrado");
     }
 
     if (body.ssn && body.ssn !== decrypt(existing.ssn)) {
       const dup = await findDuplicateSsn(leadId, encryptDeterministic(body.ssn));
       if (dup)
-        return conflict("El seguro social ya está registrado", {
-          registeredTo: describeDuplicateOwner(dup),
-        });
+        return conflict("El seguro social ya está registrado");
     }
 
-    const lead = await prisma.lead.update({
-      where: { id: leadId },
-      data,
-      include: {
-        company: { select: { id: true, name: true } },
-        assignedTo: { select: { id: true, name: true } },
-      },
-    });
+    let lead;
+    try {
+      lead = await prisma.lead.update({
+        where: { id: leadId },
+        data,
+        include: {
+          company: { select: { id: true, name: true } },
+          assignedTo: { select: { id: true, name: true } },
+        },
+      });
+    } catch (error) {
+      const message = uniqueViolationMessage(error);
+      if (message) return conflict(message);
+      throw error;
+    }
 
     const changedFields = (Object.keys(data) as Array<keyof typeof data>).filter(
       (key) => {

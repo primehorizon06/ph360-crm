@@ -11,7 +11,7 @@ import { useSession } from "next-auth/react";
 import { CustomSelect } from "../ui/Select";
 import { Props } from "@/utils/interfaces/leadEditModal";
 import { CUSTOMER_STATUS, LEAD_FIELDS, STATUS } from "@/utils/constants/leads";
-import { formatPhone, formatSsn, formatDuplicateOwner, calculateAge } from "@/utils/helpers/format";
+import { formatPhone, formatSsn, calculateAge } from "@/utils/helpers/format";
 import { UserRole } from "@/utils/constants/roles";
 import { canEditMainPhone, canTransferLead } from "@/lib/permissions";
 import { fetcher } from "@/lib/fetcher";
@@ -101,10 +101,7 @@ export function LeadEditModal({ lead, onClose, onSave, type = "lead" }: Props) {
 
     if (!res.ok) {
       const json = await res.json();
-      const detail = formatDuplicateOwner(json.registeredTo);
-      toast.error(
-        detail ? `${json.error ?? "Error al guardar"} — ${detail}` : json.error ?? "Error al guardar",
-      );
+      toast.error(json.error ?? "Error al guardar");
       return;
     }
     toast.success(isCustomer ? "Cliente actualizado" : "Lead actualizado");
