@@ -11,7 +11,12 @@ import { encryptDeterministic, decrypt } from "@/lib/crypto";
 import { leadObjectSchema } from "@/lib/validations/lead";
 import { logAudit, getRequestMeta } from "@/lib/audit";
 import { optionalField, optionalDate } from "@/lib/patchFields";
-import { findDuplicatePhone, findDuplicateSsn, describeDuplicateOwner } from "@/lib/leadService";
+import {
+  findDuplicatePhone,
+  findDuplicateSsn,
+  describeDuplicateOwner,
+  resolveLeadOwnership,
+} from "@/lib/leadService";
 
 const leadPatchSchema = leadObjectSchema.partial().passthrough();
 
@@ -67,26 +72,6 @@ export const PATCH = withAuthParams<{ id: string }>(
         ? null
         : existing.ssn;
 
-    if (
-      (role === UserRole.SUPERVISOR || role === UserRole.COACH) &&
-      body.assignedToId &&
-      Number(body.assignedToId) !== existing.assignedToId
-    ) {
-      const target = await prisma.user.findUnique({
-        where: { id: Number(body.assignedToId) },
-        select: { companyId: true, teamId: true },
-      });
-      const inScope =
-        !!target &&
-        (role === UserRole.SUPERVISOR
-          ? target.companyId === user.companyId
-          : target.teamId === user.teamId);
-      if (!inScope)
-        return forbidden("No puedes asignar el lead a ese usuario");
-    }
-
-    // Customer Service Holding traslada leads entre franquicias; a diferencia de
-    // ADMIN, se valida que el asesor pertenezca al equipo y la franquicia.
     const transfer = isGlobalCustomerService(role)
       ? {
           companyId: body.companyId ? Number(body.companyId) : existing.companyId,
@@ -96,25 +81,6 @@ export const PATCH = withAuthParams<{ id: string }>(
             : existing.assignedToId,
         }
       : null;
-
-    if (
-      transfer &&
-      (transfer.companyId !== existing.companyId ||
-        transfer.teamId !== existing.teamId ||
-        transfer.assignedToId !== existing.assignedToId)
-    ) {
-      const assignee = await prisma.user.findFirst({
-        where: {
-          id: transfer.assignedToId,
-          teamId: transfer.teamId,
-          companyId: transfer.companyId,
-          active: true,
-        },
-        select: { id: true },
-      });
-      if (!assignee)
-        return badRequest("El asesor no pertenece al equipo y franquicia seleccionados");
-    }
 
     const canChangeStatus = role !== UserRole.AGENT;
 
@@ -167,6 +133,32 @@ export const PATCH = withAuthParams<{ id: string }>(
     data = Object.fromEntries(
       Object.entries(data).filter(([, value]) => value !== undefined),
     );
+
+    const ownershipChanged = (["assignedToId", "teamId", "companyId"] as const).some(
+      (key) => data[key] !== undefined && data[key] !== existing[key],
+    );
+    if (ownershipChanged) {
+      const owner = await resolveLeadOwnership(Number(data.assignedToId ?? existing.assignedToId));
+      if (!owner)
+        return badRequest("El asesor debe estar activo y pertenecer a una franquicia y un equipo");
+
+      const outOfScope =
+        (role === UserRole.SUPERVISOR && owner.companyId !== user.companyId) ||
+        (role === UserRole.COACH && owner.teamId !== user.teamId);
+      if (outOfScope) return forbidden("No puedes asignar el lead a ese usuario");
+
+      const conflicts = (["teamId", "companyId"] as const).some(
+        (key) =>
+          data[key] !== undefined && data[key] !== existing[key] && data[key] !== owner[key],
+      );
+      if (conflicts)
+        return badRequest(
+          "El equipo y la franquicia del lead los define el asesor asignado; cambia también el asesor",
+        );
+
+      data.companyId = owner.companyId;
+      data.teamId = owner.teamId;
+    }
 
     if (body.phone1 && body.phone1 !== existing.phone1) {
       const dup = await findDuplicatePhone(leadId, body.phone1);

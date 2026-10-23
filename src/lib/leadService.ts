@@ -39,6 +39,15 @@ export function describeDuplicateOwner(dup: DuplicateOwner) {
   };
 }
 
+export async function resolveLeadOwnership(assignedToId: number) {
+  const assignee = await prisma.user.findUnique({
+    where: { id: assignedToId },
+    select: { id: true, active: true, companyId: true, teamId: true },
+  });
+  if (!assignee?.active || assignee.companyId === null || assignee.teamId === null) return null;
+  return { assignedToId: assignee.id, companyId: assignee.companyId, teamId: assignee.teamId };
+}
+
 export async function findLeadProduct(leadId: number, productId: number) {
   const [lead, product] = await Promise.all([
     prisma.lead.findUnique({ where: { id: leadId } }),
