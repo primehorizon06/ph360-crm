@@ -47,7 +47,7 @@ export const PATCH = withAuthParams<{ id: string }>(
 
     const user = await prisma.user.update({
       where: { id: Number(id) },
-      data,
+      data: { ...data, ...(password ? { sessionVersion: { increment: 1 } } : {}) },
       select: {
         id: true,
         username: true,
