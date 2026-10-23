@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 import { PageSkeleton } from "@/components/ui/Skeleton";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Plus, Search, X } from "lucide-react";
 import { useSidebar } from "@/components/layout/SidebarContext";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Lead } from "@/utils/interfaces/leads";
 import {
   CUSTOMER_STATUS,
@@ -39,31 +40,57 @@ interface Props {
 export function LeadsListView({ type }: Props) {
   const { data: session, status } = useSession();
   const { setLeadsModalOpen, setOnLeadCreated } = useSidebar();
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState("ALL");
-  const [filterAgent, setFilterAgent] = useState("");
-  const [filterProduct, setFilterProduct] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const page = Math.max(1, Number(searchParams.get("page")) || 1);
+  const debouncedSearch = searchParams.get("q") ?? "";
+  const filterStatus = searchParams.get("status") ?? "ALL";
+  const filterAgent = searchParams.get("agent") ?? "";
+  const filterProduct = searchParams.get("product") ?? "";
+  const dateFrom = searchParams.get("from") ?? "";
+  const dateTo = searchParams.get("to") ?? "";
+  const [search, setSearch] = useState(debouncedSearch);
   const isAdmin = session?.user?.role === UserRole.ADMIN;
   // Un agente solo ve sus propios leads: no necesita filtrar por agente.
   const canFilterAgent = status === "authenticated" && session?.user?.role !== UserRole.AGENT;
   const hasFilters =
     filterStatus !== "ALL" || !!filterAgent || !!filterProduct || !!dateFrom || !!dateTo;
-  const router = useRouter();
 
   const isLead = type === "lead";
   const label = isLead ? "Lead" : "Cliente";
   const basePath = isLead ? "/leads" : "/customers";
   const statusOptions = isLead ? STATUS : CUSTOMER_STATUS;
 
-  // Debounce search: el setState ocurre en el callback del timer, no directo en el efecto
+  const updateParams = useCallback(
+    (patch: Record<string, string>) => {
+      const params = new URLSearchParams(searchParams);
+      for (const [key, value] of Object.entries(patch)) {
+        if (value && value !== "ALL") params.set(key, value);
+        else params.delete(key);
+      }
+      if (!("page" in patch) || patch.page === "1") params.delete("page");
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [searchParams, pathname, router],
+  );
+
+  // Debounce search: la URL se actualiza en el callback del timer, no directo en el efecto
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(search), 300);
+    if (search === debouncedSearch) return;
+    const t = setTimeout(() => updateParams({ q: search }), 300);
     return () => clearTimeout(t);
-  }, [search]);
+  }, [search, debouncedSearch, updateParams]);
+
+  function openRow(e: React.MouseEvent, href: string) {
+    if ((e.target as HTMLElement).closest("a")) return;
+    if (e.metaKey || e.ctrlKey || e.button === 1) {
+      window.open(href, "_blank", "noopener");
+      return;
+    }
+    router.push(href);
+  }
 
   const swrKey = useMemo(() => {
     if (status !== "authenticated") return null;
@@ -90,12 +117,7 @@ export function LeadsListView({ type }: Props) {
   );
 
   function clearFilters() {
-    setFilterStatus("ALL");
-    setFilterAgent("");
-    setFilterProduct("");
-    setDateFrom("");
-    setDateTo("");
-    setPage(1);
+    updateParams({ status: "", agent: "", product: "", from: "", to: "" });
   }
 
   const leads = data?.data ?? [];
@@ -165,10 +187,7 @@ export function LeadsListView({ type }: Props) {
               type="text"
               placeholder="Nombre, teléfono o email..."
               value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
+              onChange={(e) => setSearch(e.target.value)}
               className="bg-transparent text-lg text-white/70 placeholder:text-white/50 outline-none w-full"
             />
           </div>
@@ -181,8 +200,7 @@ export function LeadsListView({ type }: Props) {
               aria-label="Status"
               value={filterStatus === "ALL" ? "Todos" : (statusOptions[filterStatus] ?? "Todos")}
               onChange={(val) => {
-                setFilterStatus(val);
-                setPage(1);
+                updateParams({ status: val });
               }}
               options={selectOptions}
               labels={selectLabels}
@@ -197,8 +215,7 @@ export function LeadsListView({ type }: Props) {
                 searchable
                 value={agents.find((a) => String(a.id) === filterAgent)?.name ?? "Todos"}
                 onChange={(val) => {
-                  setFilterAgent(val);
-                  setPage(1);
+                  updateParams({ agent: val });
                 }}
                 options={["", ...agents.map((a) => String(a.id))]}
                 labels={[
@@ -215,8 +232,7 @@ export function LeadsListView({ type }: Props) {
               aria-label="Producto"
               value={catalog.find((c) => String(c.id) === filterProduct)?.name ?? "Todos"}
               onChange={(val) => {
-                setFilterProduct(val);
-                setPage(1);
+                updateParams({ product: val });
               }}
               options={["", ...catalog.map((c) => String(c.id))]}
               labels={["Todos", ...catalog.map((c) => c.name)]}
@@ -233,8 +249,7 @@ export function LeadsListView({ type }: Props) {
               value={dateFrom}
               max={dateTo || undefined}
               onChange={(e) => {
-                setDateFrom(e.target.value);
-                setPage(1);
+                updateParams({ from: e.target.value });
               }}
               className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white/90 outline-none focus:border-tertiary/50"
             />
@@ -249,8 +264,7 @@ export function LeadsListView({ type }: Props) {
               value={dateTo}
               min={dateFrom || undefined}
               onChange={(e) => {
-                setDateTo(e.target.value);
-                setPage(1);
+                updateParams({ to: e.target.value });
               }}
               className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white/90 outline-none focus:border-tertiary/50"
             />
@@ -287,16 +301,22 @@ export function LeadsListView({ type }: Props) {
               {leads.map((lead) => (
                 <tr
                   key={lead.id}
-                  onClick={() => router.push(`${basePath}/${lead.id}`)}
+                  onClick={(e) => openRow(e, `${basePath}/${lead.id}`)}
+                  onAuxClick={(e) => openRow(e, `${basePath}/${lead.id}`)}
                   className="hover:bg-white/5 transition-colors cursor-pointer"
                 >
                   <td className="px-4 py-3 text-lg text-white/90">
                     {lead.id}
                   </td>
                   <td className="px-4 py-3 text-lg text-white font-medium">
-                    {lead.firstName} {lead.lastName}
+                    <Link
+                      href={`${basePath}/${lead.id}`}
+                      className="rounded outline-none hover:underline focus-visible:underline focus-visible:ring-2 focus-visible:ring-tertiary/60"
+                    >
+                      {lead.firstName} {lead.lastName}
+                    </Link>
                   </td>
-                  <td className="px-4 py-3 text-lg text-white/70">
+                  <td className="px-4 py-3 text-lg text-white/70 whitespace-nowrap">
                     {lead.phone1}
                   </td>
                   {isAdmin && (
@@ -307,7 +327,7 @@ export function LeadsListView({ type }: Props) {
                   <td className="px-4 py-3 text-lg text-white/90">
                     {lead.assignedTo?.name ?? "—"}
                   </td>
-                  <td className="px-4 py-3 text-lg text-white/90">
+                  <td className="px-4 py-3 text-lg text-white/90 whitespace-nowrap">
                     {lead.assignedTo?.team?.name ?? "—"}
                   </td>
 
@@ -367,10 +387,10 @@ export function LeadsListView({ type }: Props) {
         {/* Tarjetas móvil */}
         <div className="md:hidden divide-y divide-white/5">
           {leads.map((lead) => (
-            <div
+            <Link
               key={lead.id}
-              onClick={() => router.push(`${basePath}/${lead.id}`)}
-              className="p-4 space-y-2 cursor-pointer hover:bg-white/5 transition-colors"
+              href={`${basePath}/${lead.id}`}
+              className="block p-4 space-y-2 hover:bg-white/5 transition-colors outline-none focus-visible:bg-white/5"
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
@@ -412,7 +432,7 @@ export function LeadsListView({ type }: Props) {
                   ))}
                 </div>
               )}
-            </div>
+            </Link>
           ))}
         </div>
 
@@ -431,14 +451,14 @@ export function LeadsListView({ type }: Props) {
             <div className="flex gap-2">
               <button
                 disabled={page === 1}
-                onClick={() => setPage((p) => p - 1)}
+                onClick={() => updateParams({ page: String(page - 1) })}
                 className="px-3 py-1 text-sm rounded border border-white/10 text-white/60 disabled:opacity-30 hover:bg-white/5 transition-colors"
               >
                 Anterior
               </button>
               <button
                 disabled={page >= totalPages}
-                onClick={() => setPage((p) => p + 1)}
+                onClick={() => updateParams({ page: String(page + 1) })}
                 className="px-3 py-1 text-sm rounded border border-white/10 text-white/60 disabled:opacity-30 hover:bg-white/5 transition-colors"
               >
                 Siguiente
