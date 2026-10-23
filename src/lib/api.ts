@@ -22,8 +22,9 @@ export const conflict = (msg: string, extra?: Record<string, unknown>) =>
 export const serverError = (msg = "Error interno del servidor") =>
   NextResponse.json({ error: msg }, { status: 500 });
 
-export async function getAuthSession() {
-  return getServerSession(authOptions);
+export async function getAuthSession(): Promise<Session | null> {
+  const session = await getServerSession(authOptions);
+  return session?.user?.id ? session : null;
 }
 
 function handleRouteError(error: unknown): NextResponse {

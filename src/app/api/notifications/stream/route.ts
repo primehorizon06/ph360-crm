@@ -1,12 +1,11 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getAuthSession } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 import { REMINDER_STATUS } from "@/utils/constants/reminders";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  const session = await getServerSession(authOptions);
+  const session = await getAuthSession();
   if (!session) return new Response("Unauthorized", { status: 401 });
 
   const userId = Number(session.user.id);
@@ -15,9 +14,18 @@ export async function GET(req: Request) {
 
   const stream = new ReadableStream({
     async start(controller) {
+      let interval: ReturnType<typeof setInterval> | undefined;
+      let stopped = false;
+      const stop = () => {
+        stopped = true;
+        clearInterval(interval);
+        try { controller.close(); } catch { /* already closed */ }
+      };
+
       const check = async () => {
         try {
-          const [notifCount, reminderCount] = await Promise.all([
+          const [user, notifCount, reminderCount] = await Promise.all([
+            prisma.user.findUnique({ where: { id: userId }, select: { active: true } }),
             prisma.notification.count({ where: { userId, read: false } }),
             prisma.reminder.count({
               where: {
@@ -27,6 +35,7 @@ export async function GET(req: Request) {
               },
             }),
           ]);
+          if (!user?.active) return stop();
 
           const payload = JSON.stringify({ notifCount, reminderCount });
           if (payload !== lastPayload) {
@@ -34,17 +43,14 @@ export async function GET(req: Request) {
             controller.enqueue(encoder.encode(`data: ${payload}\n\n`));
           }
         } catch {
-          try { controller.close(); } catch { /* already closed */ }
+          stop();
         }
       };
 
       await check();
-      const interval = setInterval(check, 15_000);
+      if (!stopped) interval = setInterval(check, 15_000);
 
-      req.signal.addEventListener("abort", () => {
-        clearInterval(interval);
-        try { controller.close(); } catch { /* already closed */ }
-      });
+      req.signal.addEventListener("abort", stop);
     },
   });
 

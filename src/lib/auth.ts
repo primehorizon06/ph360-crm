@@ -1,4 +1,5 @@
-import NextAuth, { NextAuthOptions } from "next-auth";
+import NextAuth, { NextAuthOptions, Session } from "next-auth";
+import type { JWT } from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { Role } from "@prisma/client";
@@ -158,10 +159,45 @@ export const authOptions: NextAuthOptions = {
         token.teamId = user.teamId;
         token.teamName = user.teamName;
         token.avatar = user.avatar;
+        return token;
       }
-      return token;
+
+      if (!token.id) return token;
+
+      try {
+        const current = await prisma.user.findUnique({
+          where: { id: Number(token.id) },
+          select: { active: true, name: true, role: true, avatar: true, companyId: true, teamId: true },
+        });
+        if (!current?.active) return {} as JWT;
+
+        if (current.companyId !== token.companyId) {
+          token.companyName = current.companyId
+            ? (await prisma.company.findUnique({ where: { id: current.companyId }, select: { name: true } }))?.name
+            : null;
+        }
+        if (current.teamId !== token.teamId) {
+          token.teamName = current.teamId
+            ? (await prisma.team.findUnique({ where: { id: current.teamId }, select: { name: true } }))?.name
+            : null;
+        }
+
+        token.name = current.name;
+        token.role = current.role;
+        token.avatar = current.avatar;
+        token.companyId = current.companyId;
+        token.teamId = current.teamId;
+        return token;
+      } catch (error) {
+        console.warn(
+          "No se pudo revalidar la sesión; se mantiene el token:",
+          error instanceof Error ? error.message : error,
+        );
+        return token;
+      }
     },
     async session({ session, token }) {
+      if (!token.id) return {} as Session;
       if (session.user) {
         session.user.id = token.id as string;
         session.user.username = token.username as string;

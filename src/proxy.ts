@@ -11,11 +11,11 @@ export async function proxy(req: NextRequest) {
 
   const publicPaths = ["/auth/login", "/auth/error"];
   if (publicPaths.includes(path)) {
-    if (token) return NextResponse.redirect(new URL("/", req.url));
+    if (token?.id) return NextResponse.redirect(new URL("/", req.url));
     return NextResponse.next();
   }
 
-  if (!token) {
+  if (!token?.id) {
     return NextResponse.redirect(new URL("/auth/login?expired=true", req.url));
   }
 

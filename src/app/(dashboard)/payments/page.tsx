@@ -1,6 +1,5 @@
-import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import { authOptions } from "@/lib/auth";
+import { getAuthSession } from "@/lib/api";
 import { canManagePayments } from "@/lib/permissions";
 import { PaymentsReport } from "@/components/dashboard/PaymentsReport";
 import { isPaymentGroup } from "@/components/dashboard/paymentGroups";
@@ -12,7 +11,7 @@ export default async function PaymentsPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await getAuthSession();
   if (!session) redirect("/auth/login");
   if (!canManagePayments(session.user.role)) redirect("/");
 

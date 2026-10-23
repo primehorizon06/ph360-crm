@@ -58,7 +58,7 @@ Response helpers (`unauthorized()`, `forbidden()`, `badRequest()`, etc.) are als
 
 ### Session / auth
 
-NextAuth is configured in [src/lib/auth.ts](src/lib/auth.ts) with a Credentials provider (username/email + bcrypt). The JWT carries `id`, `role`, `companyId`, `teamId`, and `companyName` so API routes never need an extra DB call just to scope a query. Session timeout is 1 hour; client-side refetch interval is 5 minutes (`providers.tsx`).
+NextAuth is configured in [src/lib/auth.ts](src/lib/auth.ts) with a Credentials provider (username/email + bcrypt). The JWT carries `id`, `role`, `companyId`, `teamId`, `companyName` and `teamName`. On every session read (`getServerSession`, `withAuth` and the client's `/api/auth/session`) the `jwt` callback reloads the user from the DB: a deactivated user loses the session, and role, franchise or team changes apply on the next request. Session timeout is 1 hour; the client refetches the session every 60 seconds (`providers.tsx`), which also refreshes the cookie that the proxy reads for page access.
 
 Extended types live in [src/types/next-auth.d.ts](src/types/next-auth.d.ts).
 
