@@ -19,32 +19,35 @@ export const productCatalogSchema = z
       .trim()
       .min(2, "Mínimo 2 caracteres")
       .max(100, "Máximo 100 caracteres"),
-    minValue: amount("mínimo"),
-    maxValue: amount("máximo").nullable(),
+    listPrice: amount("de lista").positive("Debe ser mayor a 0"),
+    specialPrice: amount("especial").positive("Debe ser mayor a 0").nullable(),
     active: z.boolean(),
     color: z.enum(PRODUCT_COLOR_KEYS as [string, ...string[]], {
       error: "Selecciona un color",
     }),
   })
-  .refine((d) => d.maxValue === null || d.minValue <= d.maxValue, {
-    message: "El máximo debe ser mayor o igual al mínimo",
-    path: ["maxValue"],
+  .refine((d) => d.specialPrice === null || d.specialPrice < d.listPrice, {
+    message: "El precio especial debe ser menor al de lista",
+    path: ["specialPrice"],
   });
 
 export type ProductCatalogFormData = z.infer<typeof productCatalogSchema>;
 
 type Amount = number | string | Prisma.Decimal;
 
-export function checkPlanTotal(
-  total: number,
-  range: { minValue: Amount; maxValue: Amount | null },
-): string | null {
-  const min = Number(range.minValue);
-  const max = range.maxValue === null ? null : Number(range.maxValue);
-  total = Math.round(total * 100) / 100;
-  if (total < min)
-    return `El total del plan ($ ${formatAmount(total)}) debe ser de al menos $ ${formatAmount(min)}`;
-  if (max !== null && total > max)
-    return `El total del plan ($ ${formatAmount(total)}) no puede superar $ ${formatAmount(max)}`;
-  return null;
+export type PriceType = "LIST" | "SPECIAL";
+
+export function catalogPrice(
+  catalog: { listPrice: Amount; specialPrice: Amount | null },
+  priceType: PriceType,
+): number | null {
+  if (priceType === "LIST") return Number(catalog.listPrice);
+  return catalog.specialPrice === null ? null : Number(catalog.specialPrice);
+}
+
+const toCents = (value: number) => Math.round(value * 100);
+
+export function checkPlanPrice(total: number, price: number): string | null {
+  if (toCents(total) === toCents(price)) return null;
+  return `El total del plan ($ ${formatAmount(toCents(total) / 100)}) debe ser exactamente $ ${formatAmount(price)}`;
 }

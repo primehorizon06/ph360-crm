@@ -4,11 +4,12 @@ import { withAuthParams, badRequest, forbidden, notFound } from "@/lib/api";
 import { canAccessLead, canCreateProduct } from "@/lib/permissions";
 import { encryptRandom } from "@/lib/crypto";
 import { productSchema } from "@/lib/validations/product";
-import { checkPlanTotal } from "@/lib/validations/productCatalog";
+import { catalogPrice, checkPlanPrice } from "@/lib/validations/productCatalog";
+import { UserRole } from "@/utils/constants/roles";
 import { maskPaymentMethod, parseInstallments } from "@/lib/leadService";
 import { logAudit, getRequestMeta } from "@/lib/audit";
 import { isWeekendDate, WEEKEND_DATE_ERROR } from "@/lib/businessDays";
-import { notifyLeadReviewers } from "@/lib/approvalService";
+import { notifyLeadReviewers, notifySpecialPriceAuthorizer } from "@/lib/approvalService";
 
 export const GET = withAuthParams<{ id: string }>(
   async (_req, session, { id }) => {
@@ -46,6 +47,7 @@ export const GET = withAuthParams<{ id: string }>(
         },
         approval: true,
         catalog: { select: { id: true, name: true, color: true } },
+        priceAuthorizedBy: { select: { id: true, name: true } },
       },
       orderBy: { createdAt: "asc" },
     });
@@ -78,9 +80,14 @@ export const POST = withAuthParams<{ id: string }>(
       catalogId: String(catalogId),
       paymentType: paymentMethod.type,
       ...paymentMethod,
+      priceType: body.priceType ?? "LIST",
+      priceAuthorizedById:
+        body.priceAuthorizedById == null ? undefined : String(body.priceAuthorizedById),
     });
     if (!parsed.success)
       return badRequest(parsed.error.issues[0]?.message ?? "Datos inválidos");
+    const { priceType } = parsed.data;
+    const isSpecialPrice = priceType === "SPECIAL";
 
     const catalog = await prisma.productCatalog.findUnique({
       where: { id: Number(catalogId) },
@@ -88,13 +95,29 @@ export const POST = withAuthParams<{ id: string }>(
     if (!catalog || !catalog.active)
       return badRequest("El producto no existe o está inactivo");
 
+    const price = catalogPrice(catalog, priceType);
+    if (price === null) return badRequest("Este producto no tiene precio especial");
+
+    const authorizer = isSpecialPrice
+      ? await prisma.user.findFirst({
+          where: {
+            id: Number(parsed.data.priceAuthorizedById),
+            role: UserRole.CUSTOMER_SERVICE_HOLDING,
+            active: true,
+          },
+          select: { id: true, name: true },
+        })
+      : null;
+    if (isSpecialPrice && !authorizer)
+      return badRequest("Selecciona un autorizador de CS Holding válido");
+
     const installments = parseInstallments(body.installments);
     if (!installments) return badRequest("Se requiere al menos una cuota válida");
     if (installments.some((i) => isWeekendDate(i.date))) return badRequest(WEEKEND_DATE_ERROR);
 
-    const planError = checkPlanTotal(
+    const planError = checkPlanPrice(
       installments.reduce((acc, i) => acc + i.amount, 0),
-      catalog,
+      price,
     );
     if (planError) return badRequest(planError);
 
@@ -107,6 +130,9 @@ export const POST = withAuthParams<{ id: string }>(
       data: {
         leadId,
         catalogId: catalog.id,
+        price,
+        isSpecialPrice,
+        priceAuthorizedById: authorizer?.id ?? null,
         paymentPlan: { create: { installments: { create: installments } } },
         paymentMethod: {
           create: {
@@ -133,6 +159,7 @@ export const POST = withAuthParams<{ id: string }>(
           include: { installments: { orderBy: { number: "asc" } } },
         },
         catalog: { select: { id: true, name: true, color: true } },
+        priceAuthorizedBy: { select: { id: true, name: true } },
       },
     });
 
@@ -168,9 +195,36 @@ export const POST = withAuthParams<{ id: string }>(
       actor: { id: session.user.id, role: session.user.role, name: session.user.name },
       entityType: "Product",
       entityId: leadProduct.id,
-      metadata: { leadId, catalogId: catalog.id, product: catalog.name, paymentType: paymentMethod.type },
+      metadata: {
+        leadId,
+        catalogId: catalog.id,
+        product: catalog.name,
+        paymentType: paymentMethod.type,
+        price,
+        priceType,
+        authorizerId: authorizer?.id,
+      },
       ...getRequestMeta(req),
     });
+
+    if (authorizer) {
+      await notifySpecialPriceAuthorizer({
+        authorizerId: authorizer.id,
+        leadId,
+        productId: leadProduct.id,
+        leadName,
+        agentName: session.user.name ?? "Un asesor",
+        price,
+      });
+      await logAudit({
+        action: "SPECIAL_PRICE_AUTHORIZED",
+        actor: { id: session.user.id, role: session.user.role, name: session.user.name },
+        entityType: "Product",
+        entityId: leadProduct.id,
+        metadata: { leadId, price, authorizerId: authorizer.id, authorizerName: authorizer.name },
+        ...getRequestMeta(req),
+      });
+    }
 
     return NextResponse.json(
       {

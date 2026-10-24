@@ -106,6 +106,7 @@ model User {
   remindersAssigned     Reminder[]      @relation("ReminderAssignedTo")
   remindersCreated      Reminder[]      @relation("ReminderCreatedBy")
   notifications         Notification[]
+  authorizedSpecialPrices Product[]     @relation("ProductPriceAuthorizer")
   goals                 Goal[]          @relation("GoalUser")
   goalsCreated          Goal[]          @relation("GoalCreatedBy")
   chargeAttempts        ChargeAttempt[]
@@ -259,8 +260,8 @@ enum CardType {
 model ProductCatalog {
   id        Int      @id @default(autoincrement())
   name      String   @unique
-  minValue  Decimal  @db.Decimal(10, 2)
-  maxValue  Decimal? @db.Decimal(10, 2)
+  listPrice    Decimal  @db.Decimal(10, 2)
+  specialPrice Decimal? @db.Decimal(10, 2)
   active    Boolean  @default(true)
   color     String   @default("cyan")
   createdAt DateTime @default(now())
@@ -284,12 +285,18 @@ model Product {
   status    ProductStatus    @default(ACTIVE)
   approval  ProductApproval?
 
-  lead          Lead           @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  catalog       ProductCatalog @relation(fields: [catalogId], references: [id])
-  paymentMethod PaymentMethod?
-  paymentPlan   PaymentPlan?
+  price               Decimal @db.Decimal(10, 2)
+  isSpecialPrice      Boolean @default(false)
+  priceAuthorizedById Int?
+
+  lead              Lead           @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  catalog           ProductCatalog @relation(fields: [catalogId], references: [id])
+  priceAuthorizedBy User?          @relation("ProductPriceAuthorizer", fields: [priceAuthorizedById], references: [id], onDelete: SetNull)
+  paymentMethod     PaymentMethod?
+  paymentPlan       PaymentPlan?
 
   @@index([catalogId])
+  @@index([priceAuthorizedById])
 }
 
 enum AccountType {
@@ -449,6 +456,7 @@ enum NotificationType {
   PRODUCT_APPROVAL_PENDING
   PRODUCT_APPROVED
   PRODUCT_REJECTED
+  SPECIAL_PRICE_AUTHORIZED
 }
 
 model Notification {
@@ -542,6 +550,7 @@ enum AuditAction {
   ATTACHMENTS_UPLOADED
   SSN_REVEALED
   BANK_ACCOUNT_REVEALED
+  SPECIAL_PRICE_AUTHORIZED
 }
 
 model AuditLog {

@@ -12,8 +12,8 @@ export type { CardType, PaymentMethodType };
 export interface ProductCatalogItem {
   id: number;
   name: string;
-  minValue: string;
-  maxValue: string | null;
+  listPrice: string;
+  specialPrice: string | null;
   active: boolean;
   color: string;
   _count?: { products: number };
@@ -65,6 +65,9 @@ export interface Product {
   id: number;
   catalogId: number;
   catalog: ProductCatalogRef;
+  price: string;
+  isSpecialPrice: boolean;
+  priceAuthorizedBy: { id: number; name: string } | null;
   createdAt: string;
   paymentMethod: PaymentMethod & { id: number };
   paymentPlan?: {

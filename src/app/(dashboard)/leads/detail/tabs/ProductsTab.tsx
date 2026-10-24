@@ -29,11 +29,8 @@ import {
   ProductCatalogItem,
   Props,
 } from "@/utils/interfaces/products";
-import {
-  formatProductRange,
-  productColorClass,
-} from "@/utils/constants/products";
-import { checkPlanTotal } from "@/lib/validations/productCatalog";
+import { productColorClass } from "@/utils/constants/products";
+import { catalogPrice, checkPlanPrice } from "@/lib/validations/productCatalog";
 import { CustomSelect } from "@/components/ui/Select";
 import { Installment } from "@/utils/interfaces/paymentPlanPicker";
 import { PaymentPlanPicker } from "@/components/leads/PaymentPlanPicker/PaymentPlanPicker";
@@ -313,19 +310,31 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
     handleSubmit,
     control,
     reset,
+    setValue,
     setError,
     clearErrors,
     formState: { errors },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
+    defaultValues: { priceType: "LIST" },
   });
 
   const paymentType = useWatch({ control, name: "paymentType" });
   const catalogId = useWatch({ control, name: "catalogId" });
+  const priceType = useWatch({ control, name: "priceType" }) ?? "LIST";
+  const priceAuthorizedById = useWatch({ control, name: "priceAuthorizedById" });
   const selectedCatalog = activeCatalog.find((c) => String(c.id) === catalogId);
+  const selectedPrice = selectedCatalog ? catalogPrice(selectedCatalog, priceType) : null;
+  const { data: holdingUsers = [], isLoading: loadingHoldingUsers } = useSWR<
+    { id: number; name: string }[]
+  >(
+    priceType === "SPECIAL" ? "/api/users/holding" : null,
+    fetcher,
+  );
+  const authorizerName = holdingUsers.find((u) => String(u.id) === priceAuthorizedById)?.name;
 
   function resetForm() {
-    reset({ paymentType: "TARJETA" });
+    reset({ paymentType: "TARJETA", priceType: "LIST" });
     setInstallments([]);
     clearErrors("root");
     setShowForm(false);
@@ -343,13 +352,15 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
       setError("root", { message: "Todas las cuotas deben tener un monto mayor a 0" });
       return;
     }
-    if (selectedCatalog) {
-      const total = installments.reduce((acc, i) => acc + parseFloat(i.amount), 0);
-      const rangeError = checkPlanTotal(total, selectedCatalog);
-      if (rangeError) {
-        setError("root", { message: rangeError });
-        return;
-      }
+    if (selectedPrice === null) {
+      setError("root", { message: "Este producto no tiene precio especial" });
+      return;
+    }
+    const total = installments.reduce((acc, i) => acc + parseFloat(i.amount), 0);
+    const priceError = checkPlanPrice(total, selectedPrice);
+    if (priceError) {
+      setError("root", { message: priceError });
+      return;
     }
     clearErrors("root");
     setPendingData(data);
@@ -382,6 +393,9 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         catalogId: Number(pendingData.catalogId),
+        priceType: pendingData.priceType,
+        priceAuthorizedById:
+          pendingData.priceType === "SPECIAL" ? Number(pendingData.priceAuthorizedById) : undefined,
         paymentMethod,
         installments: installments.map((i) => ({
           number: i.number,
@@ -520,7 +534,11 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                 <CustomSelect
                   name="catalogId"
                   value={field.value ?? ""}
-                  onChange={field.onChange}
+                  onChange={(value) => {
+                    field.onChange(value);
+                    setValue("priceType", "LIST");
+                    setValue("priceAuthorizedById", undefined);
+                  }}
                   options={activeCatalog.map((c) => String(c.id))}
                   labels={activeCatalog.map((c) => c.name)}
                   searchable={false}
@@ -530,12 +548,76 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
             {errors.catalogId && (
               <p className="text-red-400 text-lg">{errors.catalogId.message}</p>
             )}
-            {selectedCatalog && (
-              <p className="text-on-surface-variant text-sm">
-                Total del plan: {formatProductRange(selectedCatalog)}
-              </p>
-            )}
           </div>
+
+          {selectedCatalog && (
+            <div className="space-y-1">
+              <label className="text-lg text-on-surface-variant">Precio</label>
+              <Controller
+                control={control}
+                name="priceType"
+                render={({ field }) => (
+                  <div className="grid grid-cols-2 gap-2">
+                    {(["LIST", "SPECIAL"] as const).map((type) => {
+                      const price = catalogPrice(selectedCatalog, type);
+                      if (price === null) return null;
+                      return (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => {
+                            field.onChange(type);
+                            if (type === "LIST") setValue("priceAuthorizedById", undefined);
+                          }}
+                          className={`py-2.5 rounded-lg border text-lg font-medium transition-all ${
+                            field.value === type
+                              ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400"
+                              : "border-white/10 bg-white/5 text-on-surface-variant hover:text-white/60"
+                          }`}
+                        >
+                          {type === "LIST" ? "De lista" : "Especial"} $ {formatAmount(price)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              />
+              {priceType === "SPECIAL" && (
+                <div className="space-y-1 pt-2">
+                  <label className="text-lg text-on-surface-variant">
+                    Autorizado por (CS Holding)
+                  </label>
+                  <Controller
+                    control={control}
+                    name="priceAuthorizedById"
+                    render={({ field }) => (
+                      <CustomSelect
+                        name="priceAuthorizedById"
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                        options={holdingUsers.map((u) => String(u.id))}
+                        labels={holdingUsers.map((u) => u.name)}
+                        searchable={false}
+                      />
+                    )}
+                  />
+                  {!loadingHoldingUsers && holdingUsers.length === 0 && (
+                    <p className="text-attention text-sm">
+                      No hay usuarios de CS Holding activos para autorizar el precio especial
+                    </p>
+                  )}
+                  {errors.priceAuthorizedById && (
+                    <p className="text-red-400 text-lg">{errors.priceAuthorizedById.message}</p>
+                  )}
+                </div>
+              )}
+              {selectedPrice !== null && (
+                <p className="text-on-surface-variant text-sm">
+                  El plan de pagos debe sumar exactamente $ {formatAmount(selectedPrice)}
+                </p>
+              )}
+            </div>
+          )}
 
           {catalogId && (
             <div className="space-y-1">
@@ -824,6 +906,13 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                   )}
                 </div>
 
+                {lp.isSpecialPrice && (
+                  <p className="text-sm text-attention">
+                    Precio especial
+                    {lp.priceAuthorizedBy ? ` · autorizado por ${lp.priceAuthorizedBy.name}` : ""}
+                  </p>
+                )}
+
                 {isApproved && (lp.status === "SUSPENDED" || managesPlan) && (
                   <div className="flex items-center justify-between gap-2">
                     {lp.status === "SUSPENDED" ? (
@@ -1014,6 +1103,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
         <ConfirmProductModal
           data={pendingData}
           catalog={selectedCatalog}
+          authorizerName={pendingData.priceType === "SPECIAL" ? authorizerName : undefined}
           installments={installments}
           saving={saving}
           onConfirm={confirmSave}

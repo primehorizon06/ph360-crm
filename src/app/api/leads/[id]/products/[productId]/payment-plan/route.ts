@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { withAuthParams, badRequest, forbidden, notFound } from "@/lib/api";
 import { canAccessLead, isCustomerService } from "@/lib/permissions";
 import { findLeadProduct, parseInstallments } from "@/lib/leadService";
-import { checkPlanTotal } from "@/lib/validations/productCatalog";
+import { checkPlanPrice } from "@/lib/validations/productCatalog";
 import { isWeekendDate, WEEKEND_DATE_ERROR } from "@/lib/businessDays";
 
 export const PUT = withAuthParams<{ id: string; productId: string }>(
@@ -35,9 +35,9 @@ export const PUT = withAuthParams<{ id: string; productId: string }>(
     if (installments.some((i) => !existingDates.has(i.date.getTime()) && isWeekendDate(i.date)))
       return badRequest(WEEKEND_DATE_ERROR);
 
-    const planError = checkPlanTotal(
+    const planError = checkPlanPrice(
       installments.reduce((acc, i) => acc + i.amount, 0),
-      match.product.catalog,
+      Number(match.product.price),
     );
     if (planError) return badRequest(planError);
 

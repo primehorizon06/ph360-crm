@@ -34,9 +34,9 @@ export function ProductCatalogModal({ product, onClose, onSave }: Props) {
     resolver: zodResolver(productCatalogSchema),
     defaultValues: {
       name: product?.name ?? "",
-      minValue: product ? Number(product.minValue) : undefined,
-      maxValue:
-        product?.maxValue != null ? Number(product.maxValue) : null,
+      listPrice: product ? Number(product.listPrice) : undefined,
+      specialPrice:
+        product?.specialPrice != null ? Number(product.specialPrice) : null,
       active: product?.active ?? true,
       color: product?.color ?? "cyan",
     },
@@ -89,41 +89,41 @@ export function ProductCatalogModal({ product, onClose, onSave }: Props) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-sm text-on-surface-variant mb-1 block">
-                Valor mínimo ($)
+                Precio de lista ($)
               </label>
               <input
-                {...register("minValue", { valueAsNumber: true })}
+                {...register("listPrice", { valueAsNumber: true })}
                 type="number"
                 step="0.01"
                 min="0"
                 className={inputClass}
               />
-              {errors.minValue && (
-                <p className="text-red-400 text-sm mt-1">{errors.minValue.message}</p>
+              {errors.listPrice && (
+                <p className="text-red-400 text-sm mt-1">{errors.listPrice.message}</p>
               )}
             </div>
             <div>
               <label className="text-sm text-on-surface-variant mb-1 block">
-                Valor máximo ($) <span className="text-white/40">— opcional</span>
+                Precio especial ($) <span className="text-white/40">— opcional</span>
               </label>
               <input
-                {...register("maxValue", {
+                {...register("specialPrice", {
                   setValueAs: (v) => (v === "" || v === null ? null : Number(v)),
                 })}
                 type="number"
                 step="0.01"
                 min="0"
-                placeholder="Sin tope"
+                placeholder="Sin precio especial"
                 className={inputClass}
               />
-              {errors.maxValue && (
-                <p className="text-red-400 text-sm mt-1">{errors.maxValue.message}</p>
+              {errors.specialPrice && (
+                <p className="text-red-400 text-sm mt-1">{errors.specialPrice.message}</p>
               )}
             </div>
           </div>
           <p className="text-on-surface-variant text-sm -mt-2">
-            El total del plan de pagos debe ser al menos el mínimo. Si dejas el
-            máximo vacío, no se limita.
+            El plan de pagos debe sumar exactamente el precio elegido. El precio
+            especial requiere la autorización de CS Holding.
           </p>
 
           <div>

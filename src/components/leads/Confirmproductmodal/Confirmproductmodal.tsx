@@ -10,6 +10,7 @@ import { formatAmount } from "@/utils/helpers/format";
 interface Props {
   data: ProductFormData;
   catalog: ProductCatalogRef;
+  authorizerName?: string;
   installments: Installment[];
   saving: boolean;
   onConfirm: () => void;
@@ -19,6 +20,7 @@ interface Props {
 export function ConfirmProductModal({
   data,
   catalog,
+  authorizerName,
   installments,
   saving,
   onConfirm,
@@ -57,6 +59,13 @@ export function ConfirmProductModal({
           <ShoppingBag size={13} />
           {catalog.name}
         </span>
+
+        {data.priceType === "SPECIAL" && (
+          <p className="text-lg text-attention -mt-3">
+            Precio especial $ {formatAmount(total)}
+            {authorizerName ? ` · autorizado por ${authorizerName}` : ""}
+          </p>
+        )}
 
         {/* Método de pago */}
         <div className="bg-surface-container-lowest border border-white/10 rounded-xl p-5 space-y-2.5">

@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/Switch";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { fetcher } from "@/lib/fetcher";
 import {
-  formatProductRange,
+  formatProductPrices,
   productColorClass,
 } from "@/utils/constants/products";
 import { ProductCatalogItem } from "@/utils/interfaces/products";
@@ -149,7 +149,7 @@ export default function ProductsPage() {
                 {product.name}
               </span>
               <p className="text-on-surface-variant text-sm mt-1">
-                {formatProductRange(product)} ·{" "}
+                {formatProductPrices(product)} ·{" "}
                 {product._count?.products ?? 0} vendidos
               </p>
             </div>

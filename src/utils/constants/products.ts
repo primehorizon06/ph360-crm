@@ -19,12 +19,12 @@ export function productColorClass(color: string | null | undefined): string {
 
 export const PRODUCT_MAX_VALUE = 99999999.99;
 
-export function formatProductRange(p: {
-  minValue: string | number;
-  maxValue: string | number | null;
+export function formatProductPrices(p: {
+  listPrice: string | number;
+  specialPrice: string | number | null;
 }): string {
-  const min = `$ ${formatAmount(Number(p.minValue))}`;
-  return p.maxValue === null
-    ? `Desde ${min}`
-    : `${min} – $ ${formatAmount(Number(p.maxValue))}`;
+  const list = `$ ${formatAmount(Number(p.listPrice))}`;
+  return p.specialPrice === null
+    ? list
+    : `${list} · especial $ ${formatAmount(Number(p.specialPrice))}`;
 }

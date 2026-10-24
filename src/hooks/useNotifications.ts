@@ -3,7 +3,7 @@ import { fetcher } from "@/lib/fetcher";
 
 export interface AppNotification {
   id: number;
-  type: "PRODUCT_APPROVAL_PENDING" | "PRODUCT_APPROVED" | "PRODUCT_REJECTED";
+  type: "PRODUCT_APPROVAL_PENDING" | "PRODUCT_APPROVED" | "PRODUCT_REJECTED" | "SPECIAL_PRICE_AUTHORIZED";
   title: string;
   body: string;
   leadId: number;

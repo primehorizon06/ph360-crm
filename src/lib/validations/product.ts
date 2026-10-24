@@ -29,10 +29,25 @@ const cuentaSchema = z.object({
   }),
 });
 
-export const productSchema = z.discriminatedUnion("paymentType", [
-  tarjetaSchema,
-  cuentaSchema,
-]);
+const priceFields = {
+  priceType: z.enum(["LIST", "SPECIAL"], { error: "Selecciona el precio" }),
+  priceAuthorizedById: z.string().regex(/^\d+$/, "Autorizador inválido").optional(),
+};
+
+export const productSchema = z
+  .discriminatedUnion("paymentType", [
+    tarjetaSchema.extend(priceFields),
+    cuentaSchema.extend(priceFields),
+  ])
+  .superRefine((data, ctx) => {
+    if (data.priceType === "SPECIAL" && !data.priceAuthorizedById) {
+      ctx.addIssue({
+        path: ["priceAuthorizedById"],
+        code: "custom",
+        message: "Selecciona quién de CS Holding lo autorizó",
+      });
+    }
+  });
 
 export type ProductFormData = z.infer<typeof productSchema>;
 

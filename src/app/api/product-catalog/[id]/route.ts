@@ -17,8 +17,8 @@ export const PATCH = withAuthParams<{ id: string }>(
     const body = await req.json();
     const parsed = productCatalogSchema.safeParse({
       name: existing.name,
-      minValue: Number(existing.minValue),
-      maxValue: existing.maxValue === null ? null : Number(existing.maxValue),
+      listPrice: Number(existing.listPrice),
+      specialPrice: existing.specialPrice === null ? null : Number(existing.specialPrice),
       active: existing.active,
       color: existing.color,
       ...body,

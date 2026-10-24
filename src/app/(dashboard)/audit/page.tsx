@@ -57,6 +57,8 @@ const ACTIONS = [
   "TEAM_DELETED",
   "ATTACHMENTS_UPLOADED",
   "SSN_REVEALED",
+  "BANK_ACCOUNT_REVEALED",
+  "SPECIAL_PRICE_AUTHORIZED",
 ];
 
 const ACTION_COLORS: Record<string, string> = {
@@ -68,6 +70,8 @@ const ACTION_COLORS: Record<string, string> = {
   TEAM_DELETED: "bg-red-500/20 text-red-400",
   PRODUCT_REJECTED: "bg-amber-500/20 text-amber-400",
   SSN_REVEALED: "bg-amber-500/20 text-amber-400",
+  BANK_ACCOUNT_REVEALED: "bg-amber-500/20 text-amber-400",
+  SPECIAL_PRICE_AUTHORIZED: "bg-amber-500/20 text-amber-400",
 };
 
 function actionColor(action: string): string {

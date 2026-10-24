@@ -191,7 +191,8 @@ export function parseInstallments(raw: unknown) {
       Number.isInteger(i.number) &&
       !Number.isNaN(i.date.getTime()) &&
       Number.isFinite(i.amount) &&
-      i.amount > 0,
+      i.amount > 0 &&
+      Math.abs(i.amount * 100 - Math.round(i.amount * 100)) < 1e-6,
   );
   return valid ? installments : null;
 }

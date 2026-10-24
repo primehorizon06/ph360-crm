@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { UserRole } from "@/utils/constants/roles";
+import { formatAmount } from "@/utils/helpers/format";
 
 export async function applyApprovalDecision({
   leadId,
@@ -82,6 +83,33 @@ export async function notifyLeadReviewers({
       leadId,
       productId,
     })),
+  });
+}
+
+export async function notifySpecialPriceAuthorizer({
+  authorizerId,
+  leadId,
+  productId,
+  leadName,
+  agentName,
+  price,
+}: {
+  authorizerId: number;
+  leadId: number;
+  productId: number;
+  leadName: string;
+  agentName: string;
+  price: number;
+}): Promise<void> {
+  await prisma.notification.create({
+    data: {
+      userId: authorizerId,
+      type: "SPECIAL_PRICE_AUTHORIZED",
+      title: "Te registraron como autorizador de un precio especial",
+      body: `${agentName} registró a ${leadName} a $ ${formatAmount(price)} con tu autorización.`,
+      leadId,
+      productId,
+    },
   });
 }
 
