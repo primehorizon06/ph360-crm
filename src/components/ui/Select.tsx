@@ -11,7 +11,11 @@ export function CustomSelect({
   options,
   labels,
   searchable = false,
+  id,
+  placeholder,
   "aria-label": ariaLabel,
+  "aria-describedby": ariaDescribedBy,
+  invalid,
 }: {
   name: string;
   value: string;
@@ -19,7 +23,11 @@ export function CustomSelect({
   options: string[];
   labels?: string[];
   searchable?: boolean;
+  id?: string;
+  placeholder?: string;
   "aria-label"?: string;
+  "aria-describedby"?: string;
+  invalid?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -149,6 +157,7 @@ export function CustomSelect({
     <div className="relative">
       <button
         ref={buttonRef}
+        id={id}
         type="button"
         onClick={() => (open ? closeDropdown(true) : openDropdown())}
         onKeyDown={handleTriggerKeyDown}
@@ -156,11 +165,12 @@ export function CustomSelect({
         aria-expanded={open}
         aria-controls={listboxId}
         aria-activedescendant={!searchable ? activeOptionId : undefined}
-        aria-label={ariaLabel ?? name}
-        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50 flex items-center justify-between"
+        aria-label={ariaLabel ?? (id ? undefined : name)}
+        aria-describedby={ariaDescribedBy}
+        className={`w-full bg-white/5 border ${invalid ? "border-error/50" : "border-white/10"} rounded-lg px-3 py-2 text-lg text-white outline-none focus:border-cyan-500/50 flex items-center justify-between`}
       >
-        <span className="truncate">
-          {labels?.[options.indexOf(value)] ?? value}
+        <span className={`truncate ${!value && placeholder ? "text-white/40" : ""}`}>
+          {!value && placeholder ? placeholder : (labels?.[options.indexOf(value)] ?? value)}
         </span>
         <ChevronDown
           size={14}
@@ -198,7 +208,12 @@ export function CustomSelect({
               </div>
             )}
 
-            <div role="listbox" aria-label={ariaLabel ?? name} className="max-h-48 overflow-y-auto">
+            <div
+              role="listbox"
+              aria-label={ariaLabel ?? (id ? undefined : name)}
+              aria-labelledby={!ariaLabel && id ? id : undefined}
+              className="max-h-48 overflow-y-auto"
+            >
               {filteredOptions.length === 0 ? (
                 <p className="px-3 py-2 text-lg text-white/90">
                   Sin resultados

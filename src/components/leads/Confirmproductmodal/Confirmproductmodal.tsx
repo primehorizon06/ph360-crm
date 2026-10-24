@@ -5,7 +5,7 @@ import { ProductFormData } from "@/lib/validations/product";
 import { Installment } from "@/utils/interfaces/paymentPlanPicker";
 import { productColorClass } from "@/utils/constants/products";
 import { ProductCatalogRef } from "@/utils/interfaces/products";
-import { formatAmount } from "@/utils/helpers/format";
+import { formatAmount, installmentsTotal, parseAmount } from "@/utils/helpers/format";
 
 interface Props {
   data: ProductFormData;
@@ -26,10 +26,7 @@ export function ConfirmProductModal({
   onConfirm,
   onCancel,
 }: Props) {
-  const total = installments.reduce(
-    (acc, i) => acc + parseFloat(i.amount || "0"),
-    0,
-  );
+  const total = installmentsTotal(installments);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -61,7 +58,7 @@ export function ConfirmProductModal({
         </span>
 
         {data.priceType === "SPECIAL" && (
-          <p className="text-lg text-attention -mt-3">
+          <p className="text-lg text-tertiary -mt-3">
             Precio especial $ {formatAmount(total)}
             {authorizerName ? ` · autorizado por ${authorizerName}` : ""}
           </p>
@@ -122,7 +119,7 @@ export function ConfirmProductModal({
                   })}
                 </div>
                 <span className="text-white/60">
-                  $ {formatAmount(parseFloat(inst.amount))}
+                  $ {formatAmount(parseAmount(inst.amount))}
                 </span>
               </div>
             ))}

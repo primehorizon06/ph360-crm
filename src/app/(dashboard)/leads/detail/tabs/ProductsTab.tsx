@@ -17,6 +17,8 @@ import {
   ChevronUp,
   Pencil,
   CheckCircle2,
+  AlertCircle,
+  AlertTriangle,
 } from "lucide-react";
 import { ListSkeleton } from "@/components/ui/Skeleton";
 import { ProductFormData, productSchema } from "@/lib/validations/product";
@@ -34,7 +36,7 @@ import { catalogPrice, checkPlanPrice } from "@/lib/validations/productCatalog";
 import { CustomSelect } from "@/components/ui/Select";
 import { Installment } from "@/utils/interfaces/paymentPlanPicker";
 import { PaymentPlanPicker } from "@/components/leads/PaymentPlanPicker/PaymentPlanPicker";
-import { formatAmount, formatDate } from "@/utils/helpers/format";
+import { formatAmount, formatDate, installmentsTotal, parseAmount } from "@/utils/helpers/format";
 import { fetcher } from "@/lib/fetcher";
 import { ConfirmProductModal } from "@/components/leads/Confirmproductmodal/Confirmproductmodal";
 import { useSession } from "next-auth/react";
@@ -60,6 +62,11 @@ import { postAction } from "@/lib/postAction";
 import { confirmToast } from "@/lib/confirmToast";
 import { PaymentMethodEditModal } from "@/components/leads/ProductPayments/PaymentMethodEditModal";
 import { BankNumbersField } from "../SensitiveField";
+import { ChoiceGroup, FieldError } from "@/components/leads/ProductForm/FormControls";
+
+const formLabelClass = "block text-base font-medium text-on-surface-variant";
+const formInputClass =
+  "w-full bg-surface-container-lowest border border-white/10 aria-[invalid=true]:border-error/50 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-tertiary/50 focus:ring-1 focus:ring-tertiary/20 transition-all";
 import { InstallmentModal } from "@/components/leads/ProductPayments/InstallmentModal";
 
 // ─── Installment status helpers ───────────────────────────────────────────────
@@ -316,8 +323,21 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
     formState: { errors },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
+    mode: "onTouched",
     defaultValues: { priceType: "LIST" },
   });
+
+  const errorOf = (field: string) =>
+    (errors as Record<string, { message?: string } | undefined>)[field]?.message;
+  const fieldA11y = (field: string) => ({
+    id: `product-${field}`,
+    "aria-invalid": errorOf(field) ? true : undefined,
+    "aria-describedby": errorOf(field) ? `product-${field}-error` : undefined,
+  });
+  const selectA11y = (field: string) => {
+    const { "aria-invalid": invalid, ...rest } = fieldA11y(field);
+    return { ...rest, invalid: !!invalid };
+  };
 
   const paymentType = useWatch({ control, name: "paymentType" });
   const catalogId = useWatch({ control, name: "catalogId" });
@@ -346,7 +366,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
       return;
     }
     const hasEmptyAmounts = installments.some(
-      (i) => !i.amount || parseFloat(i.amount) <= 0,
+      (i) => !(parseAmount(i.amount) > 0),
     );
     if (hasEmptyAmounts) {
       setError("root", { message: "Todas las cuotas deben tener un monto mayor a 0" });
@@ -356,7 +376,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
       setError("root", { message: "Este producto no tiene precio especial" });
       return;
     }
-    const total = installments.reduce((acc, i) => acc + parseFloat(i.amount), 0);
+    const total = installmentsTotal(installments);
     const priceError = checkPlanPrice(total, selectedPrice);
     if (priceError) {
       setError("root", { message: priceError });
@@ -400,7 +420,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
         installments: installments.map((i) => ({
           number: i.number,
           date: i.date.toISOString(),
-          amount: i.amount,
+          amount: parseAmount(i.amount),
         })),
       }),
     });
@@ -512,6 +532,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
       {showForm && (
         <form
           onSubmit={handleSubmit(onSubmit)}
+          noValidate
           className="bg-surface border border-white/10 rounded-xl p-4 space-y-4"
         >
           <div className="flex items-center justify-between">
@@ -519,21 +540,26 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
             <button
               type="button"
               onClick={resetForm}
-              className="text-white/20 hover:text-white/90 transition-colors"
+              aria-label="Cerrar formulario de nuevo producto"
+              className="-m-2 p-3.5 rounded-lg text-white/40 hover:text-white/90 outline-none focus-visible:ring-2 focus-visible:ring-tertiary/40 transition-colors"
             >
-              <X size={16} />
+              <X size={18} />
             </button>
           </div>
 
-          <div className="space-y-1">
-            <label className="text-lg text-on-surface-variant">Producto</label>
+          <div className="space-y-1.5">
+            <label htmlFor="product-catalogId" className={formLabelClass}>
+              Producto
+            </label>
             <Controller
               control={control}
               name="catalogId"
               render={({ field }) => (
                 <CustomSelect
+                  {...selectA11y("catalogId")}
                   name="catalogId"
                   value={field.value ?? ""}
+                  placeholder="Selecciona un producto"
                   onChange={(value) => {
                     field.onChange(value);
                     setValue("priceType", "LIST");
@@ -545,46 +571,42 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                 />
               )}
             />
-            {errors.catalogId && (
-              <p className="text-red-400 text-lg">{errors.catalogId.message}</p>
-            )}
+            <FieldError id="product-catalogId-error" message={errorOf("catalogId")} />
           </div>
 
           {selectedCatalog && (
-            <div className="space-y-1">
-              <label className="text-lg text-on-surface-variant">Precio</label>
+            <div className="space-y-1.5">
+              <p id="product-priceType-label" className={formLabelClass}>
+                Precio
+              </p>
               <Controller
                 control={control}
                 name="priceType"
                 render={({ field }) => (
-                  <div className="grid grid-cols-2 gap-2">
-                    {(["LIST", "SPECIAL"] as const).map((type) => {
+                  <ChoiceGroup
+                    labelId="product-priceType-label"
+                    value={field.value}
+                    onChange={(type) => {
+                      field.onChange(type);
+                      if (type === "LIST") setValue("priceAuthorizedById", undefined);
+                    }}
+                    options={(["LIST", "SPECIAL"] as const).flatMap((type) => {
                       const price = catalogPrice(selectedCatalog, type);
-                      if (price === null) return null;
-                      return (
-                        <button
-                          key={type}
-                          type="button"
-                          onClick={() => {
-                            field.onChange(type);
-                            if (type === "LIST") setValue("priceAuthorizedById", undefined);
-                          }}
-                          className={`py-2.5 rounded-lg border text-lg font-medium transition-all ${
-                            field.value === type
-                              ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400"
-                              : "border-white/10 bg-white/5 text-on-surface-variant hover:text-white/60"
-                          }`}
-                        >
-                          {type === "LIST" ? "De lista" : "Especial"} $ {formatAmount(price)}
-                        </button>
-                      );
+                      return price === null
+                        ? []
+                        : [
+                            {
+                              value: type,
+                              label: `${type === "LIST" ? "De lista" : "Especial"} $ ${formatAmount(price)}`,
+                            },
+                          ];
                     })}
-                  </div>
+                  />
                 )}
               />
               {priceType === "SPECIAL" && (
-                <div className="space-y-1 pt-2">
-                  <label className="text-lg text-on-surface-variant">
+                <div className="space-y-1.5 pt-2">
+                  <label htmlFor="product-priceAuthorizedById" className={formLabelClass}>
                     Autorizado por (CS Holding)
                   </label>
                   <Controller
@@ -592,8 +614,10 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                     name="priceAuthorizedById"
                     render={({ field }) => (
                       <CustomSelect
+                        {...selectA11y("priceAuthorizedById")}
                         name="priceAuthorizedById"
                         value={field.value ?? ""}
+                        placeholder="Selecciona quién autorizó"
                         onChange={field.onChange}
                         options={holdingUsers.map((u) => String(u.id))}
                         labels={holdingUsers.map((u) => u.name)}
@@ -602,13 +626,15 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                     )}
                   />
                   {!loadingHoldingUsers && holdingUsers.length === 0 && (
-                    <p className="text-attention text-sm">
+                    <p className="flex items-center gap-1.5 text-warning text-sm">
+                      <AlertTriangle size={14} aria-hidden="true" className="shrink-0" />
                       No hay usuarios de CS Holding activos para autorizar el precio especial
                     </p>
                   )}
-                  {errors.priceAuthorizedById && (
-                    <p className="text-red-400 text-lg">{errors.priceAuthorizedById.message}</p>
-                  )}
+                  <FieldError
+                    id="product-priceAuthorizedById-error"
+                    message={errorOf("priceAuthorizedById")}
+                  />
                 </div>
               )}
               {selectedPrice !== null && (
@@ -620,227 +646,206 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
           )}
 
           {catalogId && (
-            <div className="space-y-1">
-              <label className="text-lg text-on-surface-variant">Método de pago</label>
+            <div className="space-y-1.5">
+              <p id="product-paymentType-label" className={formLabelClass}>
+                Método de pago
+              </p>
               <Controller
                 control={control}
                 name="paymentType"
                 render={({ field }) => (
-                  <div className="grid grid-cols-2 gap-2">
-                    {(["TARJETA", "CUENTA"] as PaymentMethodType[]).map(
-                      (type) => (
-                        <button
-                          key={type}
-                          type="button"
-                          onClick={() => field.onChange(type)}
-                          className={`flex items-center justify-center gap-2 py-2.5 rounded-lg border text-lg font-medium transition-all ${
-                            field.value === type
-                              ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400"
-                              : "border-white/10 bg-white/5 text-on-surface-variant hover:text-white/60"
-                          }`}
-                        >
-                          {type === "TARJETA" ? (
-                            <CreditCard size={15} />
-                          ) : (
-                            <Building2 size={15} />
-                          )}
-                          {type === "TARJETA" ? "Tarjeta" : "Cuenta"}
-                        </button>
-                      ),
-                    )}
-                  </div>
+                  <ChoiceGroup
+                    labelId="product-paymentType-label"
+                    value={field.value}
+                    onChange={field.onChange}
+                    errorId="product-paymentType-error"
+                    invalid={!!errorOf("paymentType")}
+                    options={[
+                      {
+                        value: "TARJETA" as PaymentMethodType,
+                        label: (
+                          <>
+                            <CreditCard size={15} aria-hidden="true" />
+                            Tarjeta
+                          </>
+                        ),
+                      },
+                      {
+                        value: "CUENTA" as PaymentMethodType,
+                        label: (
+                          <>
+                            <Building2 size={15} aria-hidden="true" />
+                            Cuenta
+                          </>
+                        ),
+                      },
+                    ]}
+                  />
                 )}
               />
+              <FieldError id="product-paymentType-error" message={errorOf("paymentType")} />
             </div>
           )}
 
           {paymentType === "TARJETA" && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
-              <div className="space-y-1">
-                <label className="text-lg text-on-surface-variant">Tipo de tarjeta</label>
+              <div className="space-y-1.5">
+                <p id="product-cardType-label" className={formLabelClass}>
+                  Tipo de tarjeta
+                </p>
                 <Controller
                   control={control}
                   name="cardType"
                   render={({ field }) => (
-                    <div className="grid grid-cols-2 gap-2">
-                      {(["DEBITO", "CREDITO"] as CardType[]).map((ct) => (
-                        <button
-                          key={ct}
-                          type="button"
-                          onClick={() => field.onChange(ct)}
-                          className={`py-2 rounded-lg border text-lg font-medium transition-all ${
-                            field.value === ct
-                              ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400"
-                              : "border-white/10 bg-white/5 text-on-surface-variant hover:text-white/60"
-                          }`}
-                        >
-                          {ct === "DEBITO" ? "Débito" : "Crédito"}
-                        </button>
-                      ))}
-                    </div>
+                    <ChoiceGroup
+                      labelId="product-cardType-label"
+                      value={field.value}
+                      onChange={field.onChange}
+                      errorId="product-cardType-error"
+                      invalid={!!errorOf("cardType")}
+                      options={[
+                        { value: "DEBITO" as CardType, label: "Débito" },
+                        { value: "CREDITO" as CardType, label: "Crédito" },
+                      ]}
+                    />
                   )}
                 />
-                {"cardType" in errors && errors.cardType && (
-                  <p className="text-red-400 text-lg">
-                    {errors.cardType.message}
-                  </p>
-                )}
+                <FieldError id="product-cardType-error" message={errorOf("cardType")} />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-lg text-on-surface-variant">
+              <div className="space-y-1.5">
+                <label htmlFor="product-lastFour" className={formLabelClass}>
                   Últimos 4 dígitos
                 </label>
                 <input
                   {...register("lastFour")}
+                  {...fieldA11y("lastFour")}
                   type="text"
                   inputMode="numeric"
                   maxLength={4}
                   placeholder="0000"
-                  className="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all tracking-widest"
+                  className={`${formInputClass} max-w-32 tracking-widest`}
                 />
-                {"lastFour" in errors && errors.lastFour && (
-                  <p className="text-red-400 text-lg">
-                    {errors.lastFour.message}
-                  </p>
-                )}
+                <FieldError id="product-lastFour-error" message={errorOf("lastFour")} />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-lg text-on-surface-variant">
+              <div className="space-y-1.5">
+                <label htmlFor="product-holderName" className={formLabelClass}>
                   Nombre del titular
                 </label>
                 <input
                   {...register("holderName")}
+                  {...fieldA11y("holderName")}
                   type="text"
                   placeholder="Como aparece en la tarjeta"
-                  className="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
+                  className={formInputClass}
                 />
-                {"holderName" in errors && errors.holderName && (
-                  <p className="text-red-400 text-lg">
-                    {errors.holderName.message}
-                  </p>
-                )}
+                <FieldError id="product-holderName-error" message={errorOf("holderName")} />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-lg text-on-surface-variant">Banco</label>
+              <div className="space-y-1.5">
+                <label htmlFor="product-bank" className={formLabelClass}>
+                  Banco
+                </label>
                 <input
                   {...register("bank")}
+                  {...fieldA11y("bank")}
                   type="text"
                   placeholder="Ej. Chase, Bank of America..."
-                  className="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
+                  className={formInputClass}
                 />
-                {"bank" in errors && errors.bank && (
-                  <p className="text-red-400 text-lg">{errors.bank.message}</p>
-                )}
+                <FieldError id="product-bank-error" message={errorOf("bank")} />
               </div>
             </div>
           )}
 
           {paymentType === "CUENTA" && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
-              <div className="space-y-1">
-                <label className="text-lg text-on-surface-variant">Banco</label>
-                <input
-                  {...register("accountBank")}
-                  type="text"
-                  placeholder="Ej. Chase, Bank of America..."
-                  className="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
-                />
-                {"accountBank" in errors && errors.accountBank && (
-                  <p className="text-red-400 text-lg">
-                    {errors.accountBank.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-lg text-on-surface-variant">
+              <div className="space-y-1.5">
+                <label htmlFor="product-accountHolder" className={formLabelClass}>
                   Titular de la cuenta
                 </label>
                 <input
                   {...register("accountHolder")}
+                  {...fieldA11y("accountHolder")}
                   type="text"
                   placeholder="Nombre del titular"
-                  className="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
+                  className={formInputClass}
                 />
-                {"accountHolder" in errors && errors.accountHolder && (
-                  <p className="text-red-400 text-lg">
-                    {errors.accountHolder.message}
-                  </p>
-                )}
+                <FieldError id="product-accountHolder-error" message={errorOf("accountHolder")} />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-sm text-on-surface-variant">Número de ruta</label>
+              <div className="space-y-1.5">
+                <label htmlFor="product-accountBank" className={formLabelClass}>
+                  Banco
+                </label>
+                <input
+                  {...register("accountBank")}
+                  {...fieldA11y("accountBank")}
+                  type="text"
+                  placeholder="Ej. Chase, Bank of America..."
+                  className={formInputClass}
+                />
+                <FieldError id="product-accountBank-error" message={errorOf("accountBank")} />
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="product-routingNumber" className={formLabelClass}>
+                  Número de ruta
+                </label>
                 <input
                   {...register("routingNumber")}
+                  {...fieldA11y("routingNumber")}
                   type="text"
                   inputMode="numeric"
                   maxLength={9}
                   placeholder="000000000"
-                  className="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all tracking-widest"
+                  className={`${formInputClass} max-w-52 tracking-widest`}
                 />
-                {"routingNumber" in errors && errors.routingNumber && (
-                  <p className="text-red-400 text-sm">
-                    {errors.routingNumber.message}
-                  </p>
-                )}
+                <FieldError id="product-routingNumber-error" message={errorOf("routingNumber")} />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-lg text-on-surface-variant">
+              <div className="space-y-1.5">
+                <label htmlFor="product-accountNumber" className={formLabelClass}>
                   Número de cuenta
                 </label>
                 <input
                   {...register("accountNumber")}
+                  {...fieldA11y("accountNumber")}
                   type="text"
                   inputMode="numeric"
                   placeholder="Número de cuenta"
-                  className="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
+                  className={formInputClass}
                 />
-                {"accountNumber" in errors && errors.accountNumber && (
-                  <p className="text-red-400 text-lg">
-                    {errors.accountNumber.message}
-                  </p>
-                )}
+                <FieldError id="product-accountNumber-error" message={errorOf("accountNumber")} />
               </div>
 
-              <div className="space-y-1 sm:col-span-2">
-                <label className="text-sm text-on-surface-variant">Tipo de cuenta</label>
+              <div className="space-y-1.5 sm:col-span-2">
+                <p id="product-accountType-label" className={formLabelClass}>
+                  Tipo de cuenta
+                </p>
                 <Controller
                   control={control}
                   name="accountType"
                   render={({ field }) => (
-                    <div className="grid grid-cols-2 gap-2">
-                      {(["AHORROS", "CHEQUES"] as const).map((type) => (
-                        <button
-                          key={type}
-                          type="button"
-                          onClick={() => field.onChange(type)}
-                          className={`py-2 rounded-lg border text-lg font-medium transition-all ${
-                            field.value === type
-                              ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400"
-                              : "border-white/10 bg-white/5 text-on-surface-variant hover:text-white/60"
-                          }`}
-                        >
-                          {type === "AHORROS" ? "Ahorros" : "Cheques"}
-                        </button>
-                      ))}
-                    </div>
+                    <ChoiceGroup
+                      labelId="product-accountType-label"
+                      value={field.value}
+                      onChange={field.onChange}
+                      errorId="product-accountType-error"
+                      invalid={!!errorOf("accountType")}
+                      options={[
+                        { value: "AHORROS" as const, label: "Ahorros" },
+                        { value: "CHEQUES" as const, label: "Cheques" },
+                      ]}
+                    />
                   )}
                 />
-                {"accountType" in errors && errors.accountType && (
-                  <p className="text-red-400 text-sm">
-                    {errors.accountType.message}
-                  </p>
-                )}
+                <FieldError id="product-accountType-error" message={errorOf("accountType")} />
               </div>
             </div>
           )}
 
-          {/* Plan de pagos */}
           {paymentType && (
             <PaymentPlanPicker
               value={installments}
@@ -849,12 +854,13 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                 clearErrors("root");
               }}
               error={errors.root?.message ?? ""}
+              targetAmount={selectedPrice}
             >
               <button
                 type="submit"
-                className="flex items-center justify-center gap-2 w-full bg-cyan-500 hover:bg-cyan-400 text-black font-medium px-4 py-2 rounded-lg text-lg transition-colors"
+                className="flex items-center justify-center gap-2 w-full min-h-11 bg-cyan-500 hover:bg-cyan-400 text-black font-medium px-4 py-2 rounded-lg text-lg outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 transition-colors"
               >
-                <Plus size={15} />
+                <Plus size={15} aria-hidden="true" />
                 Asociar producto
               </button>
             </PaymentPlanPicker>
@@ -907,7 +913,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                 </div>
 
                 {lp.isSpecialPrice && (
-                  <p className="text-sm text-attention">
+                  <p className="self-start text-sm px-2 py-0.5 rounded-full font-medium bg-tertiary/10 text-tertiary">
                     Precio especial
                     {lp.priceAuthorizedBy ? ` · autorizado por ${lp.priceAuthorizedBy.name}` : ""}
                   </p>
@@ -1001,8 +1007,12 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                   lp.paymentMethod?.type === "CUENTA" &&
                   !lp.paymentMethod.soarAccountId &&
                   lp.paymentMethod.soarSyncError && (
-                    <div className="rounded-lg border border-attention/30 bg-attention/10 px-3 py-2 space-y-1.5">
-                      <p className="text-sm text-attention font-medium">
+                    <div
+                      role="alert"
+                      className="rounded-lg border border-error/30 bg-error/10 px-3 py-2 space-y-1.5"
+                    >
+                      <p className="flex items-center gap-1.5 text-sm text-error font-medium">
+                        <AlertCircle size={14} aria-hidden="true" className="shrink-0" />
                         Pendiente de sincronizar con SOAR
                       </p>
                       <p className="text-sm text-white/90">{lp.paymentMethod.soarSyncError}</p>
@@ -1011,7 +1021,7 @@ export function ProductsTab({ leadId, onProductCreated }: Props) {
                           type="button"
                           onClick={() => handleSoarSync(lp.id)}
                           disabled={syncingProduct === lp.id}
-                          className="flex items-center gap-1.5 text-sm text-attention hover:text-white transition-colors disabled:opacity-50"
+                          className="flex items-center gap-1.5 text-sm text-error hover:text-white transition-colors disabled:opacity-50"
                         >
                           <RotateCcw size={12} className={syncingProduct === lp.id ? "animate-spin" : ""} />
                           Reintentar

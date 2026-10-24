@@ -5,6 +5,7 @@ import useSWR from "swr";
 import Link from "next/link";
 import { useRowNavigation, useUrlFilters } from "@/hooks/useUrlFilters";
 import {
+  AlertTriangle,
   Ban,
   CalendarCheck,
   DollarSign,
@@ -348,7 +349,8 @@ export function CollectionsQueue() {
     if ((view === "scheduled" || view === "processing") && attempt) {
       if (attempt.unconfirmed)
         return (
-          <p className="text-sm text-attention">
+          <p className="flex items-center gap-1.5 text-sm text-warning">
+            <AlertTriangle size={14} aria-hidden="true" className="shrink-0" />
             Sin confirmar · buscar en SOAR el memo {attempt.memo}
           </p>
         );

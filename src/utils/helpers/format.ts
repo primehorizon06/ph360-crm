@@ -50,15 +50,25 @@ export function formatAmount(amount: number): string {
   });
 }
 
-export function formatTotalAmount(installments: Installment[]): string {
-  const total = installments.reduce((acc, i) => {
-    const val = parseFloat(i.amount.replace(",", "."));
+export function parseAmount(raw: string): number {
+  const value = raw.trim();
+  if (!value) return NaN;
+  const decimalAt = Math.max(value.lastIndexOf(","), value.lastIndexOf("."));
+  if (decimalAt === -1) return Number(value);
+  const integer = value.slice(0, decimalAt).replace(/[.,]/g, "");
+  const decimals = value.slice(decimalAt + 1);
+  return Number(`${integer}.${decimals}`);
+}
+
+export function installmentsTotal(installments: Pick<Installment, "amount">[]): number {
+  return installments.reduce((acc, i) => {
+    const val = parseAmount(i.amount);
     return acc + (isNaN(val) ? 0 : val);
   }, 0);
-  return total.toLocaleString("es-CO", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+}
+
+export function formatTotalAmount(installments: Installment[]): string {
+  return formatAmount(installmentsTotal(installments));
 }
 
 export function calculateAge(birthDate: string): number | null {

@@ -136,12 +136,16 @@ export function RecordDetailClient({ type }: Props) {
 
   return (
     <div className="space-y-6">
-      <LeadDetailHeader
-        lead={lead}
-        role={role}
-        onSuspend={handleSuspend}
-        onEdit={() => setEditing(true)}
-      />
+      <div className="md:sticky md:top-0 md:z-20 md:-mx-1 md:px-1 md:pb-2 md:bg-background">
+        <div className="rounded-xl md:shadow-lg md:shadow-black/40">
+          <LeadDetailHeader
+            lead={lead}
+            role={role}
+            onSuspend={handleSuspend}
+            onEdit={() => setEditing(true)}
+          />
+        </div>
+      </div>
 
       {canViewProductChecklist(role ?? "") && (
         <ProductChecklist
@@ -153,7 +157,7 @@ export function RecordDetailClient({ type }: Props) {
 
       <LeadDetailTabs activeTab={activeTab} onChange={handleTabChange} />
 
-      <div className="max-h-[60vh] overflow-y-auto pr-2 pb-2">
+      <div className="pb-2">
         {activeTab === "personal" && <PersonalTab lead={lead} />}
         {activeTab === "notes" && <NotesTab leadId={lead.id} />}
         {activeTab === "reminders" && <RemindersTab leadId={lead.id} />}

@@ -45,7 +45,7 @@ export function catalogPrice(
   return catalog.specialPrice === null ? null : Number(catalog.specialPrice);
 }
 
-const toCents = (value: number) => Math.round(value * 100);
+export const toCents = (value: number) => Math.round(value * 100);
 
 export function checkPlanPrice(total: number, price: number): string | null {
   if (toCents(total) === toCents(price)) return null;

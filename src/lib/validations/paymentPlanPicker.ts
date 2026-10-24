@@ -1,4 +1,5 @@
 import z from "zod";
+import { parseAmount } from "@/utils/helpers/format";
 
 export const installmentSchema = z.object({
   installments: z.array(
@@ -8,7 +9,7 @@ export const installmentSchema = z.object({
       amount: z
         .string()
         .min(1, "Requerido")
-        .refine((v) => parseFloat(v.replace(",", ".")) > 0, {
+        .refine((v) => parseAmount(v) > 0, {
           message: "Debe ser mayor a 0",
         }),
     }),

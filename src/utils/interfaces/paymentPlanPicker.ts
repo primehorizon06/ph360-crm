@@ -10,5 +10,6 @@ export interface Props {
   value: Installment[];
   onChange: (installments: Installment[]) => void;
   error?: string;
+  targetAmount?: number | null;
   children?: ReactNode;
 }

@@ -3,16 +3,22 @@
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import "react-datepicker/dist/react-datepicker.css";
-import { CalendarDays, Trash2 } from "lucide-react";
+import { AlertTriangle, CalendarDays, CheckCircle2, Trash2 } from "lucide-react";
 import {
   InstallmentForm,
   installmentSchema,
 } from "@/lib/validations/paymentPlanPicker";
 import { Installment, Props } from "@/utils/interfaces/paymentPlanPicker";
-import { formatDate, formatTotalAmount } from "@/utils/helpers/format";
+import {
+  formatAmount,
+  formatDate,
+  formatTotalAmount,
+  installmentsTotal,
+} from "@/utils/helpers/format";
+import { toCents } from "@/lib/validations/productCatalog";
 import { InlineDatePicker } from "@/components/ui/InlineDatePicker";
 
-export function PaymentPlanPicker({ value, onChange, error, children }: Props) {
+export function PaymentPlanPicker({ value, onChange, error, targetAmount, children }: Props) {
   const {
     register,
     control,
@@ -67,6 +73,9 @@ export function PaymentPlanPicker({ value, onChange, error, children }: Props) {
 
   const highlightedDates = value.map((i) => i.date);
   const hasAmounts = value.some((i) => i.amount !== "");
+  const differenceCents =
+    targetAmount == null ? null : toCents(targetAmount) - toCents(installmentsTotal(value));
+  const matchesTarget = differenceCents === 0;
 
   return (
     <div className="space-y-3">
@@ -111,6 +120,11 @@ export function PaymentPlanPicker({ value, onChange, error, children }: Props) {
                       type="text"
                       inputMode="decimal"
                       placeholder="0.00"
+                      aria-label={`Monto de la cuota ${installment.number}`}
+                      aria-invalid={!!errors.installments?.[idx]?.amount || undefined}
+                      aria-describedby={
+                        errors.installments?.[idx]?.amount ? `installment-${idx}-error` : undefined
+                      }
                       value={installment.amount}
                       onChange={(e) => handleAmountChange(idx, e.target.value)}
                       className={`w-full bg-surface border rounded-md pl-6 pr-2 py-1.5 text-lg text-white/80 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 transition-all ${
@@ -120,7 +134,7 @@ export function PaymentPlanPicker({ value, onChange, error, children }: Props) {
                       }`}
                     />
                     {errors.installments?.[idx]?.amount && (
-                      <p className="text-red-400 text-[10px] mt-0.5">
+                      <p id={`installment-${idx}-error`} className="text-red-400 text-sm mt-0.5">
                         {errors.installments[idx]?.amount?.message}
                       </p>
                     )}
@@ -130,29 +144,67 @@ export function PaymentPlanPicker({ value, onChange, error, children }: Props) {
                   <button
                     type="button"
                     onClick={() => handleRemove(idx)}
-                    className="shrink-0 text-white/20 hover:text-red-400 transition-colors"
+                    aria-label={`Eliminar la cuota ${installment.number}`}
+                    className="shrink-0 -m-2 p-3.5 rounded-lg text-white/40 hover:text-red-400 focus-visible:ring-2 focus-visible:ring-tertiary/40 outline-none transition-colors"
                   >
-                    <Trash2 size={13} />
+                    <Trash2 size={16} />
                   </button>
                 </div>
               ))}
 
               {/* Total */}
-              {hasAmounts && (
-                <div className="flex items-center justify-between px-3 py-2 bg-cyan-500/5 border border-cyan-500/20 rounded-lg">
-                  <span className="text-lg text-on-surface-variant">
-                    Total · {value.length} cuota{value.length !== 1 ? "s" : ""}
-                  </span>
-                  <span className="text-lg font-semibold text-cyan-400">
-                    $ {formatTotalAmount(value)}
-                  </span>
+              {(hasAmounts || differenceCents !== null) && (
+                <div
+                  className={`px-3 py-2 rounded-lg border space-y-0.5 ${
+                    matchesTarget
+                      ? "bg-success/5 border-success/30"
+                      : differenceCents !== null && error
+                        ? "bg-warning/10 border-warning/30"
+                        : "bg-tertiary/5 border-tertiary/20"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg text-on-surface-variant">
+                      Total · {value.length} cuota{value.length !== 1 ? "s" : ""}
+                    </span>
+                    <span className="text-lg font-semibold text-cyan-400">
+                      $ {formatTotalAmount(value)}
+                    </span>
+                  </div>
+                  {differenceCents !== null && targetAmount != null && (
+                    <p
+                      aria-live="polite"
+                      className={`flex items-center gap-1.5 text-sm ${
+                        matchesTarget
+                          ? "text-success"
+                          : error
+                            ? "text-warning"
+                            : "text-on-surface-variant"
+                      }`}
+                    >
+                      {matchesTarget ? (
+                        <CheckCircle2 size={14} aria-hidden="true" className="shrink-0" />
+                      ) : error ? (
+                        <AlertTriangle size={14} aria-hidden="true" className="shrink-0" />
+                      ) : null}
+                      {matchesTarget
+                        ? `Cuadra con el precio de $ ${formatAmount(targetAmount)}`
+                        : differenceCents > 0
+                          ? `Faltan $ ${formatAmount(differenceCents / 100)} para llegar a $ ${formatAmount(targetAmount)}`
+                          : `Sobran $ ${formatAmount(-differenceCents / 100)} sobre $ ${formatAmount(targetAmount)}`}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
           )}
 
           {/* Error desde el padre (validación al submit) */}
-          {error && <p className="text-red-400 text-lg">{error}</p>}
+          {error && (
+            <p role="alert" className="text-red-400 text-lg">
+              {error}
+            </p>
+          )}
 
           {value.length === 0 && (
             <p className="text-center text-white/20 text-lg py-2">
